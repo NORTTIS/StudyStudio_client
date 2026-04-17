@@ -2847,7 +2847,7 @@ export default function TaskDetailModal(props: {
             return;
         }
 
-        if (task?.assigneeId && !assigneeId) {
+        if (false && task?.assigneeId && !assigneeId) {
             setSaveError(
                 locale === "vi"
                     ? "Không thể huỷ người phụ trách sau khi đã phân công."
@@ -3104,7 +3104,7 @@ export default function TaskDetailModal(props: {
                                             <SelectItem
                                                 value="unassigned"
                                                 className={selectItemClassName}
-                                                disabled={!!task?.assigneeId}>
+                                                >
                                                 <div className="flex items-center gap-2">
                                                     <AssigneeAvatar size={24} unassigned className="text-[11px]" />
                                                     <span>{t("unassigned")}</span>

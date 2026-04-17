@@ -31,16 +31,16 @@ export function GroupBannerBackground({ bannerUrl, colorHex }: GroupBannerBackgr
         <>
             <div
                 className="pointer-events-none absolute inset-0 z-0"
-                style={{ background: "#FFF8F3" }}
+                style={{ background: "#FCFAF7" }}
             />
             <div
-                className="pointer-events-none absolute inset-x-0 top-0 z-0 h-[220px] opacity-[0.08]"
+                className="pointer-events-none absolute inset-x-0 top-0 z-0 h-[220px] opacity-[0.06]"
                 style={{
                     background: `radial-gradient(circle at 50% 0%, ${accentColor}22 0%, ${accentColor}10 24%, transparent 68%)`
                 }}
             />
             <div
-                className="pointer-events-none absolute inset-x-0 top-0 z-0 h-[180px] opacity-[0.45]"
+                className="pointer-events-none absolute inset-x-0 top-0 z-0 h-[180px] opacity-[0.32]"
                 style={{
                     background:
                         "linear-gradient(180deg, rgba(255,255,255,0.42) 0%, rgba(255,255,255,0.16) 48%, rgba(255,255,255,0) 100%)"

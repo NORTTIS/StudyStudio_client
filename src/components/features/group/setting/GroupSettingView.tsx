@@ -5,6 +5,7 @@ import { Power, Settings, Trash2, UserPlus, Users } from "lucide-react";
 import Image from "next/image";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
+import * as React from "react";
 import { useEffect, useMemo, useState } from "react";
 import { z } from "zod";
 import type { components } from "@/api/types";
@@ -117,6 +118,27 @@ const safeInitials = (first: string, last: string) => {
     const i2 = l ? l[0] : "";
     const out = `${i1}${i2}`.toUpperCase();
     return out || "U";
+};
+
+const safeAvatarUrl = (input?: string | null) => {
+    const raw = String(input ?? "").trim();
+    if (!raw) return null;
+    return raw.replace("localhost", "127.0.0.1");
+};
+
+const getMemberAvatarUrl = (member: Record<string, unknown>) => {
+    const nestedUser = (member.user as Record<string, unknown> | undefined) ?? {};
+
+    return (
+        safeAvatarUrl(String(member.avatarUrl ?? "").trim()) ??
+        safeAvatarUrl(String(member.avatar ?? "").trim()) ??
+        safeAvatarUrl(String(member.profilePictureUrl ?? "").trim()) ??
+        safeAvatarUrl(String(member.profileImageUrl ?? "").trim()) ??
+        safeAvatarUrl(String(nestedUser.avatarUrl ?? "").trim()) ??
+        safeAvatarUrl(String(nestedUser.avatar ?? "").trim()) ??
+        safeAvatarUrl(String(nestedUser.profilePictureUrl ?? "").trim()) ??
+        safeAvatarUrl(String(nestedUser.profileImageUrl ?? "").trim())
+    );
 };
 
 const getCurrentUserId = () => {
@@ -432,10 +454,7 @@ export function GroupSettingView() {
             const last = (m.lastName ?? "").trim();
             const uid = m.userId ?? `${idx}`;
             const role = toMemberRole(m.role);
-            const avatarUrl =
-                String(m.avatarUrl ?? "")
-                    .trim()
-                    .replace("localhost", "127.0.0.1") || null;
+            const avatarUrl = getMemberAvatarUrl(m as Record<string, unknown>);
 
             return {
                 id: String(uid),
@@ -582,7 +601,8 @@ export function GroupSettingView() {
                     name: `${first} ${last}`.trim() || "Không rõ",
                     email: "",
                     initials: safeInitials(first, last),
-                    role: isMe ? roleFromDetail : "Member"
+                    role: isMe ? roleFromDetail : "Member",
+                    avatarUrl: getMemberAvatarUrl(m as Record<string, unknown>)
                 };
             });
             setMembers(mapped);
@@ -1172,6 +1192,18 @@ export function GroupSettingView() {
         }
     };
 
+    React.useEffect(() => {
+        if (loading || canViewSettings || !groupId) return;
+
+        const nextParams = new URLSearchParams();
+        nextParams.set("groupId", groupId);
+        if (fromStudioId) {
+            nextParams.set("fromStudioId", fromStudioId);
+        }
+
+        router.replace(`/${locale}/group-setting-no-access?${nextParams.toString()}`);
+    }, [loading, canViewSettings, groupId, fromStudioId, router, locale]);
+
     if (loading) {
         return <div className="p-6 text-gray-500 text-sm">{t("loading.loading")}</div>;
     }
@@ -1190,34 +1222,7 @@ export function GroupSettingView() {
     }
 
     if (!canViewSettings) {
-        const groupHref = fromStudioId
-            ? `/${locale}/group/${groupId}?fromStudioId=${encodeURIComponent(fromStudioId)}`
-            : `/${locale}/group/${groupId}`;
-
-        return (
-            <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
-                <div className="w-full max-w-md rounded-xl bg-white p-8 text-center shadow-xl">
-                    <div className="mb-6 flex items-center justify-center gap-3">
-                        <svg width="48" height="48" viewBox="0 0 64 64">
-                            <path d="M32 6L2 20L32 34L62 20L32 6Z" fill="#F97316" />
-                            <path d="M12 26V38C12 45 20 50 32 50C44 50 52 45 52 38V26L32 36L12 26Z" fill="#FB923C" />
-                        </svg>
-                        <span className="text-3xl font-bold leading-tight text-orange-500">
-                            Study <br /> Studio
-                        </span>
-                    </div>
-
-                    <h1 className="mb-2 font-bold text-2xl text-[#261E33]">{t("unauthorized.title")}</h1>
-                    <p className="mb-6 text-sm text-muted-foreground">{t("unauthorized.description")}</p>
-
-                    <Button
-                        className="w-full bg-orange-600 text-white hover:bg-orange-700"
-                        onClick={() => router.push(groupHref)}>
-                        {t("unauthorized.backToGroup")}
-                    </Button>
-                </div>
-            </div>
-        );
+        return null;
     }
 
     const removeBusy = removeTarget ? !!removeLoadingByUserId[removeTarget.id] : false;

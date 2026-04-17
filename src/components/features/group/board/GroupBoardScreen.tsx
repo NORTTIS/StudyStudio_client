@@ -480,6 +480,11 @@ function canDeleteByRole(role: string | null | undefined) {
     return r === "owner" || r === "moderator";
 }
 
+function canDeleteTaskByRole(role: string | null | undefined) {
+    const r = normalizeGroupRole(role);
+    return r === "owner" || r === "moderator" || r === "member";
+}
+
 async function apiFetchJson<T>(
     input: RequestInfo,
     init: RequestInit,
@@ -1140,7 +1145,6 @@ async function apiDeleteTask(args: { groupId: string; taskId: string }, messages
         url,
         {
             method: "DELETE",
-            credentials: "include",
             headers: {
                 Accept: "text/plain, application/json",
                 ...(token ? { Authorization: `Bearer ${token}` } : {})
@@ -1467,7 +1471,7 @@ function PortalDropdown({
 }: {
     open: boolean;
     onClose: () => void;
-    anchorRef: React.RefObject<HTMLElement>;
+    anchorRef: React.RefObject<HTMLElement | null>;
     children: React.ReactNode;
     width?: number;
 }) {
@@ -1552,7 +1556,15 @@ function MenuItem({
     return (
         <button
             type="button"
-            onClick={onClick}
+            onPointerDown={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+            }}
+            onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onClick();
+            }}
             className={cn(
                 "flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-sm",
                 danger ? "text-orange-700 hover:bg-orange-50" : "text-zinc-700 hover:bg-zinc-100"
@@ -1699,6 +1711,8 @@ type TaskCardProps = {
     onCancelEdit: () => void;
     onCommitEdit: () => void;
     onDelete: () => void;
+    canEditTask?: boolean;
+    canDeleteTask?: boolean;
 };
 
 function TaskCard({
@@ -1711,7 +1725,9 @@ function TaskCard({
     onStartEdit,
     onCancelEdit,
     onCommitEdit,
-    onDelete
+    onDelete,
+    canEditTask = true,
+    canDeleteTask = true
 }: TaskCardProps) {
     const t = useTranslations("GroupBoardScreen");
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
@@ -1805,47 +1821,56 @@ function TaskCard({
                                     </p>
                                 </div>
                             </div>
-                            <div className="relative shrink-0">
-                                <button
-                                    ref={btnRef}
-                                    type="button"
-                                    onPointerDown={(e) => {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                        setOpenMenu((v) => !v);
-                                    }}
-                                    onClick={(e) => {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                    }}
-                                    className="grid h-7 w-7 cursor-pointer place-items-center rounded-lg text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600"
-                                    aria-label={t("menu")}>
-                                    <MoreHorizontal className="h-3.5 w-3.5" />
-                                </button>
+                            {canEditTask || canDeleteTask ? (
+                                <div className="relative shrink-0">
+                                    <button
+                                        ref={btnRef}
+                                        type="button"
+                                        onPointerDown={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            setOpenMenu((v) => !v);
+                                        }}
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            if (e.detail === 0) {
+                                                setOpenMenu((v) => !v);
+                                            }
+                                        }}
+                                        className="grid h-7 w-7 cursor-pointer place-items-center rounded-lg text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600"
+                                        aria-label={t("menu")}>
+                                        <MoreHorizontal className="h-3.5 w-3.5" />
+                                    </button>
 
-                                <PortalDropdown
-                                    open={openMenu}
-                                    onClose={() => setOpenMenu(false)}
-                                    anchorRef={btnRef as any}>
-                                    <MenuItem
-                                        icon={<Pencil className="h-4 w-4" />}
-                                        label={t("editName")}
-                                        onClick={() => {
-                                            setOpenMenu(false);
-                                            onStartEdit();
-                                        }}
-                                    />
-                                    <MenuItem
-                                        icon={<Trash2 className="h-4 w-4" />}
-                                        label={t("delete")}
-                                        danger
-                                        onClick={() => {
-                                            setOpenMenu(false);
-                                            onDelete();
-                                        }}
-                                    />
-                                </PortalDropdown>
-                            </div>
+                                    <PortalDropdown
+                                        open={openMenu}
+                                        onClose={() => setOpenMenu(false)}
+                                        anchorRef={btnRef}>
+                                        {canEditTask ? (
+                                            <MenuItem
+                                                icon={<Pencil className="h-4 w-4" />}
+                                                label={t("editName")}
+                                                onClick={() => {
+                                                    setOpenMenu(false);
+                                                    onStartEdit();
+                                                }}
+                                            />
+                                        ) : null}
+                                        {canDeleteTask ? (
+                                            <MenuItem
+                                                icon={<Trash2 className="h-4 w-4" />}
+                                                label={t("delete")}
+                                                danger
+                                                onClick={() => {
+                                                    setOpenMenu(false);
+                                                    onDelete();
+                                                }}
+                                            />
+                                        ) : null}
+                                    </PortalDropdown>
+                                </div>
+                            ) : null}
                         </div>
 
                         <div className="mt-2 flex flex-wrap items-center gap-1.5">
@@ -2267,7 +2292,9 @@ function ColumnView({
     onColumnDraftChange,
     onColumnCommit,
     onColumnCancel,
+    canEditTask,
     canEditStatus,
+    canDeleteStatus,
     canDeleteTask,
     canAddTask,
     isLoadingMore,
@@ -2307,7 +2334,9 @@ function ColumnView({
     onColumnDraftChange: (v: string) => void;
     onColumnCommit: () => void;
     onColumnCancel: () => void;
+    canEditTask: boolean;
     canEditStatus: boolean;
+    canDeleteStatus: boolean;
     canDeleteTask: boolean;
     canAddTask: boolean;
 }) {
@@ -2417,7 +2446,7 @@ function ColumnView({
                             {totalCount ?? tasks.length}
                         </span>
 
-                        {(canEditStatus || canDeleteTask) && (
+                        {(canEditStatus || canDeleteStatus) && (
                             <div className="relative">
                                 <button
                                     ref={colMenuBtnRef}
@@ -2430,6 +2459,9 @@ function ColumnView({
                                     onClick={(e) => {
                                         e.preventDefault();
                                         e.stopPropagation();
+                                        if (e.detail === 0) {
+                                            setOpenColMenu((v) => !v);
+                                        }
                                     }}
                                     className="grid h-8 w-8 place-items-center rounded-lg text-zinc-500 hover:bg-black/5"
                                     aria-label={t("columnMenu")}>
@@ -2439,7 +2471,7 @@ function ColumnView({
                                 <PortalDropdown
                                     open={openColMenu}
                                     onClose={() => setOpenColMenu(false)}
-                                    anchorRef={colMenuBtnRef as unknown as React.RefObject<HTMLButtonElement>}>
+                                    anchorRef={colMenuBtnRef}>
                                     {canEditStatus && (
                                         <MenuItem
                                             icon={<Pencil className="h-4 w-4" />}
@@ -2450,7 +2482,7 @@ function ColumnView({
                                             }}
                                         />
                                     )}
-                                    {canDeleteTask && (
+                                    {canDeleteStatus && (
                                         <MenuItem
                                             icon={<Trash2 className="h-4 w-4" />}
                                             label={t("deleteStatus")}
@@ -2515,6 +2547,8 @@ function ColumnView({
                                                 onCancelEdit={onTaskCancelEdit}
                                                 onCommitEdit={onTaskCommitEdit}
                                                 onDelete={() => onDeleteTask(item.task.id, col.id)}
+                                                canEditTask={canEditTask}
+                                                canDeleteTask={canDeleteTask}
                                             />
                                         );
                                     })
@@ -2579,6 +2613,8 @@ function ColumnView({
                                             onCancelEdit={onTaskCancelEdit}
                                             onCommitEdit={onTaskCommitEdit}
                                             onDelete={() => onDeleteTask(t.id, col.id)}
+                                            canEditTask={canEditTask}
+                                            canDeleteTask={canDeleteTask}
                                         />
                                     );
                                 })
@@ -2643,7 +2679,9 @@ function SortableColumn({
     onColumnDraftChange,
     onColumnCommit,
     onColumnCancel,
+    canEditTask,
     canEditStatus,
+    canDeleteStatus,
     canDeleteTask,
     canAddTask,
     isLoadingMore,
@@ -2682,7 +2720,9 @@ function SortableColumn({
     onColumnDraftChange: (v: string) => void;
     onColumnCommit: () => void;
     onColumnCancel: () => void;
+    canEditTask: boolean;
     canEditStatus: boolean;
+    canDeleteStatus: boolean;
     canDeleteTask: boolean;
     canAddTask: boolean;
 }) {
@@ -2706,7 +2746,9 @@ function SortableColumn({
             className="min-w-[300px] max-w-[300px] self-start"
             data-status-id={statusId}>
             <ColumnView
+                canEditTask={canEditTask}
                 canEditStatus={canEditStatus}
+                canDeleteStatus={canDeleteStatus}
                 canDeleteTask={canDeleteTask}
                 canAddTask={canAddTask}
                 col={col}
@@ -2847,6 +2889,13 @@ export function GroupBoardScreen({
     const headerActionSlot = useGroupHeaderActionSlot();
     const groupId = String(groupIdOverride ?? "").trim() || (params?.groupId ? String(params.groupId) : "");
 
+    React.useEffect(() => {
+        if (!groupId) return;
+        if (isUuidLike(groupId)) return;
+
+        router.replace(`/${locale}/group-access-denied?reason=forbidden`, { scroll: false });
+    }, [groupId, router, locale]);
+
     const apiMessages = React.useMemo<ApiMessages>(
         () => ({
             missingApiBase: t("missingApiBase"),
@@ -2866,11 +2915,15 @@ export function GroupBoardScreen({
     const canContributeToBoard =
         hasAuthoritativeRole &&
         (currentUserRole === "owner" || currentUserRole === "moderator" || currentUserRole === "member");
-    const canDeleteTask = canDelete || (hasAuthoritativeRole && canDeleteByRole(currentUserRole));
+    // Quyền quản lý trạng thái chỉ dành cho owner/moderator theo role thực tế của group.
+    const canManageStatus = hasAuthoritativeRole && canDeleteByRole(currentUserRole);
+    const canEditTask = canContributeToBoard;
+    const canDeleteStatus = canManageStatus;
+    const canDeleteTask = canDelete || (hasAuthoritativeRole && canDeleteTaskByRole(currentUserRole));
     const isRestricted = !canContributeToBoard;
-    const canEditStatus = canContributeToBoard;
+    const canEditStatus = canManageStatus;
     const canAddTask = canContributeToBoard;
-    const canAddStatus = canContributeToBoard;
+    const canAddStatus = canManageStatus;
 
     const [columns, setColumns] = React.useState<Column[]>([]);
     const [board, setBoard] = React.useState<Record<ColumnId, Task[]>>({});
@@ -3205,8 +3258,13 @@ export function GroupBoardScreen({
     };
 
     const openTaskDetail = (taskId: string) => {
-        setDetailTaskId(taskId);
-        setDetailOpen(true);
+        const normalizedTaskId = String(taskId ?? "").trim();
+        if (!normalizedTaskId || !isUuidLike(normalizedTaskId)) {
+            openErrorModal(t("invalidTaskId"));
+            return;
+        }
+
+        router.push(`/${locale}/group/task/${encodeURIComponent(normalizedTaskId)}`, { scroll: false });
     };
 
     const closeTaskDetail = () => {
@@ -3493,8 +3551,9 @@ export function GroupBoardScreen({
     }, [fetchBoardData]);
 
     React.useEffect(() => {
+        if (!groupId || !isUuidLike(groupId)) return;
         void refresh();
-    }, [refresh]);
+    }, [groupId, refresh]);
 
     React.useEffect(() => {
         if (loading) return;
@@ -3608,6 +3667,11 @@ export function GroupBoardScreen({
     }, [activeTaskId, overId, board, columns]);
 
     const submitAddColumn = async (title: string) => {
+        if (!canAddStatus) {
+            openNoPermissionModal(t("noPermissionCreateStatus"));
+            return;
+        }
+
         if (!groupId) throw new Error(t("missingGroupId"));
         if (!isUuidLike(groupId)) throw new Error(t("invalidGroupId"));
 
@@ -3680,7 +3744,7 @@ export function GroupBoardScreen({
     };
 
     const onDeleteColumn = (columnId: ColumnId) => {
-        if (!canDeleteTask) {
+        if (!canDeleteStatus) {
             openNoPermissionModal(t("noPermissionDeleteStatus"));
             return;
         }
@@ -4494,12 +4558,10 @@ export function GroupBoardScreen({
     const onColumnDraftChange = (v: string) => {
         setEditingColumn((p) => {
             const trimmed = v.trim();
-            if (!trimmed) return { ...p, draft: v, error: t("enterStatusName") };
-            const dup = columns.some((c) => c.id !== p.id && c.title.trim().toLowerCase() === trimmed.toLowerCase());
             return {
                 ...p,
                 draft: v,
-                error: dup ? t("statusNameExists") : null
+                error: trimmed ? null : t("enterStatusName")
             };
         });
     };
@@ -4592,7 +4654,9 @@ export function GroupBoardScreen({
                                 onOpenCreateTask={openCreateTask}
                                 onOpenTaskDetail={openTaskDetail}
                                 dndEnabled={false}
+                                canEditTask={canEditTask}
                                 canEditStatus={canEditStatus}
+                                canDeleteStatus={canDeleteStatus}
                                 canDeleteTask={canDeleteTask}
                                 canAddTask={canAddTask}
                                 headerDragProps={undefined}
@@ -4656,7 +4720,9 @@ export function GroupBoardScreen({
                                         onOpenCreateTask={openCreateTask}
                                         onOpenTaskDetail={openTaskDetail}
                                         dndEnabled={!isRestricted}
+                                        canEditTask={canEditTask}
                                         canEditStatus={canEditStatus}
+                                        canDeleteStatus={canDeleteStatus}
                                         canDeleteTask={canDeleteTask}
                                         canAddTask={canAddTask}
                                         ghost={ghost}

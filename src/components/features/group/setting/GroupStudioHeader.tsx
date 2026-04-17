@@ -237,6 +237,138 @@ export function GroupStudioHeader({
     const [showLeaveDialog, setShowLeaveDialog] = React.useState(false);
     const [isLeaving, setIsLeaving] = React.useState(false);
 
+    const loadHeaderData = React.useCallback(
+        async ({ suppressForbiddenRedirect = false }: { suppressForbiddenRedirect?: boolean } = {}) => {
+            if (!groupId) return;
+
+            setError("");
+
+            const apiBase = getApiBase();
+            const token = localStorage.getItem("accessToken") || "";
+
+            const res = await fetch(`${apiBase}/group/${groupId}/detail`, {
+                headers: {
+                    Accept: "application/json",
+                    ...(token ? { Authorization: `Bearer ${token}` } : {})
+                },
+                cache: "no-store"
+            });
+
+            const text = await readText(res);
+            let json: any = null;
+
+            try {
+                json = text ? JSON.parse(text) : null;
+            } catch { }
+
+            if (!res.ok) {
+                const msg = normalizeErrorMessage(
+                    String(json?.message || text || ""),
+                    t("errors.fetchDetailFailed")
+                );
+                toast({
+                    description: msg,
+                    variant: "destructive"
+                });
+                if (res.status === 403 && !suppressForbiddenRedirect) {
+                    router.replace(`/${locale}/home`);
+                }
+                throw new Error(msg);
+            }
+
+            const parsed = (json as GroupDetailResponse) || {};
+            const data = parsed?.data ?? null;
+
+            setGroupName(data?.groupName || "Group");
+            setGroupAvatarUrl(data?.avatarUrl || null);
+            setGroupDesc(data?.description || "");
+            setStudioName(data?.studioName || "");
+            setGroupTagline(data?.tagline || "");
+            setGroupAlias(data?.alias || "");
+            setGroupColorHex(data?.colorHex || "#FF5F3D");
+            setIsArchived(Boolean(data?.isArchived ?? false));
+
+            const resolvedStudioId = String(data?.studioId ?? "").trim();
+            if (resolvedStudioId) {
+                const studioRes = await fetch(`${apiBase}/studio/${resolvedStudioId}`, {
+                    headers: {
+                        Accept: "application/json",
+                        ...(token ? { Authorization: `Bearer ${token}` } : {})
+                    },
+                    cache: "no-store"
+                });
+
+                const studioText = await readText(studioRes);
+                let studioJson: unknown = null;
+                try {
+                    studioJson = studioText ? JSON.parse(studioText) : null;
+                } catch { }
+
+                const studioData = (studioJson as StudioResponseApiResponse | null)?.data;
+                if (studioRes.ok && studioData) {
+                    setIsStudioArchived(Boolean(studioData.isArchived ?? false));
+                } else {
+                    setIsStudioArchived(Boolean(data?.isArchived ?? false));
+                }
+            } else {
+                setIsStudioArchived(Boolean(data?.isArchived ?? false));
+            }
+
+            const memberApprovalValue =
+                (
+                    data as GroupDetail & {
+                        requiresMemberApproval?: boolean | null;
+                        memberApprovalRequired?: boolean | null;
+                    }
+                )?.requiresMemberApproval ??
+                (
+                    data as GroupDetail & {
+                        requiresMemberApproval?: boolean | null;
+                        memberApprovalRequired?: boolean | null;
+                    }
+                )?.memberApprovalRequired ??
+                false;
+            setRequiresMemberApproval(Boolean(memberApprovalValue));
+
+            const c = Number(data?.memberCount ?? 0);
+            setMemberCount(Number.isFinite(c) ? c : 0);
+
+            const role = toMemberRole(data?.userRole);
+            setUserRole(role as GroupRole);
+
+            if (token) {
+                const mRes = await fetch(`${apiBase}/group/${groupId}/members`, {
+                    headers: { Accept: "application/json", Authorization: `Bearer ${token}` },
+                    cache: "no-store"
+                });
+
+                const mText = await readText(mRes);
+                let mJson: any = null;
+                try {
+                    mJson = mText ? JSON.parse(mText) : null;
+                } catch { }
+
+                if (mRes.ok) {
+                    const members = (mJson as ApiGroupMembersResponse)?.data?.members ?? [];
+                    const anyMod = members.some((x) => {
+                        const r = String(x?.role ?? "");
+                        const rr = String(r)
+                            .trim()
+                            .replace(/^ROLE_/i, "")
+                            .replace(/^GROUP_/i, "")
+                            .replace(/^STUDIO_/i, "")
+                            .replace(/^TEAM_/i, "")
+                            .replace(/\s+/g, "")
+                            .toLowerCase();
+                        return rr === "moderator";
+                    });
+                    setHasModerator(anyMod);
+                }
+            }
+        },
+        [groupId, locale, router, toast, t]
+    );
+
     const tabs: Tab[] = React.useMemo(
         () => [
             { key: "board", label: t("tabs.board"), icon: LayoutGrid, href: (l, id) => `/${l}/group/${id}` },
@@ -289,133 +421,7 @@ export function GroupStudioHeader({
 
         (async () => {
             try {
-                setError("");
-
-                const apiBase = getApiBase();
-                const token = localStorage.getItem("accessToken") || "";
-
-                const res = await fetch(`${apiBase}/group/${groupId}/detail`, {
-                    headers: {
-                        Accept: "application/json",
-                        ...(token ? { Authorization: `Bearer ${token}` } : {})
-                    },
-                    cache: "no-store"
-                });
-
-                const text = await readText(res);
-                let json: any = null;
-
-                try {
-                    json = text ? JSON.parse(text) : null;
-                } catch { }
-
-                if (!res.ok) {
-                    const msg = normalizeErrorMessage(
-                        String(json?.message || text || ""),
-                        t("errors.fetchDetailFailed")
-                    );
-                    toast({
-                        description: msg,
-                        variant: "destructive"
-                    });
-                    if (res.status === 403) {
-                        router.replace(`/${locale}/home`);
-                    }
-                    throw new Error(msg);
-                }
-
-                const parsed = (json as GroupDetailResponse) || {};
-                const data = parsed?.data ?? null;
-
-                if (!alive) return;
-
-                setGroupName(data?.groupName || "Group");
-                setGroupAvatarUrl(data?.avatarUrl || null);
-                setGroupDesc(data?.description || "");
-                setStudioName(data?.studioName || "");
-                setGroupTagline(data?.tagline || "");
-                setGroupAlias(data?.alias || "");
-                setGroupColorHex(data?.colorHex || "#FF5F3D");
-                setIsArchived(Boolean(data?.isArchived ?? false));
-
-                const resolvedStudioId = String(data?.studioId ?? "").trim();
-                if (resolvedStudioId) {
-                    const studioRes = await fetch(`${apiBase}/studio/${resolvedStudioId}`, {
-                        headers: {
-                            Accept: "application/json",
-                            ...(token ? { Authorization: `Bearer ${token}` } : {})
-                        },
-                        cache: "no-store"
-                    });
-
-                    const studioText = await readText(studioRes);
-                    let studioJson: unknown = null;
-                    try {
-                        studioJson = studioText ? JSON.parse(studioText) : null;
-                    } catch { }
-
-                    const studioData = (studioJson as StudioResponseApiResponse | null)?.data;
-                    if (studioRes.ok && studioData) {
-                        setIsStudioArchived(Boolean(studioData.isArchived ?? false));
-                    } else {
-                        // Fallback to group state only when studio detail cannot be resolved.
-                        setIsStudioArchived(Boolean(data?.isArchived ?? false));
-                    }
-                } else {
-                    setIsStudioArchived(Boolean(data?.isArchived ?? false));
-                }
-
-                const memberApprovalValue =
-                    (
-                        data as GroupDetail & {
-                            requiresMemberApproval?: boolean | null;
-                            memberApprovalRequired?: boolean | null;
-                        }
-                    )?.requiresMemberApproval ??
-                    (
-                        data as GroupDetail & {
-                            requiresMemberApproval?: boolean | null;
-                            memberApprovalRequired?: boolean | null;
-                        }
-                    )?.memberApprovalRequired ??
-                    false;
-                setRequiresMemberApproval(Boolean(memberApprovalValue));
-
-                const c = Number(data?.memberCount ?? 0);
-                setMemberCount(Number.isFinite(c) ? c : 0);
-
-                const role = toMemberRole(data?.userRole);
-                setUserRole(role as GroupRole);
-
-                if (token) {
-                    const mRes = await fetch(`${apiBase}/group/${groupId}/members`, {
-                        headers: { Accept: "application/json", Authorization: `Bearer ${token}` },
-                        cache: "no-store"
-                    });
-
-                    const mText = await readText(mRes);
-                    let mJson: any = null;
-                    try {
-                        mJson = mText ? JSON.parse(mText) : null;
-                    } catch { }
-
-                    if (alive && mRes.ok) {
-                        const members = (mJson as ApiGroupMembersResponse)?.data?.members ?? [];
-                        const anyMod = members.some((x) => {
-                            const r = String(x?.role ?? "");
-                            const rr = String(r)
-                                .trim()
-                                .replace(/^ROLE_/i, "")
-                                .replace(/^GROUP_/i, "")
-                                .replace(/^STUDIO_/i, "")
-                                .replace(/^TEAM_/i, "")
-                                .replace(/\s+/g, "")
-                                .toLowerCase();
-                            return rr === "moderator";
-                        });
-                        setHasModerator(anyMod);
-                    }
-                }
+                await loadHeaderData();
             } catch (e: any) {
                 if (!alive) return;
                 setError(e?.message || t("errors.fetchDetailFailed"));
@@ -425,7 +431,7 @@ export function GroupStudioHeader({
         return () => {
             alive = false;
         };
-    }, [groupId, locale, router, toast, t]);
+    }, [groupId, loadHeaderData, t]);
 
     React.useEffect(() => {
         if (!groupId) return;
@@ -452,11 +458,15 @@ export function GroupStudioHeader({
             if (typeof d.studioIsArchived !== "undefined" && d.studioIsArchived != null) {
                 setIsStudioArchived(Boolean(d.studioIsArchived));
             }
+
+            void loadHeaderData({ suppressForbiddenRedirect: true }).catch(() => {
+                // loadHeaderData already reports refresh failures to the user
+            });
         };
 
         window.addEventListener(GROUP_UPDATED_EVENT, onUpdated);
         return () => window.removeEventListener(GROUP_UPDATED_EVENT, onUpdated);
-    }, [groupId]);
+    }, [groupId, loadHeaderData]);
 
     const curPath = stripLocale(pathname || "");
     const canInvite = userRole === "owner" || userRole === "moderator";

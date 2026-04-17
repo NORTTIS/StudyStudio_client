@@ -327,7 +327,7 @@ export function StudioModal({
             onKeyDown={(e) => {
                 if (e.key === "Escape") onClose();
             }}>
-            <div className="w-[920px] max-w-[calc(100vw-2rem)] max-h-[calc(100vh-3rem)] overflow-hidden rounded-2xl bg-white shadow-xl">
+            <div className="w-[920px] max-w-[calc(100vw-2rem)] overflow-hidden rounded-2xl bg-white shadow-xl">
                 <div className="mb-4 flex items-center justify-between p-5 pb-0">
                     <h2 id="studio-modal-title" className="font-bold text-xl text-[#261E33]">
                         {mode === "create" ? t("modal.createTitle") : t("modal.editTitle")}
@@ -340,7 +340,7 @@ export function StudioModal({
                     </button>
                 </div>
 
-                <form onSubmit={handleSubmit} className="max-h-[calc(100vh-8rem)] overflow-y-auto px-5 pb-5 scrollbar-hide">
+                <form onSubmit={handleSubmit} className="px-5 pb-5">
                     {mode === "create" ? (
                         <div className="grid gap-6 lg:grid-cols-2 lg:items-start">
                         <div className="space-y-4">
@@ -505,36 +505,6 @@ export function StudioModal({
                                     />
                                 </div>
 
-                                {studio?.id && (
-                                    <div>
-                                        <label className="mb-2 block font-medium text-[#261E33] text-sm">{t("modal.bannerLabel")}</label>
-                                        <BannerUpload
-                                            entityType="studio"
-                                            entityId={studio.id}
-                                            bannerUrl={bannerUrl}
-                                            colorHex={formData.colorHex}
-                                            onUploadSuccess={(url) => setBannerUrl(url)}
-                                            onDeleteSuccess={() => setBannerUrl(null)}
-                                        />
-                                    </div>
-                                )}
-
-                                {studio?.id && (
-                                    <div>
-                                        <label className="mb-2 block font-medium text-[#261E33] text-sm">{t("modal.avatarLabel")}</label>
-                                        <AvatarUpload
-                                            entityType="studio"
-                                            entityId={studio.id}
-                                            avatarUrl={logoUrl}
-                                            colorHex={formData.colorHex}
-                                            onUploadSuccess={(url) => setLogoUrl(url)}
-                                            onDeleteSuccess={() => setLogoUrl(null)}
-                                        />
-                                    </div>
-                                )}
-                            </div>
-
-                            <div className="space-y-4">
                                 <div>
                                     <label htmlFor="studio-alias" className="mb-2 block font-medium text-[#261E33] text-sm">
                                         {aliasLabel}
@@ -566,6 +536,38 @@ export function StudioModal({
                                     </div>
                                 </div>
 
+                                {studio?.id && (
+                                    <div>
+                                        <label className="mb-2 block font-medium text-[#261E33] text-sm">{t("modal.bannerLabel")}</label>
+                                        <BannerUpload
+                                            entityType="studio"
+                                            entityId={studio.id}
+                                            bannerUrl={bannerUrl}
+                                            colorHex={formData.colorHex}
+                                            onUploadSuccess={(url) => setBannerUrl(url)}
+                                            onDeleteSuccess={() => setBannerUrl(null)}
+                                        />
+                                    </div>
+                                )}
+
+                                {studio?.id && (
+                                    <div>
+                                        <label className="mb-2 block font-medium text-[#261E33] text-sm">{t("modal.avatarLabel")}</label>
+                                        <div className="pt-3">
+                                            <AvatarUpload
+                                                entityType="studio"
+                                                entityId={studio.id}
+                                                avatarUrl={logoUrl}
+                                                colorHex={formData.colorHex}
+                                                onUploadSuccess={(url) => setLogoUrl(url)}
+                                                onDeleteSuccess={() => setLogoUrl(null)}
+                                            />
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="space-y-4">
                                 <div>
                                     <label htmlFor="studio-tagline" className="mb-2 block font-medium text-[#261E33] text-sm">
                                         {t("modal.taglineLabel")}

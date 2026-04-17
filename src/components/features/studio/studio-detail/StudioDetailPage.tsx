@@ -89,6 +89,7 @@ interface StudioDetailPageProps {
     initialGroups: GroupCardDto[];
     bannerUrl?: string | null;
     colorHex?: string | null;
+    initialTab?: "groups" | "ai" | "analytics" | "settings";
 }
 
 function toBooleanLike(value: unknown): boolean | null {
@@ -296,7 +297,13 @@ function EmptyBlock({ title, subtitle }: { title: string; subtitle: string }) {
     );
 }
 
-export default function StudioDetailPage({ initialStudio, initialGroups, bannerUrl, colorHex }: StudioDetailPageProps) {
+export default function StudioDetailPage({
+    initialStudio,
+    initialGroups,
+    bannerUrl,
+    colorHex,
+    initialTab = "groups"
+}: StudioDetailPageProps) {
     const params = useParams();
     const router = useRouter();
     const t = useTranslations("MasterPage");
@@ -312,7 +319,7 @@ export default function StudioDetailPage({ initialStudio, initialGroups, bannerU
     const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
     const [isCreateGroupModalOpen, setIsCreateGroupModalOpen] = useState(false);
     const [isQuickAssignOpen, setIsQuickAssignOpen] = useState(false);
-    const [activeTab, setActiveTab] = useState<"groups" | "ai" | "analytics" | "settings">("groups");
+    const [activeTab, setActiveTab] = useState<"groups" | "ai" | "analytics" | "settings">(initialTab);
     const [groupSearchQuery, setGroupSearchQuery] = useState("");
     const [panelView, setPanelView] = useState<"members" | "approvals">("members");
     const [pendingApprovals, setPendingApprovals] = useState<StudioPendingApprovalItem[]>([]);
