@@ -1,9 +1,9 @@
 "use client";
 
-import * as React from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { useLocale } from "next-intl";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
+import * as React from "react";
+import { toast as sonnerToast } from "sonner";
 import { toPublicUrl } from "@/api/banner-logo";
 import ErrorDisplay from "@/components/common/ErrorDisplay";
 import { GroupBannerBackground } from "@/components/features/group/GroupBannerBackground";
@@ -56,9 +56,17 @@ function extractBannerSettings(raw: unknown) {
     const data = response?.data ?? response;
 
     const normalizeRole = (role?: string | null) => {
-        const normalized = String(role ?? "").trim().toLowerCase();
+        const normalized = String(role ?? "")
+            .trim()
+            .toLowerCase();
         // Chỉ giữ lại các role hợp lệ để tránh đẩy giá trị lạ vào UI.
-        if (normalized === "owner" || normalized === "moderator" || normalized === "member" || normalized === "commenter" || normalized === "viewer") {
+        if (
+            normalized === "owner" ||
+            normalized === "moderator" ||
+            normalized === "member" ||
+            normalized === "commenter" ||
+            normalized === "viewer"
+        ) {
             return normalized;
         }
         return null;
@@ -122,21 +130,20 @@ function isAbortLikeError(error: unknown) {
     if (!error) return false;
     if (error instanceof DOMException && error.name === "AbortError") return true;
 
-    const name = typeof error === "object" && error !== null && "name" in error ? String((error as { name?: unknown }).name ?? "") : "";
+    const name =
+        typeof error === "object" && error !== null && "name" in error
+            ? String((error as { name?: unknown }).name ?? "")
+            : "";
     return name === "AbortError";
 }
 
 function isUuidLike(value: string) {
-    return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value ?? "").trim());
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+        String(value ?? "").trim()
+    );
 }
 
-export function GroupShell({
-    groupId,
-    children
-}: {
-    groupId: string;
-    children: React.ReactNode;
-}) {
+export function GroupShell({ groupId, children }: { groupId: string; children: React.ReactNode }) {
     const router = useRouter();
     const pathname = usePathname();
     const locale = useLocale();
@@ -195,6 +202,16 @@ export function GroupShell({
                             return;
                         }
 
+                        // 429 Rate Limit: show toast + keep existing data
+                        if (result.error.status === 429) {
+                            sonnerToast.error("Thao tác quá nhanh, vui lòng thử lại sau.", {
+                                id: "group-shell-rate-limit",
+                                duration: 4000
+                            });
+                            setIsReady(true);
+                            return;
+                        }
+
                         setLoadError(tGroupHeader("errors.fetchDetailFailed"));
                     }
                     return;
@@ -214,6 +231,15 @@ export function GroupShell({
 
                 const status = error instanceof Response ? error.status : undefined;
                 if (typeof status === "number") {
+                    // 429 Rate Limit: show toast + keep existing data
+                    if (status === 429) {
+                        sonnerToast.error("Thao tác quá nhanh, vui lòng thử lại sau.", {
+                            id: "group-shell-rate-limit",
+                            duration: 4000
+                        });
+                        if (!cancelled) setIsReady(true);
+                        return;
+                    }
                     console.error("[GroupShell] Failed to load data:", { status });
                 } else {
                     console.error("[GroupShell] Failed to load data.");
@@ -240,7 +266,7 @@ export function GroupShell({
     }, [redirectTarget, router]);
 
     React.useEffect(() => {
-        if (!isReady || !groupId || !isArchived) return;
+        if (!(isReady && groupId && isArchived)) return;
 
         const settingPrefix = `/group/${groupId}/setting`;
         if (pathname === settingPrefix || pathname.startsWith(`${settingPrefix}/`)) return;
@@ -251,7 +277,11 @@ export function GroupShell({
     }, [groupId, isArchived, isReady, pathname, router]);
 
     if (!isReady) {
-        return <div className="flex min-h-screen items-center justify-center px-6 text-sm text-[#6F6B99]">{tCommon("loading")}</div>;
+        return (
+            <div className="flex min-h-screen items-center justify-center px-6 text-[#6F6B99] text-sm">
+                {tCommon("loading")}
+            </div>
+        );
     }
 
     if (redirectTarget) {
@@ -270,7 +300,7 @@ export function GroupShell({
                     <GroupBannerBackground bannerUrl={bannerUrl} colorHex={colorHex} />
                 </div>
 
-                <div className="relative z-20 back-ground-transparent">
+                <div className="back-ground-transparent relative z-20">
                     {/* Header có thể nhận action động từ các màn con thông qua context. */}
                     <GroupStudioHeader groupId={groupId} headerAction={headerAction} />
                     <div className="relative z-20 overflow-visible">{children}</div>

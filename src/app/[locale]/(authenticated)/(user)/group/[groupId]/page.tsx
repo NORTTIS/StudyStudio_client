@@ -4,7 +4,9 @@ import ErrorDisplay from "@/components/common/ErrorDisplay";
 import { GroupBoardScreen } from "@/components/features/group/board/GroupBoardScreen";
 
 function isUuidLike(value: string) {
-    return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value ?? "").trim());
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+        String(value ?? "").trim()
+    );
 }
 
 export default async function Page({ params }: { params: Promise<{ locale: string; groupId: string }> }) {
@@ -33,6 +35,13 @@ export default async function Page({ params }: { params: Promise<{ locale: strin
 
         if (response.code === "HTTP_404") {
             redirect(`/${resolvedParams.locale}/group-access-denied?reason=not_found`);
+        }
+
+        // 429 Rate Limit: do NOT show error display — just pass the error to the client
+        // GroupShell (client component) will handle showing toast + keep existing data
+        if (response.code === "RATE_LIMIT_EXCEEDED") {
+            console.warn("[GroupBoardPage] Rate limit exceeded, keeping existing state");
+            return <GroupBoardScreen />;
         }
 
         console.error("[GroupBoardPage] Failed to load group detail on the server", {

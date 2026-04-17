@@ -3,6 +3,7 @@ import "../globals.css";
 import { notFound } from "next/navigation";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages } from "next-intl/server";
+import RateLimitGuardProvider from "@/components/providers/RateLimitGuardProvider";
 import { locales } from "@/i18n/request";
 
 export default async function LocaleLayout({
@@ -22,7 +23,7 @@ export default async function LocaleLayout({
 
     return (
         <NextIntlClientProvider locale={locale} messages={messages}>
-            {children}
+            <RateLimitGuardProvider>{children}</RateLimitGuardProvider>
         </NextIntlClientProvider>
     );
 }

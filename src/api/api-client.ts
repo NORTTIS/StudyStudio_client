@@ -3,6 +3,7 @@
  * Handles API requests with proper error handling, i18n support, and token refresh
  */
 
+import { toast as sonnerToast } from "sonner";
 import { getAccessToken, isTokenExpired, refreshAccessToken } from "@/api/auth";
 import { sanitizeErrorMessage } from "@/utils/error-message";
 
@@ -110,6 +111,12 @@ export async function apiFetch<T = unknown>(url: string, options: FetchOptions =
         // Handle 429 Rate Limit - return error with proper message
         if (response.status === 429) {
             console.warn("Rate limit exceeded for:", fullUrl);
+            sonnerToast.error(
+                locale === "vi"
+                    ? "Thao tác quá nhanh, vui lòng thử lại sau."
+                    : "You are acting too fast. Please try again later.",
+                { duration: 4000 }
+            );
             return {
                 status: "error",
                 code: "RATE_LIMIT_EXCEEDED",
@@ -125,10 +132,7 @@ export async function apiFetch<T = unknown>(url: string, options: FetchOptions =
         if (data.status === "error") {
             return {
                 ...data,
-                message: sanitizeErrorMessage(
-                    data.message,
-                    locale === "vi" ? "Đã xảy ra lỗi" : "An error occurred"
-                )
+                message: sanitizeErrorMessage(data.message, locale === "vi" ? "Đã xảy ra lỗi" : "An error occurred")
             };
         }
 
