@@ -3259,7 +3259,10 @@ export function GroupBoardScreen({
 
     const openTaskDetail = (taskId: string) => {
         const normalizedTaskId = String(taskId ?? "").trim();
-        if (!normalizedTaskId) return;
+        if (!normalizedTaskId || !isUuidLike(normalizedTaskId)) {
+            openErrorModal(t("invalidTaskId"));
+            return;
+        }
 
         router.push(`/${locale}/group/task/${encodeURIComponent(normalizedTaskId)}`, { scroll: false });
     };

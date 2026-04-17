@@ -6,6 +6,10 @@ import GroupAiQaPage from "@/components/features/group/ai-qa/GroupAiQaPage";
 
 type GroupDetailResponse = components["schemas"]["GroupDetailResponse"];
 
+function isUuidLike(value: string) {
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value ?? "").trim());
+}
+
 function normalizeGroupRole(role?: string | null) {
     const raw = String(role ?? "")
         .trim()
@@ -34,6 +38,10 @@ export default async function Page({
 
     if (resolvedSearchParams.fromStudioId) {
         nextParams.set("fromStudioId", resolvedSearchParams.fromStudioId);
+    }
+
+    if (!isUuidLike(resolvedParams.groupId)) {
+        redirect(`/${resolvedParams.locale}/group-ai-no-access?${nextParams.toString()}`);
     }
 
     const response = await serverFetchApi.GET<GroupDetailResponse>(
