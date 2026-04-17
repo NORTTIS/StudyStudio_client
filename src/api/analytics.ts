@@ -8,7 +8,6 @@ import type { components } from "./types";
 
 // === Studio-level types ===
 export type StudioOverviewResponse = components["schemas"]["StudioOverviewResponse"];
-export type StudioHeatmapData = components["schemas"]["StudioHeatmapData"];
 export type StudioGroupData = components["schemas"]["StudioGroupData"];
 export type StudioStatusBreakdown = components["schemas"]["StudioStatusBreakdown"];
 export type StudioCompletionTrendResponse = components["schemas"]["StudioCompletionTrendResponse"];
@@ -19,7 +18,6 @@ export type StudioActivityRow = components["schemas"]["StudioActivityRow"];
 export type StudioActivityItem = components["schemas"]["StudioActivityItem"];
 
 // === Group-level types ===
-export type GroupComparisonData = components["schemas"]["GroupComparisonData"];
 export type MemberTaskBreakdownData = components["schemas"]["MemberTaskBreakdownData"];
 export type DailyProgressPoint = components["schemas"]["DailyProgressPoint"];
 export type MemberProgressTrendData = components["schemas"]["MemberProgressTrendData"];
@@ -93,41 +91,8 @@ export async function getStudioGroupActivity(studioId: string, options?: { start
     );
 }
 
-/**
- * GET /api/analytics/studio/{studioId}/groups
- *
- * Returns per-group progress snapshots for a studio (backward compat).
- *
- * @param studioId - The studio UUID
- * @param locale   - Language code (default "vi")
- */
-export async function getStudioGroupAnalytics(studioId: string, locale = "vi") {
-    return apiGet<GroupComparisonData[]>(`/analytics/studio/${studioId}/groups`, locale, false);
-}
 
 // === Group-level endpoints ===
-
-/**
- * GET /api/analytics/group/{groupId}
- *
- * Returns analytics data for a specific group.
- *
- * @param groupId - The group UUID
- * @param options - startDate, endDate (YYYY-MM-DD), locale
- */
-export async function getGroupAnalytics(
-    groupId: string,
-    options?: { startDate?: string; endDate?: string; locale?: string }
-): Promise<ApiResponse<GroupAnalyticsResponse>> {
-    const { startDate, endDate, locale = "vi" } = options ?? {};
-
-    const params = new URLSearchParams();
-    if (startDate) params.set("startDate", startDate);
-    if (endDate) params.set("endDate", endDate);
-    const query = params.toString();
-
-    return apiGet<GroupAnalyticsResponse>(`/analytics/group/${groupId}${query ? `?${query}` : ""}`, locale, false);
-}
 
 /**
  * GET /api/analytics/group/{groupId}/summary

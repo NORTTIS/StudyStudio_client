@@ -44,7 +44,6 @@ import {
     getUserBenchmark,
     getUserGroupRankings,
     getUserKpiSummary,
-    getUserOnTimeOverview,
     getUserPriorityDistribution,
     getUserProductivityTrend,
     getUserRiskAlerts,
@@ -53,7 +52,6 @@ import {
     type UserBenchmarkResponse,
     type UserGroupRankingsResponse,
     type UserKpiSummaryResponse,
-    type UserOnTimeOverviewResponse,
     type UserPriorityDistributionResponse,
     type UserProductivityTrendResponse,
     type UserRiskAlertsResponse,
@@ -728,7 +726,6 @@ export default function AnalysisHome() {
     const [taskStatusData, setTaskStatusData] = useState<UserTaskStatusResponse | null>(null);
     const [groupRankingsData, setGroupRankingsData] = useState<UserGroupRankingsResponse | null>(null);
     const [trendData, setTrendData] = useState<UserProductivityTrendResponse | null>(null);
-    const [onTimeData, setOnTimeData] = useState<UserOnTimeOverviewResponse | null>(null);
     const [priorityData, setPriorityData] = useState<UserPriorityDistributionResponse | null>(null);
     const [urgencyData, setUrgencyData] = useState<UserUrgencyDistributionResponse | null>(null);
     const [benchmarkData, setBenchmarkData] = useState<UserBenchmarkResponse | null>(null);
@@ -739,7 +736,6 @@ export default function AnalysisHome() {
     const [taskStatusLoading, setTaskStatusLoading] = useState(true);
     const [rankingsLoading, setRankingsLoading] = useState(true);
     const [trendLoading, setTrendLoading] = useState(true);
-    const [_onTimeLoading, setOnTimeLoading] = useState(true);
     const [priorityLoading, setPriorityLoading] = useState(true);
     const [urgencyLoading, setUrgencyLoading] = useState(true);
     const [benchmarkLoading, setBenchmarkLoading] = useState(true);
@@ -774,10 +770,7 @@ export default function AnalysisHome() {
                 if (r.status === "success" && r.data) setTrendData(r.data);
                 setTrendLoading(false);
             }),
-            getUserOnTimeOverview(uid, locale).then((r) => {
-                if (r.status === "success" && r.data) setOnTimeData(r.data);
-                setOnTimeLoading(false);
-            }),
+           
             getUserPriorityDistribution(uid, locale).then((r) => {
                 if (r.status === "success" && r.data) setPriorityData(r.data);
                 setPriorityLoading(false);
@@ -866,11 +859,6 @@ export default function AnalysisHome() {
     };
 
     // ── Derived values ──────────────────────────────────────────
-    const totalOnTime = onTimeData?.segments?.find((s) => s.name === "Đúng hạn" || s.name === "On time")?.value ?? 0;
-    const totalOverdue = onTimeData?.segments?.find((s) => s.name === "Quá hạn" || s.name === "Overdue")?.value ?? 0;
-    const totalTasks = totalOnTime + totalOverdue;
-    const _onTimeRate = totalTasks > 0 ? Math.round((totalOnTime / totalTasks) * 100) : 0;
-
     const taskStatusSegments = taskStatusData?.segments ?? [];
     const completedValue =
         taskStatusSegments.find((s) => s.name === "Hoàn thành" || s.name === "Completed" || s.name === "Done")?.value ??

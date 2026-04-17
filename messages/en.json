@@ -2933,6 +2933,11 @@
       "contributionScore": "Contribution score",
       "lastActivity": "Last activity",
       "totalScore": "Total score",
+      "status": {
+        "onTrack": "On track",
+        "needAttention": "Needs attention",
+        "behindSchedule": "Behind schedule"
+      },
       "score": {
         "completed": "Completion score",
         "created": "Creation score",

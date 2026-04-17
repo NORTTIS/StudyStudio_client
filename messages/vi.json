@@ -3010,6 +3010,11 @@
       "contributionScore": "Điểm đóng góp",
       "lastActivity": "Hoạt động gần nhất",
       "totalScore": "Tổng điểm",
+      "status": {
+        "onTrack": "Đúng tiến độ",
+        "needAttention": "Cần chú ý",
+        "behindSchedule": "Chậm tiến độ"
+      },
       "score": {
         "completed": "Điểm hoàn thành",
         "created": "Điểm tạo mới",

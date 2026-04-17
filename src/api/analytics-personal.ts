@@ -11,7 +11,6 @@ export type UserKpiSummaryResponse = components["schemas"]["UserKpiSummaryRespon
 export type UserTaskStatusResponse = components["schemas"]["UserTaskStatusResponse"];
 export type UserGroupRankingsResponse = components["schemas"]["UserGroupRankingsResponse"];
 export type UserProductivityTrendResponse = components["schemas"]["UserProductivityTrendResponse"];
-export type UserOnTimeOverviewResponse = components["schemas"]["UserOnTimeOverviewResponse"];
 export type UserPriorityDistributionResponse = components["schemas"]["UserPriorityDistributionResponse"];
 export type UserUrgencyDistributionResponse = components["schemas"]["UserUrgencyDistributionResponse"];
 export type UserBenchmarkResponse = components["schemas"]["UserBenchmarkResponse"];
@@ -63,16 +62,6 @@ export async function getUserProductivityTrend(userId: string, period = 30, loca
     });
 }
 
-/**
- * GET /api/analytics/user/{userId}/on-time-overview
- * On-time vs overdue donut
- */
-export async function getUserOnTimeOverview(userId: string, locale = "vi") {
-    return apiFetch<UserOnTimeOverviewResponse>(`/analytics/user/${userId}/on-time-overview`, {
-        method: "GET",
-        locale
-    });
-}
 
 /**
  * GET /api/analytics/user/{userId}/priority-distribution
