@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
@@ -11,7 +12,19 @@ function FloatingOrb({ className }: { className: string }) {
     return <div className={`pointer-events-none absolute rounded-full blur-3xl ${className}`} />;
 }
 
-function PreviewFrame({ src, alt, tone = "light" }: { src: string; alt: string; tone?: "light" | "warm" | "glass" }) {
+function PreviewFrame({
+    src,
+    alt,
+    tone = "light",
+    imageClassName = "",
+    frameClassName = ""
+}: {
+    src: string;
+    alt: string;
+    tone?: "light" | "warm" | "glass";
+    imageClassName?: string;
+    frameClassName?: string;
+}) {
     const tones = {
         light: "bg-[linear-gradient(180deg,#FFFFFF_0%,#F8FAFC_100%)] border-gray-200",
         warm: "bg-[linear-gradient(180deg,#FFF9F2_0%,#FFF2E8_100%)] border-orange-200/70",
@@ -23,13 +36,13 @@ function PreviewFrame({ src, alt, tone = "light" }: { src: string; alt: string; 
             className={`group relative overflow-hidden rounded-[30px] border shadow-[0_18px_40px_rgba(15,23,42,0.05)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_26px_50px_rgba(15,23,42,0.08)] ${tones[tone]}`}>
             <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.65),transparent_35%)]" />
 
-            <div className="relative h-[260px] w-full p-4 md:h-[340px] md:p-6">
+            <div className={`relative h-[260px] w-full p-4 md:h-[340px] md:p-6 ${frameClassName}`}>
                 <Image
                     src={src}
                     alt={alt}
                     fill
                     sizes="(max-width: 768px) 100vw, 50vw"
-                    className="object-contain object-bottom transition-transform duration-500 group-hover:scale-[1.02]"
+                    className={`object-contain object-bottom transition-transform duration-500 group-hover:scale-[1.02] ${imageClassName}`}
                 />
             </div>
         </div>
@@ -55,7 +68,17 @@ function HeroPreviewFrame({ src, alt }: { src: string; alt: string }) {
     );
 }
 
-function AICard({ title, description, delay = "" }: { title: string; description: string; delay?: string }) {
+function AICard({
+    title,
+    description,
+    delay = "",
+    previewSrc
+}: {
+    title: string;
+    description: string;
+    delay?: string;
+    previewSrc?: string;
+}) {
     return (
         <div
             className={`landing-pop ${delay} flex h-full flex-col rounded-[28px] border border-white/80 bg-white/82 p-6 shadow-[0_18px_40px_rgba(15,23,42,0.05)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_24px_50px_rgba(15,23,42,0.08)]`}>
@@ -63,15 +86,123 @@ function AICard({ title, description, delay = "" }: { title: string; description
 
             <p className="mt-2 text-[15px] leading-7 text-gray-600">{description}</p>
 
-            <div className="mt-6 rounded-[24px] border border-dashed border-gray-300 bg-[linear-gradient(180deg,#FAFAFA_0%,#F4F4F5_100%)] p-5 md:mt-auto">
-                <div className="space-y-3">
-                    <div className="h-4 w-2/3 rounded-full bg-gray-200" />
-                    <div className="h-4 w-full rounded-full bg-gray-100" />
-                    <div className="h-4 w-5/6 rounded-full bg-gray-100" />
-                    <div className="mt-6 grid grid-cols-2 gap-3">
-                        <div className="h-24 rounded-2xl bg-white shadow-sm" />
-                        <div className="h-24 rounded-2xl bg-white shadow-sm" />
+            {previewSrc ? (
+                <div className="relative mt-6 min-h-[260px] overflow-hidden rounded-[24px] border border-gray-200 bg-[linear-gradient(180deg,#FFFFFF_0%,#F8FAFC_100%)] md:mt-auto">
+                    <Image
+                        src={previewSrc}
+                        alt={title}
+                        fill
+                        sizes="(max-width: 768px) 100vw, 50vw"
+                        className="object-contain object-center p-3 transition-transform duration-500 group-hover:scale-[1.02]"
+                    />
+                </div>
+            ) : (
+                <div className="mt-6 rounded-[24px] border border-dashed border-gray-300 bg-[linear-gradient(180deg,#FAFAFA_0%,#F4F4F5_100%)] p-5 md:mt-auto">
+                    <div className="space-y-3">
+                        <div className="h-4 w-2/3 rounded-full bg-gray-200" />
+                        <div className="h-4 w-full rounded-full bg-gray-100" />
+                        <div className="h-4 w-5/6 rounded-full bg-gray-100" />
+                        <div className="mt-6 grid grid-cols-2 gap-3">
+                            <div className="h-24 rounded-2xl bg-white shadow-sm" />
+                            <div className="h-24 rounded-2xl bg-white shadow-sm" />
+                        </div>
                     </div>
+                </div>
+            )}
+        </div>
+    );
+}
+
+function PreviewCarousel({
+    alt,
+    slides,
+    tone = "warm",
+    previousLabel,
+    nextLabel,
+    dotLabel
+}: {
+    alt: string;
+    slides: { src: string; className?: string }[];
+    tone?: "light" | "warm" | "glass";
+    previousLabel: string;
+    nextLabel: string;
+    dotLabel: (index: number) => string;
+}) {
+    const tones = {
+        light: "border-gray-200 bg-[linear-gradient(180deg,#FFFFFF_0%,#F8FAFC_100%)]",
+        warm: "border-orange-200/70 bg-[linear-gradient(180deg,#FFF9F2_0%,#FFF2E8_100%)]",
+        glass: "border-white/70 bg-white/55 backdrop-blur-xl"
+    };
+    const [activeIndex, setActiveIndex] = useState(0);
+
+    useEffect(() => {
+        const interval = window.setInterval(() => {
+            setActiveIndex((currentIndex) => (currentIndex + 1) % slides.length);
+        }, 7000);
+
+        return () => window.clearInterval(interval);
+    }, [slides.length]);
+
+    const goToPrevious = () => {
+        setActiveIndex((currentIndex) => (currentIndex - 1 + slides.length) % slides.length);
+    };
+
+    const goToNext = () => {
+        setActiveIndex((currentIndex) => (currentIndex + 1) % slides.length);
+    };
+
+    return (
+        <div
+            className={`group relative overflow-hidden rounded-[30px] border shadow-[0_18px_40px_rgba(15,23,42,0.05)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_26px_50px_rgba(15,23,42,0.08)] ${tones[tone]}`}>
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.65),transparent_35%)]" />
+
+            <div className="relative h-[260px] w-full md:h-[340px]">
+                {slides.map((slide, index) => (
+                    <div
+                        key={slide.src}
+                        className={`absolute inset-0 transition-opacity duration-700 ${index === activeIndex ? "opacity-100" : "opacity-0"}`}>
+                        <Image
+                            src={slide.src}
+                            alt={alt}
+                            fill
+                            sizes="(max-width: 768px) 100vw, 50vw"
+                            className={`${slide.className ?? "object-contain object-center p-3 md:p-4"} transition-transform duration-500 group-hover:scale-[1.02]`}
+                        />
+                    </div>
+                ))}
+
+                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-within:opacity-100">
+                    <button
+                        type="button"
+                        onClick={goToPrevious}
+                        aria-label={previousLabel}
+                        className="pointer-events-auto flex h-11 w-11 items-center justify-center rounded-full bg-white/90 text-2xl font-light text-gray-700 shadow-lg backdrop-blur transition-all duration-300 hover:scale-105 hover:bg-white focus-visible:scale-105 focus-visible:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2 active:scale-95">
+                        &lt;
+                    </button>
+                </div>
+
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-within:opacity-100">
+                    <button
+                        type="button"
+                        onClick={goToNext}
+                        aria-label={nextLabel}
+                        className="pointer-events-auto flex h-11 w-11 items-center justify-center rounded-full bg-white/90 text-2xl font-light text-gray-700 shadow-lg backdrop-blur transition-all duration-300 hover:scale-105 hover:bg-white focus-visible:scale-105 focus-visible:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2 active:scale-95">
+                        &gt;
+                    </button>
+                </div>
+
+                <div className="pointer-events-none absolute bottom-4 left-1/2 flex -translate-x-1/2 gap-2">
+                    {slides.map((slide, index) => (
+                        <button
+                            key={`${slide.src}-dot`}
+                            type="button"
+                            onClick={() => setActiveIndex(index)}
+                            aria-label={dotLabel(index)}
+                            className={`pointer-events-auto h-2.5 rounded-full transition-all duration-300 ${
+                                index === activeIndex ? "w-7 bg-orange-500" : "w-2.5 bg-orange-200/80 hover:bg-orange-300"
+                            }`}
+                        />
+                    ))}
                 </div>
             </div>
         </div>
@@ -90,6 +221,9 @@ export default function LandingPage() {
     const delay3 = "landing-delay-3";
     const delay4 = "landing-delay-4";
     const delay5 = "landing-delay-5";
+    const managementLabel = t("badges.management");
+    const groupLabel = t("badges.group");
+    const personalLabel = t("badges.personal");
 
     return (
         <div className="flex min-h-screen flex-col scroll-smooth bg-[linear-gradient(180deg,#FFF8F1_0%,#FFFDFB_35%,#FFF7ED_68%,#FFFFFF_100%)] text-gray-800">
@@ -180,7 +314,17 @@ export default function LandingPage() {
                         </div>
 
                         <div className={`${fadeUp} ${delay4}`}>
-                            <PreviewFrame src="/images/management.png" alt={t("previews.management")} tone="glass" />
+                            <PreviewCarousel
+                                alt={t("previews.management")}
+                                tone="glass"
+                                slides={[
+                                    { src: "/images/Studio%201.png", className: "object-contain object-center p-3 md:p-4" },
+                                    { src: "/images/Studio%202.png", className: "object-contain object-center p-3 md:p-4" }
+                                ]}
+                                previousLabel={t("carousel.previous", { section: managementLabel })}
+                                nextLabel={t("carousel.next", { section: managementLabel })}
+                                dotLabel={(index) => t("carousel.goTo", { section: managementLabel, index: index + 1 })}
+                            />
                         </div>
                     </div>
                 </div>
@@ -190,7 +334,16 @@ export default function LandingPage() {
                 <div className="mx-auto max-w-7xl px-6 lg:px-8">
                     <div className="grid items-center gap-10 lg:grid-cols-[1.05fr_0.95fr]">
                         <div className={`${fadeUp} ${delay2} order-2 lg:order-1`}>
-                            <PreviewFrame src="/images/group.png" alt={t("previews.group")} tone="warm" />
+                            <PreviewCarousel
+                                alt={t("previews.group")}
+                                slides={[
+                                    { src: "/images/group1.png", className: "object-contain object-center p-3 md:p-4" },
+                                    { src: "/images/Group%202.png", className: "object-contain object-center p-3 md:p-4" }
+                                ]}
+                                previousLabel={t("carousel.previous", { section: groupLabel })}
+                                nextLabel={t("carousel.next", { section: groupLabel })}
+                                dotLabel={(index) => t("carousel.goTo", { section: groupLabel, index: index + 1 })}
+                            />
                         </div>
 
                         <div className={`${fadeUp} ${delay1} order-1 lg:order-2`}>
@@ -252,7 +405,17 @@ export default function LandingPage() {
                         </div>
 
                         <div className={`${fadeUp} ${delay2}`}>
-                            <PreviewFrame src="/images/personal.png" alt={t("previews.personal")} tone="light" />
+                            <PreviewCarousel
+                                alt={t("previews.personal")}
+                                tone="light"
+                                slides={[
+                                    { src: "/images/Personal%201.png", className: "object-contain object-center p-3 md:p-4" },
+                                    { src: "/images/Personal%202.png", className: "object-contain object-center p-3 md:p-4" }
+                                ]}
+                                previousLabel={t("carousel.previous", { section: personalLabel })}
+                                nextLabel={t("carousel.next", { section: personalLabel })}
+                                dotLabel={(index) => t("carousel.goTo", { section: personalLabel, index: index + 1 })}
+                            />
                         </div>
                     </div>
                 </div>
@@ -269,9 +432,19 @@ export default function LandingPage() {
                     </h3>
 
                     <div className="mt-14 grid grid-cols-1 gap-6 md:grid-cols-2">
-                        <AICard title={t("ai.feature1")} description={t("ai.feature1Description")} delay={delay1} />
+                        <AICard
+                            title={t("ai.feature1")}
+                            description={t("ai.feature1Description")}
+                            delay={delay1}
+                            previewSrc="/images/AI3.png"
+                        />
 
-                        <AICard title={t("ai.feature2")} description={t("ai.feature2Description")} delay={delay2} />
+                        <AICard
+                            title={t("ai.feature2")}
+                            description={t("ai.feature2Description")}
+                            delay={delay2}
+                            previewSrc="/images/AI2.png"
+                        />
                     </div>
                 </div>
             </section>

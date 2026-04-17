@@ -7,10 +7,12 @@ import {
     DndContext,
     type DragCancelEvent,
     type DragEndEvent,
+    type DragMoveEvent,
     type DragOverEvent,
     DragOverlay,
     type DragStartEvent,
     type DroppableContainer,
+    getFirstCollision,
     KeyboardSensor,
     PointerSensor,
     pointerWithin,
@@ -1223,6 +1225,11 @@ async function apiDeleteGroupTaskStatus(args: { groupId: string; statusId: strin
 
 const DROP_PREFIX = "drop:";
 const END_PREFIX = "drop-end:";
+const TASK_INSERT_DEADZONE_PX = 10;
+const TASK_EDGE_LOCK_PX = 16;
+const TASK_AUTOSCROLL_EDGE_PX = 48;
+const TASK_AUTOSCROLL_MOVE_DEADZONE_PX = 2;
+const TASK_DRAG_ACTIVATION_DISTANCE = 12;
 
 function findColumnOfTask(board: Record<ColumnId, Task[]>, columns: Column[], taskId: string): ColumnId | null {
     for (const col of columns) {
@@ -1239,13 +1246,129 @@ function findTask(board: Record<ColumnId, Task[]>, columns: Column[], taskId: st
     return null;
 }
 
+function normalizeTaskOverTarget(args: {
+    board: Record<ColumnId, Task[]>;
+    columns: Column[];
+    overRaw: string | null;
+    insertAfter: boolean;
+}) {
+    const { board, columns, overRaw, insertAfter } = args;
+    if (!overRaw || !insertAfter) return overRaw;
+    if (overRaw.startsWith(DROP_PREFIX) || overRaw.startsWith(END_PREFIX)) return overRaw;
+
+    const toCol = findColumnOfTask(board, columns, overRaw);
+    if (!toCol) return overRaw;
+
+    const toTasks = board[toCol] ?? [];
+    if (toTasks.length === 0) return `${END_PREFIX}${toCol}`;
+
+    const hoveredIndex = toTasks.findIndex((task) => task.id === overRaw);
+    if (hoveredIndex === -1) return overRaw;
+
+    return hoveredIndex === toTasks.length - 1 ? `${END_PREFIX}${toCol}` : overRaw;
+}
+
+function getStableInsertAfter(args: {
+    overType?: string;
+    activeCenterY: number | null;
+    overTop?: number | null;
+    overHeight?: number | null;
+    previous: boolean;
+    deadzone?: number;
+}) {
+    const {
+        overType,
+        activeCenterY,
+        overTop,
+        overHeight,
+        previous,
+        deadzone = TASK_INSERT_DEADZONE_PX
+    } = args;
+
+    if (
+        overType !== "task" ||
+        activeCenterY == null ||
+        overTop == null ||
+        overHeight == null
+    ) {
+        return false;
+    }
+
+    const middle = overTop + overHeight / 2;
+    const delta = activeCenterY - middle;
+
+    if (Math.abs(delta) <= deadzone) {
+        return previous;
+    }
+
+    return delta > 0;
+}
+
+function findColumnIdFromOverRaw(
+    board: Record<ColumnId, Task[]>,
+    columns: Column[],
+    overRaw: string | null
+): ColumnId | null {
+    if (!overRaw) return null;
+
+    const overKey = overRaw.startsWith(DROP_PREFIX)
+        ? overRaw.replace(DROP_PREFIX, "")
+        : overRaw.startsWith(END_PREFIX)
+            ? overRaw.replace(END_PREFIX, "")
+            : overRaw;
+
+    if (columns.some((column) => column.id === overKey)) return overKey;
+    return findColumnOfTask(board, columns, overKey) ?? null;
+}
+
+function lockTaskOverTargetAtScrollEdge(args: {
+    board: Record<ColumnId, Task[]>;
+    columns: Column[];
+    overRaw: string | null;
+    activeCenterY: number | null;
+    deltaY?: number;
+    edgeThreshold?: number;
+}) {
+    const {
+        board,
+        columns,
+        overRaw,
+        activeCenterY,
+        deltaY = 0,
+        edgeThreshold = TASK_EDGE_LOCK_PX
+    } = args;
+
+    const columnId = findColumnIdFromOverRaw(board, columns, overRaw);
+    if (!(columnId && activeCenterY != null)) return overRaw;
+
+    const scrollEl = document.querySelector<HTMLElement>(
+        `[data-task-scroll-column-id="${columnId}"]`
+    );
+    if (!scrollEl) return overRaw;
+
+    const scrollRect = scrollEl.getBoundingClientRect();
+    const distanceToTop = activeCenterY - scrollRect.top;
+    const distanceToBottom = scrollRect.bottom - activeCenterY;
+
+    if (deltaY < 0 && distanceToTop <= edgeThreshold) {
+        return `${DROP_PREFIX}${columnId}`;
+    }
+
+    if (deltaY > 0 && distanceToBottom <= edgeThreshold) {
+        return `${END_PREFIX}${columnId}`;
+    }
+
+    return overRaw;
+}
+
 function applyTaskDrop(args: {
     board: Record<ColumnId, Task[]>;
     columns: Column[];
     activeTaskId: string;
     overRaw: string;
+    insertAfter?: boolean;
 }) {
-    const { board, columns, activeTaskId, overRaw } = args;
+    const { board, columns, activeTaskId, overRaw, insertAfter = false } = args;
 
     const overIsEnd = overRaw.startsWith(END_PREFIX);
     const overKey = overRaw.startsWith(DROP_PREFIX)
@@ -1276,7 +1399,7 @@ function applyTaskDrop(args: {
         } else {
             const toIndex = fromTasks.findIndex((t) => t.id === overKey);
             if (toIndex === -1) fromTasks.unshift(moving);
-            else fromTasks.splice(Math.max(0, toIndex), 0, moving);
+            else fromTasks.splice(Math.max(0, toIndex + (insertAfter ? 1 : 0)), 0, moving);
         }
 
         const newIndex = fromTasks.findIndex((t) => t.id === activeTaskId);
@@ -1290,7 +1413,7 @@ function applyTaskDrop(args: {
         toTasks.push(moving);
     } else {
         const idx = toTasks.findIndex((t) => t.id === overKey);
-        if (idx !== -1) toTasks.splice(Math.max(0, idx), 0, moving);
+        if (idx !== -1) toTasks.splice(Math.max(0, idx + (insertAfter ? 1 : 0)), 0, moving);
         else toTasks.unshift(moving);
     }
 
@@ -1704,6 +1827,7 @@ type TaskCardProps = {
     task: Task;
     columnId: ColumnId;
     isEditing: boolean;
+    isDropTarget?: boolean;
     draftTitle: string;
     onDraftChange: (v: string) => void;
     onOpenDetail: () => void;
@@ -1719,6 +1843,7 @@ function TaskCard({
     task,
     columnId,
     isEditing,
+    isDropTarget = false,
     draftTitle,
     onDraftChange,
     onOpenDetail,
@@ -1799,10 +1924,19 @@ function TaskCard({
                 "group relative w-full select-none rounded-xl p-3",
                 "cursor-grab border border-black/5 shadow-[0_1px_1px_rgba(9,30,66,0.08),0_0_0_1px_rgba(9,30,66,0.04)]",
                 "transition focus-within:ring-2 focus-within:ring-blue-200/60 active:cursor-grabbing",
+                isDropTarget && "ring-2 ring-blue-200/70 ring-offset-2 ring-offset-white",
                 done
                     ? "bg-zinc-50 hover:bg-zinc-100/90 hover:shadow-[0_2px_6px_rgba(9,30,66,0.10),0_0_0_1px_rgba(9,30,66,0.04)]"
                     : "bg-white hover:bg-white hover:shadow-[0_4px_8px_rgba(9,30,66,0.16),0_0_0_1px_rgba(9,30,66,0.04)]"
             )}>
+            {isDropTarget ? (
+                <div className="-top-2 pointer-events-none absolute right-3 left-3 z-10">
+                    <div className="flex items-center">
+                        <div className="h-2.5 w-2.5 rounded-full border-2 border-white bg-blue-500 shadow-[0_4px_14px_rgba(59,130,246,0.28)]" />
+                        <div className="ml-2 h-1 flex-1 rounded-full bg-[linear-gradient(90deg,#3B82F6_0%,#60A5FA_100%)] shadow-[0_0_0_3px_rgba(59,130,246,0.10)]" />
+                    </div>
+                </div>
+            ) : null}
             <div className="min-w-0">
                 {!isEditing ? (
                     <>
@@ -1978,64 +2112,12 @@ function TaskCard({
     );
 }
 
-function GhostTaskCard({ task }: { task: Task }) {
-    const t = useTranslations("GroupBoardScreen");
-    const done = isTaskDone(task);
-    const showProgress = shouldShowProgress(task);
-    const overdue = task.dueRaw ? isOverdue(task.dueRaw) : false;
-    const severityLabel = task.severity != null ? severityLabelOf(task.severity, t) : null;
-
+function GhostTaskCard() {
     return (
-        <div className={cn("rounded-xl border-2 border-blue-300 border-dashed bg-blue-50/70 p-3")}>
-            <div className="min-w-0">
-                <div className="flex min-w-0 items-start gap-2">
-                    <div className={cn("mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full", dotClass(task.statusDot))} />
-                    <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
-                        <p
-                            className={cn(
-                                "line-clamp-2 min-w-0 flex-1 font-medium text-sm leading-snug tracking-tight",
-                                done ? "text-zinc-500 line-through" : "text-zinc-800"
-                            )}>
-                            {task.title}
-                        </p>
-                    </div>
-                </div>
-
-                <div className="mt-2 flex flex-wrap items-center gap-1.5">
-                    {task.due || !isTaskUnassigned(task) ? (
-                        <DuePill
-                            due={task.due}
-                            overdue={overdue}
-                            done={done}
-                            assigneeAvatarUrl={task.assigneeAvatarUrl}
-                            assigneeInitials={task.assigneeInitials}
-                            showAssigneeAvatar={!isTaskUnassigned(task)}
-                        />
-                    ) : null}
-                    {severityLabel ? (
-                        <span
-                            className={cn(
-                                "inline-flex h-7 shrink-0 items-center rounded-full border px-2.5 py-1 font-semibold text-xs",
-                                done ? "border-zinc-200 bg-zinc-100 text-zinc-500" : severityTone(task.severity)
-                            )}>
-                            {severityLabel}
-                        </span>
-                    ) : null}
-                    {showProgress ? <ProgressPill progress={Number(task.progress ?? 0)} /> : null}
-                    {done ? <DonePill completedAt={task.completedAt} /> : null}
-                    {task.estimatedHours != null ? (
-                        <span className="inline-flex h-7 shrink-0 items-center gap-1 rounded-full border border-blue-200 bg-blue-50 px-2.5 py-1 font-semibold text-blue-700 text-xs">
-                            {task.estimatedHours}
-                            {t("estimatedHours")}
-                        </span>
-                    ) : null}
-                    {task.actualHours != null ? (
-                        <span className="inline-flex h-7 shrink-0 items-center gap-1 rounded-full border border-green-200 bg-green-50 px-2.5 py-1 font-semibold text-green-700 text-xs">
-                            {task.actualHours}
-                            {t("actualHours")}
-                        </span>
-                    ) : null}
-                </div>
+        <div className="pointer-events-none py-1">
+            <div className="relative flex items-center justify-center">
+                <div className="h-3 w-full rounded-full bg-blue-100" />
+                <div className="absolute h-3 w-full rounded-full border border-blue-400 bg-blue-200/80 shadow-[0_0_0_3px_rgba(59,130,246,0.12)]" />
             </div>
         </div>
     );
@@ -2277,6 +2359,7 @@ function ColumnView({
     dndEnabled,
     headerDragProps,
     ghost,
+    dropTargetTaskId,
     creatingTask,
     onRenameColumnInline,
     onDeleteColumn,
@@ -2319,6 +2402,7 @@ function ColumnView({
     dndEnabled: boolean;
     headerDragProps?: HeaderDragProps;
     ghost?: { task: Task; toCol: ColumnId; index: number } | null;
+    dropTargetTaskId?: string | null;
     creatingTask: boolean;
     onRenameColumnInline: (columnId: ColumnId) => void;
     onDeleteColumn: (columnId: ColumnId) => void;
@@ -2357,17 +2441,6 @@ function ColumnView({
     });
 
     const shouldShowGhost = !!ghost && ghost.toCol === col.id;
-
-    type RenderItem = { kind: "task"; task: Task } | { kind: "ghost"; key: string };
-
-    const rendered = React.useMemo<RenderItem[]>(() => {
-        const base: RenderItem[] = tasks.map((t) => ({ kind: "task", task: t }));
-        if (!(shouldShowGhost && ghost)) return base;
-        const idx = Math.max(0, Math.min(ghost.index, base.length));
-        const next = [...base];
-        next.splice(idx, 0, { kind: "ghost", key: `ghost_${ghost.task.id}` });
-        return next;
-    }, [tasks, shouldShowGhost, ghost]);
 
     const [openColMenu, setOpenColMenu] = React.useState(false);
     const colMenuBtnRef = React.useRef<HTMLButtonElement | null>(null);
@@ -2504,7 +2577,9 @@ function ColumnView({
                 <div ref={setDroppableRef} className={cn("rounded-b-xl transition", isOver && "bg-blue-50/40")}>
                     {dndEnabled ? (
                         <SortableContext items={taskIds} strategy={verticalListSortingStrategy}>
-                            <div className="relative max-h-[68vh] space-y-2 overflow-y-auto pr-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                            <div
+                                data-task-scroll-column-id={col.id}
+                                className="relative max-h-[68vh] space-y-2 overflow-y-auto pr-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                                 {showLoadingState ? (
                                     <div className="rounded-xl border border-zinc-300 border-dashed bg-white/70 px-3 py-8 text-center text-sm text-zinc-500 backdrop-blur-sm">
                                         {t("loading")}
@@ -2524,29 +2599,25 @@ function ColumnView({
                                 ) : null}
 
                                 {!(showLoadingState || showErrorState)
-                                    ? rendered.map((item) => {
-                                        if (item.kind === "ghost")
-                                            return <GhostTaskCard key={item.key} task={ghost!.task} />;
-
+                                    ? tasks.map((task) => {
                                         const isEditingThis =
-                                            taskEditState.taskId === item.task.id &&
+                                            taskEditState.taskId === task.id &&
                                             taskEditState.columnId === col.id;
 
                                         return (
                                             <TaskCard
-                                                key={item.task.id}
-                                                task={item.task}
+                                                key={task.id}
+                                                task={task}
                                                 columnId={col.id}
                                                 isEditing={isEditingThis}
-                                                draftTitle={isEditingThis ? taskEditState.draft : item.task.title}
+                                                isDropTarget={dropTargetTaskId === task.id}
+                                                draftTitle={isEditingThis ? taskEditState.draft : task.title}
                                                 onDraftChange={onTaskDraftChange}
-                                                onOpenDetail={() => onOpenTaskDetail(item.task.id)}
-                                                onStartEdit={() =>
-                                                    onTaskStartEdit(item.task.id, col.id, item.task.title)
-                                                }
+                                                onOpenDetail={() => onOpenTaskDetail(task.id)}
+                                                onStartEdit={() => onTaskStartEdit(task.id, col.id, task.title)}
                                                 onCancelEdit={onTaskCancelEdit}
                                                 onCommitEdit={onTaskCommitEdit}
-                                                onDelete={() => onDeleteTask(item.task.id, col.id)}
+                                                onDelete={() => onDeleteTask(task.id, col.id)}
                                                 canEditTask={canEditTask}
                                                 canDeleteTask={canDeleteTask}
                                             />
@@ -2564,8 +2635,11 @@ function ColumnView({
                                 <div
                                     ref={setEndRef}
                                     className={cn(
-                                        "h-3 rounded-xl border border-dashed transition",
-                                        isOverEnd ? "border-blue-300 bg-blue-50/60" : "border-transparent"
+                                        "rounded-xl transition-all duration-150",
+                                        shouldShowGhost && ghost?.index === tasks.length ? "h-6" : "h-3",
+                                        isOverEnd
+                                            ? "border border-blue-300/80 bg-[linear-gradient(90deg,rgba(191,219,254,0.72),rgba(219,234,254,0.96))] shadow-[0_0_0_3px_rgba(59,130,246,0.08)]"
+                                            : "border border-transparent bg-transparent"
                                     )}
                                 />
 
@@ -2577,7 +2651,9 @@ function ColumnView({
                             </div>
                         </SortableContext>
                     ) : (
-                        <div className="max-h-[68vh] space-y-2 overflow-y-auto pr-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                        <div
+                            data-task-scroll-column-id={col.id}
+                            className="max-h-[68vh] space-y-2 overflow-y-auto pr-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                             {showLoadingState ? (
                                 <div className="rounded-xl border border-zinc-300 border-dashed bg-white px-3 py-8 text-center text-sm text-zinc-500">
                                     {t("loading")}
@@ -2664,6 +2740,7 @@ function SortableColumn({
     onOpenTaskDetail,
     dndEnabled,
     ghost,
+    dropTargetTaskId,
     creatingTask,
     onRenameColumnInline,
     onDeleteColumn,
@@ -2705,6 +2782,7 @@ function SortableColumn({
     onOpenTaskDetail: (taskId: string) => void;
     dndEnabled: boolean;
     ghost?: { task: Task; toCol: ColumnId; index: number } | null;
+    dropTargetTaskId?: string | null;
     creatingTask: boolean;
     onRenameColumnInline: (columnId: ColumnId) => void;
     onDeleteColumn: (columnId: ColumnId) => void;
@@ -2763,6 +2841,7 @@ function SortableColumn({
                 dndEnabled={dndEnabled}
                 headerDragProps={{ attributes, listeners, setActivatorNodeRef }}
                 ghost={ghost}
+                dropTargetTaskId={dropTargetTaskId}
                 creatingTask={creatingTask}
                 onRenameColumnInline={onRenameColumnInline}
                 onDeleteColumn={onDeleteColumn}
@@ -2825,7 +2904,7 @@ function TaskOverlay({ task }: { task: Task }) {
 
                             {showProgress ? <ProgressPill progress={Number(task.progress ?? 0)} /> : null}
 
-                            {done ? <DonePill completedAt={task.completedAt}/> : null}
+                            {done ? <DonePill completedAt={task.completedAt} /> : null}
                         </div>
                     ) : null}
                 </div>
@@ -3045,6 +3124,12 @@ export function GroupBoardScreen({
     const [activeTaskId, setActiveTaskId] = React.useState<string | null>(null);
     const [activeColumnId, setActiveColumnId] = React.useState<string | null>(null);
     const [overId, setOverId] = React.useState<string | null>(null);
+    const [overTaskInsertAfter, setOverTaskInsertAfter] = React.useState(false);
+    const lastTaskOverIdRef = React.useRef<string | null>(null);
+    const overIdRef = React.useRef<string | null>(null);
+    const previousDragDeltaYRef = React.useRef(0);
+    const latestMoveDeltaYRef = React.useRef(0);
+    const overTaskInsertAfterRef = React.useRef(false);
 
     const [editingColumn, setEditingColumn] = React.useState<{
         id: string | null;
@@ -3298,7 +3383,7 @@ export function GroupBoardScreen({
 
     const sensors = useSensors(
         useSensor(PointerSensor, {
-            activationConstraint: { delay: 200, tolerance: 5 }
+            activationConstraint: { distance: TASK_DRAG_ACTIVATION_DISTANCE }
         }),
         useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
     );
@@ -3662,9 +3747,15 @@ export function GroupBoardScreen({
         if (overId.startsWith(END_PREFIX)) return { task, toCol, index: toTasks.length };
 
         const idx = toTasks.findIndex((t) => t.id === overKey);
-        const index = idx !== -1 ? idx : 0;
+        const index = idx !== -1 ? idx + (overTaskInsertAfter ? 1 : 0) : 0;
         return { task, toCol, index };
-    }, [activeTaskId, overId, board, columns]);
+    }, [activeTaskId, overId, overTaskInsertAfter, board, columns]);
+
+    const dropTargetTaskId = React.useMemo(() => {
+        if (!overId) return null;
+        if (overId.startsWith(DROP_PREFIX) || overId.startsWith(END_PREFIX)) return null;
+        return overId;
+    }, [overId]);
 
     const submitAddColumn = async (title: string) => {
         if (!canAddStatus) {
@@ -3953,35 +4044,167 @@ export function GroupBoardScreen({
         // Khi kéo task, ưu tiên vị trí con trỏ thật; nếu không có thì fallback theo góc gần nhất.
         const allow = filterDroppablesByType(args.droppableContainers, ["task", "column-drop", "column-end"]);
         const pointerHits = pointerWithin({ ...args, droppableContainers: allow });
-        if (pointerHits.length > 0) return pointerHits;
-        return closestCorners({ ...args, droppableContainers: allow });
+        if (pointerHits.length > 0) {
+            const nextId = getFirstCollision(pointerHits, "id");
+            if (typeof nextId === "string") lastTaskOverIdRef.current = nextId;
+            return pointerHits;
+        }
+
+        const fallbackHits = closestCenter({ ...args, droppableContainers: allow });
+        if (fallbackHits.length > 0) {
+            const nextId = getFirstCollision(fallbackHits, "id");
+            if (typeof nextId === "string") lastTaskOverIdRef.current = nextId;
+            return fallbackHits;
+        }
+
+        if (lastTaskOverIdRef.current) {
+            return [{ id: lastTaskOverIdRef.current }];
+        }
+
+        return [];
     }, []);
 
     const handleDragStart = (e: DragStartEvent) => {
         setOverId(null);
+        overIdRef.current = null;
+        setOverTaskInsertAfter(false);
+        overTaskInsertAfterRef.current = false;
+        lastTaskOverIdRef.current = null;
+        previousDragDeltaYRef.current = 0;
+        latestMoveDeltaYRef.current = 0;
+
         const type = e.active.data.current?.type;
         if (type === "task") setActiveTaskId(String(e.active.id));
         if (type === "column") setActiveColumnId(String(e.active.id));
     };
 
     const handleDragOver = (e: DragOverEvent) => {
-        const next = e.over?.id ? String(e.over.id) : null;
-        setOverId(next);
+        const overType = e.over?.data.current?.type;
+        const translatedRect = e.active.rect.current.translated;
+        const activeCenterY = translatedRect ? translatedRect.top + translatedRect.height / 2 : null;
+
+        const insertAfter = getStableInsertAfter({
+            overType,
+            activeCenterY,
+            overTop: e.over?.rect.top ?? null,
+            overHeight: e.over?.rect.height ?? null,
+            previous: overTaskInsertAfterRef.current
+        });
+
+        const normalizedOverRaw = normalizeTaskOverTarget({
+            board,
+            columns,
+            overRaw: e.over?.id ? String(e.over.id) : null,
+            insertAfter
+        });
+
+        const next = lockTaskOverTargetAtScrollEdge({
+            board,
+            columns,
+            overRaw: normalizedOverRaw,
+            activeCenterY,
+            deltaY: latestMoveDeltaYRef.current
+        });
+
+        if (overIdRef.current !== next) {
+            setOverId(next);
+            overIdRef.current = next;
+        }
+
+        if (overTaskInsertAfterRef.current !== insertAfter) {
+            setOverTaskInsertAfter(insertAfter);
+            overTaskInsertAfterRef.current = insertAfter;
+        }
+    };
+
+    const handleDragMove = (e: DragMoveEvent) => {
+        if (e.active.data.current?.type !== "task") return;
+
+        const moveDeltaY = e.delta.y - previousDragDeltaYRef.current;
+        previousDragDeltaYRef.current = e.delta.y;
+        latestMoveDeltaYRef.current = moveDeltaY;
+        if (Math.abs(moveDeltaY) < TASK_AUTOSCROLL_MOVE_DEADZONE_PX) return;
+
+        const targetColumnId =
+            findColumnIdFromOverRaw(board, columns, overIdRef.current) ??
+            findColumnOfTask(board, columns, String(e.active.id));
+        if (!targetColumnId) return;
+
+        const scrollEl = document.querySelector<HTMLElement>(`[data-task-scroll-column-id="${targetColumnId}"]`);
+        if (!scrollEl) return;
+
+        const translatedRect = e.active.rect.current.translated;
+        if (!translatedRect) return;
+
+        const cardCenterY = translatedRect.top + translatedRect.height / 2;
+        const scrollRect = scrollEl.getBoundingClientRect();
+        const edgeThreshold = TASK_AUTOSCROLL_EDGE_PX;
+
+        if (moveDeltaY > 0) {
+            const distanceToBottom = scrollRect.bottom - cardCenterY;
+            if (distanceToBottom <= edgeThreshold) {
+                const intensity = Math.max(0, edgeThreshold - distanceToBottom) / edgeThreshold;
+                scrollEl.scrollTop += Math.max(6, Math.round(14 * intensity));
+            }
+        } else if (moveDeltaY < 0) {
+            const distanceToTop = cardCenterY - scrollRect.top;
+            if (distanceToTop <= edgeThreshold) {
+                const intensity = Math.max(0, edgeThreshold - distanceToTop) / edgeThreshold;
+                scrollEl.scrollTop -= Math.max(6, Math.round(14 * intensity));
+            }
+        }
     };
 
     const handleDragCancel = (_e: DragCancelEvent) => {
         setActiveTaskId(null);
         setActiveColumnId(null);
         setOverId(null);
+        overIdRef.current = null;
+        setOverTaskInsertAfter(false);
+        overTaskInsertAfterRef.current = false;
+        lastTaskOverIdRef.current = null;
+        previousDragDeltaYRef.current = 0;
+        latestMoveDeltaYRef.current = 0;
     };
 
     const handleDragEnd = (e: DragEndEvent) => {
         const activeType = e.active.data.current?.type;
-        const overRaw = e.over?.id ? String(e.over.id) : null;
+        const overType = e.over?.data.current?.type;
+        const translatedRect = e.active.rect.current.translated;
+        const activeCenterY = translatedRect ? translatedRect.top + translatedRect.height / 2 : null;
+
+        const insertAfter = getStableInsertAfter({
+            overType,
+            activeCenterY,
+            overTop: e.over?.rect.top ?? null,
+            overHeight: e.over?.rect.height ?? null,
+            previous: overTaskInsertAfterRef.current
+        });
+
+        const normalizedOverRaw = normalizeTaskOverTarget({
+            board,
+            columns,
+            overRaw: e.over?.id ? String(e.over.id) : null,
+            insertAfter
+        });
+
+        const overRaw = lockTaskOverTargetAtScrollEdge({
+            board,
+            columns,
+            overRaw: normalizedOverRaw,
+            activeCenterY,
+            deltaY: e.delta.y
+        });
 
         setActiveTaskId(null);
         setActiveColumnId(null);
         setOverId(null);
+        overIdRef.current = null;
+        setOverTaskInsertAfter(false);
+        overTaskInsertAfterRef.current = false;
+        lastTaskOverIdRef.current = null;
+        previousDragDeltaYRef.current = 0;
+        latestMoveDeltaYRef.current = 0;
 
         if (!overRaw) return;
 
@@ -3996,7 +4219,8 @@ export function GroupBoardScreen({
                 board,
                 columns,
                 activeTaskId: activeId,
-                overRaw
+                overRaw,
+                insertAfter
             });
             if (!dropped) return;
 
@@ -4661,6 +4885,7 @@ export function GroupBoardScreen({
                                 canAddTask={canAddTask}
                                 headerDragProps={undefined}
                                 ghost={null}
+                                dropTargetTaskId={null}
                                 creatingTask={creatingTask}
                                 onRenameColumnInline={startEditColumn}
                                 onDeleteColumn={onDeleteColumn}
@@ -4692,8 +4917,10 @@ export function GroupBoardScreen({
                 ) : (
                     <DndContext
                         sensors={sensors}
+                        autoScroll={false}
                         collisionDetection={collisionDetection}
                         onDragStart={handleDragStart}
+                        onDragMove={handleDragMove}
                         onDragOver={handleDragOver}
                         onDragCancel={handleDragCancel}
                         onDragEnd={handleDragEnd}>
@@ -4726,6 +4953,7 @@ export function GroupBoardScreen({
                                         canDeleteTask={canDeleteTask}
                                         canAddTask={canAddTask}
                                         ghost={ghost}
+                                        dropTargetTaskId={dropTargetTaskId}
                                         creatingTask={creatingTask}
                                         onRenameColumnInline={startEditColumn}
                                         onDeleteColumn={onDeleteColumn}

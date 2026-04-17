@@ -52,7 +52,7 @@ function EmptyBlock({ title, subtitle }: { title: string; subtitle: string }) {
         <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            className="rounded-[28px] border border-white/80 bg-white/82 p-14 text-center shadow-sm backdrop-blur">
+            className="w-full rounded-[28px] border border-white/80 bg-white/82 p-14 text-center shadow-sm backdrop-blur">
             <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[linear-gradient(135deg,#FFF1EC_0%,#F5F0FF_100%)]">
                 <svg className="h-7 w-7 text-[#9B8CA8]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path

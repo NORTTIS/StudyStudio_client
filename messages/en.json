@@ -139,6 +139,11 @@
       "management": "Management workspace preview",
       "group": "Group workspace preview",
       "personal": "Personal workspace preview"
+    },
+    "carousel": {
+      "previous": "Previous {section} preview",
+      "next": "Next {section} preview",
+      "goTo": "Go to {section} preview {index}"
     }
   },
   "TaskDetailModal": {
@@ -1176,7 +1181,7 @@
     },
     "users": {
       "title": "Who's using Study Studio",
-      "subtitle": "Over xxx people use boards each month.",
+      "subtitle": "Over 100 people use boards each month.",
       "personal": {
         "title": "Individuals & Groups",
         "description": "For teachers, students, and self-learners\nfriend groups, project teams,\nand small communities\nlearning and working effectively together."
@@ -1251,7 +1256,7 @@
     },
     "users": {
       "title": "Who's using Study Studio",
-      "subtitle": "Over xxx people use boards each month.",
+      "subtitle": "Over 100 people use boards each month.",
       "students": {
         "title": "Students",
         "description": "Students, self-learners, friend groups,\nproject teams, and small communities\nlearning and working\ntogether effectively."

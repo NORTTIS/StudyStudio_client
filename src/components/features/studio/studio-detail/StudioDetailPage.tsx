@@ -280,7 +280,7 @@ function EmptyBlock({ title, subtitle }: { title: string; subtitle: string }) {
         <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            className="rounded-[28px] border border-white/80 bg-white/82 p-14 text-center shadow-sm backdrop-blur">
+            className="w-full rounded-[28px] border border-white/80 bg-white/82 p-14 text-center shadow-sm backdrop-blur">
             <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[linear-gradient(135deg,#FFF1EC_0%,#F5F0FF_100%)]">
                 <svg className="h-7 w-7 text-[#9B8CA8]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path
@@ -1719,7 +1719,11 @@ export default function StudioDetailPage({
                                         exit={{ opacity: 0, y: -8 }}
                                         className="grid grid-cols-1 gap-6 lg:grid-cols-12">
                                         <div className={`min-w-0 ${isStudioOwner ? "lg:col-span-8" : "lg:col-span-12"}`}>
-                                            <div className="grid grid-cols-1 justify-start gap-5 sm:[grid-template-columns:repeat(auto-fit,minmax(320px,390px))]">
+                                            <div
+                                                className={`grid grid-cols-1 gap-5 ${activeFilteredGroups.length === 0 && archivedFilteredGroups.length === 0
+                                                    ? "w-full"
+                                                    : "justify-start sm:[grid-template-columns:repeat(auto-fit,minmax(320px,390px))]"
+                                                    }`}>
                                                 {activeFilteredGroups.length > 0 ? (
                                                     activeFilteredGroups.map((group) => (
                                                         <motion.div
@@ -1930,7 +1934,7 @@ export default function StudioDetailPage({
                                                         </motion.div>
                                                     ))
                                                 ) : activeFilteredGroups.length === 0 && archivedFilteredGroups.length === 0 ? (
-                                                    <div className="col-span-2">
+                                                    <div className="w-full">
                                                         <EmptyBlock
                                                             title={
                                                                 isStudioOwner
