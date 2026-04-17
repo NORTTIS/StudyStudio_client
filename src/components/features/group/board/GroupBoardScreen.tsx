@@ -1471,7 +1471,7 @@ function PortalDropdown({
 }: {
     open: boolean;
     onClose: () => void;
-    anchorRef: React.RefObject<HTMLElement>;
+    anchorRef: React.RefObject<HTMLElement | null>;
     children: React.ReactNode;
     width?: number;
 }) {
@@ -1834,6 +1834,9 @@ function TaskCard({
                                         onClick={(e) => {
                                             e.preventDefault();
                                             e.stopPropagation();
+                                            if (e.detail === 0) {
+                                                setOpenMenu((v) => !v);
+                                            }
                                         }}
                                         className="grid h-7 w-7 cursor-pointer place-items-center rounded-lg text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600"
                                         aria-label={t("menu")}>
@@ -1843,7 +1846,7 @@ function TaskCard({
                                     <PortalDropdown
                                         open={openMenu}
                                         onClose={() => setOpenMenu(false)}
-                                        anchorRef={btnRef as any}>
+                                        anchorRef={btnRef}>
                                         {canEditTask ? (
                                             <MenuItem
                                                 icon={<Pencil className="h-4 w-4" />}
@@ -2456,6 +2459,9 @@ function ColumnView({
                                     onClick={(e) => {
                                         e.preventDefault();
                                         e.stopPropagation();
+                                        if (e.detail === 0) {
+                                            setOpenColMenu((v) => !v);
+                                        }
                                     }}
                                     className="grid h-8 w-8 place-items-center rounded-lg text-zinc-500 hover:bg-black/5"
                                     aria-label={t("columnMenu")}>
@@ -2465,7 +2471,7 @@ function ColumnView({
                                 <PortalDropdown
                                     open={openColMenu}
                                     onClose={() => setOpenColMenu(false)}
-                                    anchorRef={colMenuBtnRef as unknown as React.RefObject<HTMLButtonElement>}>
+                                    anchorRef={colMenuBtnRef}>
                                     {canEditStatus && (
                                         <MenuItem
                                             icon={<Pencil className="h-4 w-4" />}

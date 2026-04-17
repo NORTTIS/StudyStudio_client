@@ -36,6 +36,15 @@ function getCopy(locale: string) {
           };
 }
 
+function getSafeInternalPath(value: string) {
+    const normalized = String(value ?? "").trim();
+    if (!normalized.startsWith("/") || normalized.startsWith("//")) {
+        return null;
+    }
+
+    return normalized;
+}
+
 export function GroupAccessDeniedPage() {
     const router = useRouter();
     const locale = useLocale();
@@ -44,7 +53,7 @@ export function GroupAccessDeniedPage() {
 
     const handleBack = () => {
         const fallback = `/${locale}/home`;
-        const from = String(searchParams.get("from") ?? "").trim();
+        const from = getSafeInternalPath(searchParams.get("from") ?? "");
 
         if (from) {
             router.push(from);

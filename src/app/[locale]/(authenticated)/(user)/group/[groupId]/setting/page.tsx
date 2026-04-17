@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { serverFetchApi } from "@/api/server-client";
 import type { components } from "@/api/types";
+import ErrorDisplay from "@/components/common/ErrorDisplay";
 import { GroupSettingView } from "@/components/features/group/setting/GroupSettingView";
 
 type GroupDetailResponse = components["schemas"]["GroupDetailResponse"];
@@ -28,6 +29,12 @@ export default async function Page({
 }) {
     const resolvedParams = await params;
     const resolvedSearchParams = await searchParams;
+    const nextParams = new URLSearchParams();
+    nextParams.set("groupId", resolvedParams.groupId);
+
+    if (resolvedSearchParams.fromStudioId) {
+        nextParams.set("fromStudioId", resolvedSearchParams.fromStudioId);
+    }
 
     const response = await serverFetchApi.GET<GroupDetailResponse>(
         `/group/${encodeURIComponent(resolvedParams.groupId)}/detail`,
@@ -38,20 +45,37 @@ export default async function Page({
         }
     );
 
-    if (response.status === "success") {
-        const normalizedRole = normalizeSettingRole(response.data?.userRole);
-        const canViewSettings = normalizedRole === "owner" || normalizedRole === "moderator";
-
-        if (!canViewSettings) {
-            const nextParams = new URLSearchParams();
-            nextParams.set("groupId", resolvedParams.groupId);
-
-            if (resolvedSearchParams.fromStudioId) {
-                nextParams.set("fromStudioId", resolvedSearchParams.fromStudioId);
-            }
-
+    if (response.status === "error") {
+        if (response.code === "HTTP_401" || response.code === "HTTP_403") {
             redirect(`/${resolvedParams.locale}/group-setting-no-access?${nextParams.toString()}`);
         }
+
+        console.error("[GroupSettingPage] Failed to load group detail on the server", {
+            locale: resolvedParams.locale,
+            groupId: resolvedParams.groupId,
+            status: response.status,
+            code: response.code ?? null,
+            message: response.message ?? null
+        });
+
+        return <ErrorDisplay message={response.message || "Unable to open this group's settings right now."} />;
+    }
+
+    if (!response.data) {
+        console.error("[GroupSettingPage] Group detail response was missing data", {
+            locale: resolvedParams.locale,
+            groupId: resolvedParams.groupId,
+            status: response.status
+        });
+
+        return <ErrorDisplay message="Unable to open this group's settings right now." />;
+    }
+
+    const normalizedRole = normalizeSettingRole(response.data.userRole);
+    const canViewSettings = normalizedRole === "owner" || normalizedRole === "moderator";
+
+    if (!canViewSettings) {
+        redirect(`/${resolvedParams.locale}/group-setting-no-access?${nextParams.toString()}`);
     }
 
     return <GroupSettingView />;

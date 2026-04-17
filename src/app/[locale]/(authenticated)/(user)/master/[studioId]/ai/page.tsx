@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { serverFetchApi } from "@/api/server-client";
 import { components } from "@/api/types";
+import ErrorDisplay from "@/components/common/ErrorDisplay";
 import StudioDetailPage from "@/components/features/studio/studio-detail/StudioDetailPage";
 
 type StudioResponse = components["schemas"]["StudioResponse"];
@@ -18,16 +19,57 @@ export default async function StudioAiPage({ params }: PageProps) {
         serverFetchApi.GET<StudioGroupListResponse>(`/studio/${studioId}/groups`)
     ]);
 
-    const studioData = studioResponse.status === "success" ? studioResponse.data : null;
+    if (studioResponse.status === "error") {
+        console.error("[StudioAiPage] Failed to load studio on the server", {
+            locale,
+            studioId,
+            status: studioResponse.status,
+            code: studioResponse.code ?? null,
+            message: studioResponse.message ?? null
+        });
 
-    if ((studioData?.studioRole ?? 1) !== 0) {
+        return <ErrorDisplay message={studioResponse.message || "Unable to open this studio's AI page right now."} />;
+    }
+
+    if (!studioResponse.data) {
+        console.error("[StudioAiPage] Studio response was missing data", {
+            locale,
+            studioId,
+            status: studioResponse.status
+        });
+
+        return <ErrorDisplay message="Unable to open this studio's AI page right now." />;
+    }
+
+    const studioData = studioResponse.data;
+
+    if (studioData.studioRole !== 0) {
         redirect(`/${locale}/master-ai-no-access?studioId=${encodeURIComponent(studioId)}`);
     }
 
-    const groupsData =
-        groupsResponse.status === "success" && groupsResponse.data?.studioGroups
-            ? groupsResponse.data.studioGroups
-            : [];
+    if (groupsResponse.status === "error") {
+        console.error("[StudioAiPage] Failed to load studio groups on the server", {
+            locale,
+            studioId,
+            status: groupsResponse.status,
+            code: groupsResponse.code ?? null,
+            message: groupsResponse.message ?? null
+        });
+
+        return <ErrorDisplay message={groupsResponse.message || "Unable to load this studio's groups right now."} />;
+    }
+
+    if (!groupsResponse.data) {
+        console.error("[StudioAiPage] Studio groups response was missing data", {
+            locale,
+            studioId,
+            status: groupsResponse.status
+        });
+
+        return <ErrorDisplay message="Unable to load this studio's groups right now." />;
+    }
+
+    const groupsData = groupsResponse.data.studioGroups ?? [];
 
     return (
         <StudioDetailPage

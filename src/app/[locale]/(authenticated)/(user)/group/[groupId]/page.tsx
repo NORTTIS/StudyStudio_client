@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { serverFetchApi } from "@/api/server-client";
+import ErrorDisplay from "@/components/common/ErrorDisplay";
 import { GroupBoardScreen } from "@/components/features/group/board/GroupBoardScreen";
 
 function isUuidLike(value: string) {
@@ -33,6 +34,26 @@ export default async function Page({ params }: { params: Promise<{ locale: strin
         if (response.code === "HTTP_404") {
             redirect(`/${resolvedParams.locale}/group-access-denied?reason=not_found`);
         }
+
+        console.error("[GroupBoardPage] Failed to load group detail on the server", {
+            locale: resolvedParams.locale,
+            groupId,
+            status: response.status,
+            code: response.code ?? null,
+            message: response.message ?? null
+        });
+
+        return <ErrorDisplay message={response.message || "Unable to open this group right now."} />;
+    }
+
+    if (!response.data) {
+        console.error("[GroupBoardPage] Group detail response was missing data", {
+            locale: resolvedParams.locale,
+            groupId,
+            status: response.status
+        });
+
+        return <ErrorDisplay message="Unable to open this group right now." />;
     }
 
     return <GroupBoardScreen />;

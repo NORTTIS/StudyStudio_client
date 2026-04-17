@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export default async function Page({
     params,
     searchParams
@@ -33,11 +35,11 @@ export default async function Page({
                         : "You do not have permission to access this studio's AI page."}
                 </p>
 
-                <a
+                <Link
                     href={backHref}
                     className="inline-flex w-full items-center justify-center rounded-lg bg-orange-600 px-4 py-2.5 font-semibold text-white hover:bg-orange-700">
                     {isVi ? "Quay lại studio" : "Back to studio"}
-                </a>
+                </Link>
             </div>
         </div>
     );
