@@ -28,13 +28,16 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { CalendarDays, CheckCircle2, Clock3, MoreHorizontal, Pencil, Plus, Trash2, X } from "lucide-react";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import * as React from "react";
 import { createPortal } from "react-dom";
+import { toast as sonnerToast } from "sonner";
 import { getUserData } from "@/api/auth";
 import type { components } from "@/api/types";
+import ErrorDisplay from "@/components/common/ErrorDisplay";
 import { useGroupHeaderActionSlot } from "@/components/features/group/GroupShell";
+import { useGuardedRouter } from "@/components/providers/RateLimitGuardProvider";
 import { getCurrentUserId, mapRole } from "@/components/features/group/group.api";
 import AssigneeAvatar from "@/components/features/group/task/AssigneeAvatar";
 import TaskDetailModal from "@/components/features/group/task/TaskDetailModal";
@@ -381,6 +384,35 @@ function severityTone(severity: number | null | undefined) {
 
 function isUuidLike(v: string) {
     return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v);
+}
+
+function canUseBackForwardCache() {
+    if (typeof window === "undefined") return false;
+
+    const navigationEntry = performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming | undefined;
+    return navigationEntry?.type === "back_forward";
+}
+
+export function GroupBoardShell({ rateLimitError = false }: { rateLimitError?: boolean }) {
+    const tCommon = useTranslations("Common");
+    const [showFallback, setShowFallback] = React.useState(false);
+
+    React.useEffect(() => {
+        if (!rateLimitError) return;
+
+        sonnerToast.error(tCommon("rateLimit"), {
+            id: "group-board-rate-limit",
+            duration: 4000
+        });
+
+        setShowFallback(!canUseBackForwardCache());
+    }, [rateLimitError, tCommon]);
+
+    if (rateLimitError && showFallback) {
+        return <ErrorDisplay message={tCommon("rateLimit")} />;
+    }
+
+    return <GroupBoardScreen />;
 }
 
 function detectPositionBase(cols: Column[]) {
@@ -2882,7 +2914,7 @@ export function GroupBoardScreen({
     onTaskDetailClose?: (() => void) | null;
 }) {
     const params = useParams<{ groupId: string }>();
-    const router = useRouter();
+    const { guardedPush, guardedReplace } = useGuardedRouter();
     const searchParams = useSearchParams();
     const t = useTranslations("GroupBoardScreen");
     const locale = useLocale();
@@ -2893,8 +2925,8 @@ export function GroupBoardScreen({
         if (!groupId) return;
         if (isUuidLike(groupId)) return;
 
-        router.replace(`/${locale}/group-access-denied?reason=forbidden`, { scroll: false });
-    }, [groupId, router, locale]);
+        guardedReplace(`/${locale}/group-access-denied?reason=forbidden`, { scroll: false });
+    }, [groupId, guardedReplace, locale]);
 
     const apiMessages = React.useMemo<ApiMessages>(
         () => ({
@@ -3264,7 +3296,7 @@ export function GroupBoardScreen({
             return;
         }
 
-        router.push(`/${locale}/group/task/${encodeURIComponent(normalizedTaskId)}`, { scroll: false });
+        guardedPush(`/${locale}/group/task/${encodeURIComponent(normalizedTaskId)}`, { scroll: false });
     };
 
     const closeTaskDetail = () => {
@@ -3572,9 +3604,9 @@ export function GroupBoardScreen({
         setDetailOpen(true);
 
         if (!initialTaskId && taskIdFromQuery && openTaskDetailFromQuery === "1") {
-            router.replace(`/${locale}/group/${groupId}`, { scroll: false });
+            guardedReplace(`/${locale}/group/${groupId}`, { scroll: false });
         }
-    }, [loading, searchParams, router, groupId, locale, initialTaskId]);
+    }, [loading, searchParams, guardedReplace, groupId, locale, initialTaskId]);
 
     React.useEffect(() => {
         const root = boardScrollRef.current;

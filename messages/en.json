@@ -21,7 +21,8 @@
     },
     "errors": {
       "fetchDetailFailed": "Failed to load details"
-    }
+    },
+    "rateLimit": "You are acting too quickly. Please try again shortly."
   },
   "Announcements": {
     "title": "Announcements",
@@ -2293,6 +2294,7 @@
     "errors": {
       "fetchDetailFailed": "Unable to load group information"
     },
+    "rateLimit": "You are acting too quickly. Please try again shortly.",
     "inviteAcceptPage": {
       "invitation": "Invitation",
       "loading": "Loading...",

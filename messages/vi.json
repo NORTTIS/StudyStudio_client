@@ -21,7 +21,8 @@
     },
     "errors": {
       "fetchDetailFailed": "Tải thông tin thất bại"
-    }
+    },
+    "rateLimit": "Thao tác quá nhanh, vui lòng thử lại sau."
   },
   "Announcements": {
     "title": "Thông báo",
@@ -2370,6 +2371,7 @@
     "errors": {
       "fetchDetailFailed": "Không thể tải thông tin nhóm"
     },
+    "rateLimit": "Thao tác quá nhanh, vui lòng thử lại sau.",
     "inviteAcceptPage": {
       "invitation": "Lời mời",
       "loading": "Đang tải...",

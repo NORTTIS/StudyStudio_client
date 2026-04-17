@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { serverFetchApi } from "@/api/server-client";
 import ErrorDisplay from "@/components/common/ErrorDisplay";
-import { GroupBoardScreen } from "@/components/features/group/board/GroupBoardScreen";
+import { GroupBoardShell } from "@/components/features/group/board/GroupBoardScreen";
 
 function isUuidLike(value: string) {
     return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
@@ -37,11 +37,11 @@ export default async function Page({ params }: { params: Promise<{ locale: strin
             redirect(`/${resolvedParams.locale}/group-access-denied?reason=not_found`);
         }
 
-        // 429 Rate Limit: do NOT show error display — just pass the error to the client
-        // GroupShell (client component) will handle showing toast + keep existing data
+        // 429 Rate Limit: hand off to GroupBoardShell so the client can decide whether
+        // to keep cached board state with a toast or fall back to ErrorDisplay.
         if (response.code === "RATE_LIMIT_EXCEEDED") {
             console.warn("[GroupBoardPage] Rate limit exceeded, keeping existing state");
-            return <GroupBoardScreen />;
+            return <GroupBoardShell rateLimitError />;
         }
 
         console.error("[GroupBoardPage] Failed to load group detail on the server", {
@@ -65,5 +65,5 @@ export default async function Page({ params }: { params: Promise<{ locale: strin
         return <ErrorDisplay message="Unable to open this group right now." />;
     }
 
-    return <GroupBoardScreen />;
+    return <GroupBoardShell />;
 }

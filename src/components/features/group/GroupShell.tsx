@@ -1,6 +1,6 @@
 "use client";
 
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import * as React from "react";
 import { toast as sonnerToast } from "sonner";
@@ -8,6 +8,7 @@ import { toPublicUrl } from "@/api/banner-logo";
 import ErrorDisplay from "@/components/common/ErrorDisplay";
 import { GroupBannerBackground } from "@/components/features/group/GroupBannerBackground";
 import { GroupStudioHeader } from "@/components/features/group/setting/GroupStudioHeader";
+import { useGuardedRouter } from "@/components/providers/RateLimitGuardProvider";
 
 type GroupHeaderActionContextValue = {
     setHeaderAction: React.Dispatch<React.SetStateAction<React.ReactNode>>;
@@ -144,7 +145,7 @@ function isUuidLike(value: string) {
 }
 
 export function GroupShell({ groupId, children }: { groupId: string; children: React.ReactNode }) {
-    const router = useRouter();
+    const { guardedReplace } = useGuardedRouter();
     const pathname = usePathname();
     const locale = useLocale();
     const tCommon = useTranslations("Common");
@@ -204,7 +205,7 @@ export function GroupShell({ groupId, children }: { groupId: string; children: R
 
                         // 429 Rate Limit: show toast + keep existing data
                         if (result.error.status === 429) {
-                            sonnerToast.error("Thao tác quá nhanh, vui lòng thử lại sau.", {
+                            sonnerToast.error(tGroupHeader("rateLimit"), {
                                 id: "group-shell-rate-limit",
                                 duration: 4000
                             });
@@ -229,21 +230,26 @@ export function GroupShell({ groupId, children }: { groupId: string; children: R
                     return;
                 }
 
-                const status = error instanceof Response ? error.status : undefined;
-                if (typeof status === "number") {
-                    // 429 Rate Limit: show toast + keep existing data
+                const status =
+                    typeof error === "object" && error !== null && "status" in error
+                        ? Number((error as { status?: unknown }).status)
+                        : undefined;
+
+                if (Number.isFinite(status)) {
                     if (status === 429) {
-                        sonnerToast.error("Thao tác quá nhanh, vui lòng thử lại sau.", {
+                        sonnerToast.error(tGroupHeader("rateLimit"), {
                             id: "group-shell-rate-limit",
                             duration: 4000
                         });
                         if (!cancelled) setIsReady(true);
                         return;
                     }
+
                     console.error("[GroupShell] Failed to load data:", { status });
                 } else {
                     console.error("[GroupShell] Failed to load data.");
                 }
+
                 if (!cancelled) {
                     setLoadError(tGroupHeader("errors.fetchDetailFailed"));
                 }
@@ -262,8 +268,8 @@ export function GroupShell({ groupId, children }: { groupId: string; children: R
     React.useEffect(() => {
         if (!redirectTarget) return;
         // Tách effect redirect riêng để render không bị trộn với logic tải dữ liệu.
-        router.replace(redirectTarget);
-    }, [redirectTarget, router]);
+        guardedReplace(redirectTarget);
+    }, [guardedReplace, redirectTarget]);
 
     React.useEffect(() => {
         if (!(isReady && groupId && isArchived)) return;
@@ -273,8 +279,8 @@ export function GroupShell({ groupId, children }: { groupId: string; children: R
 
         // Group đã bị lưu trữ thì khóa người dùng vào khu vực cài đặt tương ứng.
         const localePrefix = pathname.split("/").filter(Boolean)[0] || "vi";
-        router.replace(`/${localePrefix}/group/${groupId}/setting`);
-    }, [groupId, isArchived, isReady, pathname, router]);
+        guardedReplace(`/${localePrefix}/group/${groupId}/setting`);
+    }, [groupId, guardedReplace, isArchived, isReady, pathname]);
 
     if (!isReady) {
         return (

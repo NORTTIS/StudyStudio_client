@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { toast as sonnerToast } from "sonner";
 
@@ -34,8 +34,8 @@ export default function ServerFetchErrorHandler({
     fallbackPath = "/"
 }: RateLimitGuardProps) {
     const router = useRouter();
-    const blockedRef = { current: false };
-    const blockKeyRef = { current: 0 };
+    const blockedRef = useRef(false);
+    const blockKeyRef = useRef(0);
 
     // Handle 429 / RATE_LIMIT_EXCEEDED from server fetch
     useEffect(() => {
@@ -52,25 +52,37 @@ export default function ServerFetchErrorHandler({
         // Block navigation for 3 seconds
         const originalPush = router.push.bind(router);
         const originalReplace = router.replace.bind(router);
+        type PushArgs = Parameters<typeof originalPush>;
+        type ReplaceArgs = Parameters<typeof originalReplace>;
 
-        const blockNav = (href: string) => {
+        const blockNav = async (href: PushArgs[0] | ReplaceArgs[0]) => {
             if (blockedRef.current) {
                 sonnerToast.error("Thao tác quá nhanh, vui lòng thử lại sau.", {
                     id: `server-nav-block-${blockKey}`,
                     duration: 3000
                 });
-                return Promise.reject(new Error("Navigation blocked due to rate limit"));
+
+                if (typeof href === "string" && href !== fallbackPath) {
+                    originalReplace(fallbackPath);
+                }
+
+                return false;
             }
-            return Promise.resolve();
+
+            return true;
         };
 
-        router.push = async (href: string) => {
-            await blockNav(href);
-            return originalPush(href);
+        router.push = async (...args: PushArgs) => {
+            const canNavigate = await blockNav(args[0]);
+            if (!canNavigate) return;
+
+            return originalPush(...args);
         };
-        router.replace = async (href: string) => {
-            await blockNav(href);
-            return originalReplace(href);
+        router.replace = async (...args: ReplaceArgs) => {
+            const canNavigate = await blockNav(args[0]);
+            if (!canNavigate) return;
+
+            return originalReplace(...args);
         };
 
         const unblockTimer = setTimeout(() => {
@@ -84,7 +96,7 @@ export default function ServerFetchErrorHandler({
             router.push = originalPush;
             router.replace = originalReplace;
         };
-    }, [error, router]);
+    }, [error, fallbackPath, router]);
 
     // Handle other server fetch errors (non-429)
     useEffect(() => {
