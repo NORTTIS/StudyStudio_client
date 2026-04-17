@@ -1905,6 +1905,7 @@ function TaskCard({
     return (
         <div
             ref={setNodeRef}
+            data-no-pan="true"
             style={style}
             {...attributes}
             {...listeners}
@@ -2456,6 +2457,7 @@ function ColumnView({
             data-status-id={dndEnabled ? undefined : statusId}>
             <div
                 ref={(node) => headerDragProps?.setActivatorNodeRef?.(node as any)}
+                data-no-pan="true"
                 {...(headerDragProps?.attributes ?? {})}
                 {...(headerDragProps?.listeners ?? {})}
                 style={{ touchAction: "none" }}
