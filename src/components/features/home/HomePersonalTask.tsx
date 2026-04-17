@@ -402,6 +402,40 @@ function findTaskInStatuses(statuses: PersonalTaskStatusDto[], taskId: string): 
     return null;
 }
 
+function resolveTaskStatusId(task: PersonalTaskItemResponse | null | undefined, statuses: PersonalTaskStatusDto[]) {
+    const directStatusId = String(task?.personalStatus?.statusId ?? "").trim();
+    if (directStatusId) return directStatusId;
+
+    const taskId = String(task?.taskId ?? "").trim();
+    if (!taskId) return null;
+
+    return findColumnOfTask(statuses, taskId);
+}
+
+function normalizeBoardStatuses(input: PersonalTaskStatusDto[] | null | undefined): PersonalTaskStatusDto[] {
+    return [...(input ?? [])]
+        .map((status) => {
+            const normalizedStatus: PersonalTaskStatusDto = {
+                ...status,
+                taskList: []
+            };
+
+            normalizedStatus.taskList = ((status.taskList ?? []) as PersonalTaskItemResponse[]).map((task) => ({
+                ...task,
+                personalStatus: {
+                    ...(task.personalStatus ?? {}),
+                    statusId: task.personalStatus?.statusId ?? status.statusId,
+                    statusName: task.personalStatus?.statusName ?? status.statusName,
+                    position: task.personalStatus?.position ?? status.position,
+                    userId: task.personalStatus?.userId ?? status.userId
+                }
+            }));
+
+            return normalizedStatus;
+        })
+        .sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
+}
+
 function filterDroppablesByType(droppables: DroppableContainer[], allow: Array<string>) {
     return droppables.filter((d) => {
         const t = d.data?.current?.type;
@@ -894,6 +928,7 @@ function PersonalTaskCard({
     task,
     columnId,
     isSubmitting,
+    isDropTarget = false,
     onOpen,
     onRename,
     onDelete,
@@ -902,6 +937,7 @@ function PersonalTaskCard({
     task: PersonalTaskItemResponse;
     columnId: string;
     isSubmitting: boolean;
+    isDropTarget?: boolean;
     onOpen: (task: PersonalTaskItemResponse) => void;
     onRename: (task: PersonalTaskItemResponse, nextTitle: string) => Promise<void>;
     onDelete: (task: PersonalTaskItemResponse) => Promise<void>;
@@ -995,10 +1031,17 @@ function PersonalTaskCard({
                 "group relative w-full select-none rounded-xl p-3",
                 "cursor-grab border border-black/5 shadow-[0_1px_1px_rgba(9,30,66,0.08),0_0_0_1px_rgba(9,30,66,0.04)]",
                 "transition focus-within:ring-2 focus-within:ring-blue-200/60 active:cursor-grabbing",
+                isDropTarget && "ring-2 ring-blue-200/70 ring-offset-2 ring-offset-white",
                 done
                     ? "bg-zinc-50 hover:bg-zinc-100/90 hover:shadow-[0_2px_6px_rgba(9,30,66,0.10),0_0_0_1px_rgba(9,30,66,0.04)]"
                     : "bg-white hover:bg-white hover:shadow-[0_4px_8px_rgba(9,30,66,0.16),0_0_0_1px_rgba(9,30,66,0.04)]"
             )}>
+            {isDropTarget ? (
+                <div className="-top-2 pointer-events-none absolute right-3 left-3 z-10 flex items-center">
+                    <div className="h-2.5 w-2.5 rounded-full border-2 border-white bg-blue-500 shadow-[0_4px_14px_rgba(59,130,246,0.28)]" />
+                    <div className="ml-2 h-1 flex-1 rounded-full bg-[linear-gradient(90deg,#3B82F6_0%,#60A5FA_100%)] shadow-[0_0_0_3px_rgba(59,130,246,0.10)]" />
+                </div>
+            ) : null}
             <div className="min-w-0">
                 {!isEditing ? (
                     <>
@@ -1323,6 +1366,7 @@ function ColumnView({
     onRenameTask,
     onDeleteTask,
     ghost,
+    dropTargetTaskId,
     isEditing,
     columnDraft,
     columnError,
@@ -1341,6 +1385,7 @@ function ColumnView({
     onRenameTask: (task: PersonalTaskItemResponse, nextTitle: string) => Promise<void>;
     onDeleteTask: (task: PersonalTaskItemResponse) => Promise<void>;
     ghost?: { task: PersonalTaskItemResponse; toCol: ColumnId; index: number } | null;
+    dropTargetTaskId?: string | null;
     isEditing: boolean;
     columnDraft: string;
     columnError: string | null;
@@ -1368,27 +1413,6 @@ function ColumnView({
     });
 
     const shouldShowGhost = !!ghost && ghost.toCol === statusId;
-
-    type RenderedBoardItem =
-        | { kind: "task"; task: PersonalTaskItemResponse }
-        | { kind: "ghost"; task: PersonalTaskItemResponse };
-
-    const rendered = React.useMemo<RenderedBoardItem[]>(() => {
-        const base: RenderedBoardItem[] = tasks.map((t) => ({
-            kind: "task",
-            task: t
-        }));
-
-        if (!(shouldShowGhost && ghost)) return base;
-
-        const idx = Math.max(0, Math.min(ghost.index, base.length));
-        const next = [...base];
-        next.splice(idx, 0, {
-            kind: "ghost",
-            task: ghost.task
-        });
-        return next;
-    }, [tasks, shouldShowGhost, ghost]);
 
     const btnRef = React.useRef<HTMLButtonElement | null>(null);
     const [openMenu, setOpenMenu] = React.useState(false);
@@ -1522,22 +1546,19 @@ function ColumnView({
                     )}>
                     <SortableContext items={taskIds} strategy={verticalListSortingStrategy}>
                         <div className="relative max-h-[68vh] space-y-2 overflow-y-auto pr-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                            {rendered.map((item, index) =>
-                                item.kind === "ghost" ? (
-                                    <GhostTaskCard key={`ghost-${statusId}-${index}`} task={item.task} t={t} />
-                                ) : (
-                                    <PersonalTaskCard
-                                        key={String(item.task.taskId)}
-                                        task={item.task}
-                                        columnId={statusId}
-                                        isSubmitting={isSubmitting}
-                                        onOpen={onOpenTask}
-                                        onRename={onRenameTask}
-                                        onDelete={onDeleteTask}
-                                        t={t}
-                                    />
-                                )
-                            )}
+                            {tasks.map((task) => (
+                                <PersonalTaskCard
+                                    key={String(task.taskId)}
+                                    task={task}
+                                    columnId={statusId}
+                                    isSubmitting={isSubmitting}
+                                    isDropTarget={dropTargetTaskId === String(task.taskId ?? "")}
+                                    onOpen={onOpenTask}
+                                    onRename={onRenameTask}
+                                    onDelete={onDeleteTask}
+                                    t={t}
+                                />
+                            ))}
 
                             {tasks.length === 0 ? (
                                 <div className="rounded-xl border border-[#D8D1CA] border-dashed bg-white px-3 py-8 text-center">
@@ -1551,8 +1572,11 @@ function ColumnView({
                             <div
                                 ref={setEndRef}
                                 className={cn(
-                                    "h-3 rounded-xl border border-dashed transition",
-                                    isOverEnd ? "border-[#CFC7BF] bg-[#ECE7E2]" : "border-transparent"
+                                    "rounded-xl transition-all duration-150",
+                                    shouldShowGhost && ghost?.index === tasks.length ? "h-6" : "h-3",
+                                    isOverEnd
+                                        ? "border border-blue-300/80 bg-[linear-gradient(90deg,rgba(191,219,254,0.72),rgba(219,234,254,0.96))] shadow-[0_0_0_3px_rgba(59,130,246,0.08)]"
+                                        : "border border-transparent bg-transparent"
                                 )}
                             />
                         </div>
@@ -1579,6 +1603,7 @@ function SortableColumn(props: {
     onRenameTask: (task: PersonalTaskItemResponse, nextTitle: string) => Promise<void>;
     onDeleteTask: (task: PersonalTaskItemResponse) => Promise<void>;
     ghost?: { task: PersonalTaskItemResponse; toCol: ColumnId; index: number } | null;
+    dropTargetTaskId?: string | null;
     isEditing: boolean;
     columnDraft: string;
     columnError: string | null;
@@ -1597,6 +1622,7 @@ function SortableColumn(props: {
         onRenameTask,
         onDeleteTask,
         ghost,
+        dropTargetTaskId,
         isEditing,
         columnDraft,
         columnError,
@@ -1633,6 +1659,7 @@ function SortableColumn(props: {
                 onRenameTask={onRenameTask}
                 onDeleteTask={onDeleteTask}
                 ghost={ghost}
+                dropTargetTaskId={dropTargetTaskId}
                 isEditing={isEditing}
                 columnDraft={columnDraft}
                 columnError={columnError}
@@ -2854,12 +2881,7 @@ export default function HomePersonalTaskScreen() {
     }, [fetchBoard]);
 
     React.useEffect(() => {
-        const nextStatuses = [...((board?.personalTaskStatuses as PersonalTaskStatusDto[] | null | undefined) ?? [])]
-            .map((status) => ({
-                ...status,
-                taskList: [...((status.taskList ?? []) as PersonalTaskItemResponse[])]
-            }))
-            .sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
+        const nextStatuses = normalizeBoardStatuses(board?.personalTaskStatuses as PersonalTaskStatusDto[] | null | undefined);
 
         setStatuses(nextStatuses);
     }, [board]);
@@ -2921,6 +2943,12 @@ export default function HomePersonalTaskScreen() {
         return { task, toCol, index: idx !== -1 ? idx : 0 };
     }, [statuses, activeTaskId, overId]);
 
+    const dropTargetTaskId = React.useMemo(() => {
+        if (!overId) return null;
+        if (overId.startsWith(DROP_PREFIX) || overId.startsWith(END_PREFIX)) return null;
+        return overId;
+    }, [overId]);
+
     const collisionDetection: CollisionDetection = React.useCallback((args) => {
         const activeType = args.active.data.current?.type;
 
@@ -2936,9 +2964,21 @@ export default function HomePersonalTaskScreen() {
     }, []);
 
     const handleOpenTaskDetail = React.useCallback((task: PersonalTaskItemResponse) => {
-        setDetailTask(task);
+        const resolvedStatusId = resolveTaskStatusId(task, statuses);
+        const resolvedStatus = statuses.find((status) => String(status.statusId ?? "") === String(resolvedStatusId ?? ""));
+
+        setDetailTask({
+            ...task,
+            personalStatus: {
+                ...(task.personalStatus ?? {}),
+                statusId: resolvedStatusId ?? task.personalStatus?.statusId,
+                statusName: resolvedStatus?.statusName ?? task.personalStatus?.statusName,
+                position: resolvedStatus?.position ?? task.personalStatus?.position,
+                userId: resolvedStatus?.userId ?? task.personalStatus?.userId
+            }
+        });
         setDetailOpen(true);
-    }, []);
+    }, [statuses]);
 
     const handleCloseTaskDetail = React.useCallback(() => {
         if (confirmDeleteTask.open && confirmDeleteTask.fromDetail) return;
@@ -3197,7 +3237,7 @@ export default function HomePersonalTaskScreen() {
                         taskDescription: task.taskDescription ?? null,
                         taskPriority: task.taskPriority,
                         taskSeverity: task.taskSeverity,
-                        personalStatusId: task.personalStatus?.statusId ?? null
+                        personalStatusId: resolveTaskStatusId(task, statuses)
                     }),
                     headers: {
                         "Content-Type": "application/json"
@@ -3214,7 +3254,7 @@ export default function HomePersonalTaskScreen() {
                 setIsSubmitting(false);
             }
         },
-        [fetchBoard]
+        [fetchBoard, statuses]
     );
 
     const handleSaveTaskDetail = React.useCallback(
@@ -3240,37 +3280,74 @@ export default function HomePersonalTaskScreen() {
 
             try {
                 setIsSubmitting(true);
+                const resolvedStatusId = values.statusId ?? resolveTaskStatusId(task, statuses);
+                const nextStatus = statuses.find((s) => String(s.statusId ?? "") === String(resolvedStatusId ?? ""));
+                const nextStartDate = toApiDateTime(values.startDate) ?? undefined;
+                const nextDueDate = toApiDateTime(values.dueDate) ?? undefined;
+                const nextPriority: 0 | 1 | 2 = values.priority === "high" ? 2 : values.priority === "medium" ? 1 : 0;
+                const nextSeverity: 0 | 1 | 2 | 3 =
+                    values.severity === "critical"
+                        ? 3
+                        : values.severity === "major"
+                            ? 2
+                            : values.severity === "moderate"
+                                ? 1
+                                : 0;
 
                 await apiFetch<TaskItemResponseApiResponse>(buildUpdatePersonalTaskUrl(String(task.taskId)), {
                     method: "PUT",
                     body: JSON.stringify({
                         taskName: values.title.trim(),
                         taskDescription: values.description.trim() || null,
-                        personalStatusId: values.statusId ?? null,
-                        startDate: toApiDateTime(values.startDate),
-                        dueDate: toApiDateTime(values.dueDate),
+                        personalStatusId: resolvedStatusId,
+                        startDate: nextStartDate ?? null,
+                        dueDate: nextDueDate ?? null,
                         progress: values.progress,
                         estimatedHours: values.estimatedHours ?? null,
                         actualHours: values.actualHours ?? null,
-                        taskPriority: values.priority === "high" ? 2 : values.priority === "medium" ? 1 : 0,
-                        taskSeverity:
-                            values.severity === "critical"
-                                ? 3
-                                : values.severity === "major"
-                                    ? 2
-                                    : values.severity === "moderate"
-                                        ? 1
-                                        : 0
+                        taskPriority: nextPriority,
+                        taskSeverity: nextSeverity
                     }),
                     headers: {
                         "Content-Type": "application/json"
                     }
                 });
 
+                setStatuses((prevStatuses) =>
+                    prevStatuses.map((status) => {
+                        const statusId = String(status.statusId ?? "");
+                        const nextTaskList = ((status.taskList ?? []) as PersonalTaskItemResponse[]).map((item) => {
+                            if (String(item.taskId ?? "") !== String(task.taskId)) return item;
+
+                            return {
+                                ...item,
+                                taskTitle: values.title.trim(),
+                                taskDescription: values.description.trim() || null,
+                                progress: values.progress,
+                                personalStatus: {
+                                    ...(item.personalStatus ?? {}),
+                                    statusId: resolvedStatusId ?? undefined,
+                                    statusName: nextStatus?.statusName ?? item.personalStatus?.statusName ?? null,
+                                    position: nextStatus?.position ?? item.personalStatus?.position,
+                                    userId: nextStatus?.userId ?? item.personalStatus?.userId
+                                },
+                                startDate: nextStartDate,
+                                dueDate: nextDueDate,
+                                estimatedHours: values.estimatedHours ?? undefined,
+                                actualHours: values.actualHours ?? undefined,
+                                taskPriority: nextPriority,
+                                taskSeverity: nextSeverity
+                            };
+                        });
+
+                        return statusId === String(resolvedStatusId ?? "")
+                            ? { ...status, taskList: nextTaskList }
+                            : { ...status, taskList: nextTaskList };
+                    })
+                );
+
                 setDetailTask((prev) => {
                     if (!prev || String(prev.taskId) !== String(task.taskId)) return prev;
-
-                    const nextStatus = statuses.find((s) => String(s.statusId ?? "") === String(values.statusId ?? ""));
 
                     return {
                         ...prev,
@@ -3279,22 +3356,17 @@ export default function HomePersonalTaskScreen() {
                         progress: values.progress,
                         personalStatus: {
                             ...(prev.personalStatus ?? {}),
-                            statusId: values.statusId ?? undefined,
-                            statusName: nextStatus?.statusName ?? prev.personalStatus?.statusName ?? null
+                            statusId: resolvedStatusId ?? undefined,
+                            statusName: nextStatus?.statusName ?? prev.personalStatus?.statusName ?? null,
+                            position: nextStatus?.position ?? prev.personalStatus?.position,
+                            userId: nextStatus?.userId ?? prev.personalStatus?.userId
                         },
-                        startDate: toApiDateTime(values.startDate) ?? undefined,
-                        dueDate: toApiDateTime(values.dueDate) ?? undefined,
+                        startDate: nextStartDate,
+                        dueDate: nextDueDate,
                         estimatedHours: values.estimatedHours ?? undefined,
                         actualHours: values.actualHours ?? undefined,
-                        taskPriority: values.priority === "high" ? 2 : values.priority === "medium" ? 1 : 0,
-                        taskSeverity:
-                            values.severity === "critical"
-                                ? 3
-                                : values.severity === "major"
-                                    ? 2
-                                    : values.severity === "moderate"
-                                        ? 1
-                                        : 0
+                        taskPriority: nextPriority,
+                        taskSeverity: nextSeverity
                     };
                 });
 
@@ -3667,6 +3739,7 @@ export default function HomePersonalTaskScreen() {
                                                 setConfirmDeleteTask({ open: true, task, fromDetail: false });
                                             }}
                                             ghost={ghost}
+                                            dropTargetTaskId={dropTargetTaskId}
                                             isEditing={editingColumn.id === String(status.statusId ?? "")}
                                             columnDraft={
                                                 editingColumn.id === String(status.statusId ?? "")
