@@ -420,16 +420,18 @@ function normalizeBoardStatuses(input: PersonalTaskStatusDto[] | null | undefine
                 taskList: []
             };
 
-            normalizedStatus.taskList = ((status.taskList ?? []) as PersonalTaskItemResponse[]).map((task) => ({
-                ...task,
-                personalStatus: {
-                    ...(task.personalStatus ?? {}),
-                    statusId: task.personalStatus?.statusId ?? status.statusId,
-                    statusName: task.personalStatus?.statusName ?? status.statusName,
-                    position: task.personalStatus?.position ?? status.position,
-                    userId: task.personalStatus?.userId ?? status.userId
-                }
-            }));
+            normalizedStatus.taskList = ((status.taskList ?? []) as PersonalTaskItemResponse[])
+                .map((task) => ({
+                    ...task,
+                    personalStatus: {
+                        ...(task.personalStatus ?? {}),
+                        statusId: task.personalStatus?.statusId ?? status.statusId,
+                        statusName: task.personalStatus?.statusName ?? status.statusName,
+                        position: task.personalStatus?.position ?? status.position,
+                        userId: task.personalStatus?.userId ?? status.userId
+                    }
+                }))
+                .sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
 
             return normalizedStatus;
         })
@@ -2897,10 +2899,37 @@ export default function HomePersonalTaskScreen() {
 
     const sensors = useSensors(
         useSensor(PointerSensor, {
-            activationConstraint: { delay: 200, tolerance: 5 }
+            activationConstraint: { distance: 8 }
         }),
         useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
     );
+
+    React.useEffect(() => {
+        const isDragging = !!(activeTaskId || activeColumnId);
+        if (!isDragging) return;
+
+        const html = document.documentElement;
+        const body = document.body;
+        const prevHtmlOverflow = html.style.overflow;
+        const prevBodyOverflow = body.style.overflow;
+        const prevHtmlOverscroll = html.style.overscrollBehavior;
+        const prevBodyOverscroll = body.style.overscrollBehavior;
+        const prevBodyTouchAction = body.style.touchAction;
+
+        html.style.overflow = "hidden";
+        body.style.overflow = "hidden";
+        html.style.overscrollBehavior = "none";
+        body.style.overscrollBehavior = "none";
+        body.style.touchAction = "none";
+
+        return () => {
+            html.style.overflow = prevHtmlOverflow;
+            body.style.overflow = prevBodyOverflow;
+            html.style.overscrollBehavior = prevHtmlOverscroll;
+            body.style.overscrollBehavior = prevBodyOverscroll;
+            body.style.touchAction = prevBodyTouchAction;
+        };
+    }, [activeTaskId, activeColumnId]);
 
     const columnIds = React.useMemo(() => statuses.map((s) => String(s.statusId ?? "")), [statuses]);
 
@@ -3743,6 +3772,7 @@ export default function HomePersonalTaskScreen() {
                     ) : (
                         <DndContext
                             sensors={sensors}
+                            autoScroll={false}
                             collisionDetection={collisionDetection}
                             onDragStart={handleDragStart}
                             onDragOver={handleDragOver}
