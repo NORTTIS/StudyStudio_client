@@ -436,6 +436,23 @@ function normalizeStatusName(value?: string | null) {
         .toLowerCase();
 }
 
+function parseTaskDueDate(dueDate?: string | null) {
+    const raw = String(dueDate ?? "").trim();
+    if (!raw) return null;
+
+    const dateOnlyMatch = raw.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (dateOnlyMatch) {
+        const year = Number(dateOnlyMatch[1]);
+        const month = Number(dateOnlyMatch[2]) - 1;
+        const day = Number(dateOnlyMatch[3]);
+        const parsed = new Date(year, month, day);
+        return Number.isNaN(parsed.getTime()) ? null : parsed;
+    }
+
+    const parsed = new Date(raw);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
 function isCompletedStatus(statusName?: string | null) {
     const normalized = normalizeStatusName(statusName);
     return normalized.includes("hoan thanh") || normalized.includes("done") || normalized.includes("completed");
@@ -448,8 +465,8 @@ function isOverdueStatus(statusName?: string | null) {
 
 function isOverdueTask(dueDate?: string | null, progress?: number | null) {
     if (!dueDate || normalizeProgressValue(progress) >= 100) return false;
-    const parsed = new Date(dueDate);
-    if (Number.isNaN(parsed.getTime())) return false;
+    const parsed = parseTaskDueDate(dueDate);
+    if (!parsed) return false;
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     parsed.setHours(0, 0, 0, 0);
@@ -482,8 +499,8 @@ function matchesAnalysisTaskFilter(item: SummaryPopupTaskItem, filter: AnalysisT
 
 function formatTaskDueDate(dueDate: string | null | undefined, locale: string, noDateLabel: string) {
     if (!dueDate) return noDateLabel;
-    const parsed = new Date(dueDate);
-    if (Number.isNaN(parsed.getTime())) return noDateLabel;
+    const parsed = parseTaskDueDate(dueDate);
+    if (!parsed) return noDateLabel;
     return new Intl.DateTimeFormat(locale === "vi" ? "vi-VN" : "en-US", {
         day: "2-digit",
         month: "2-digit",
@@ -1686,8 +1703,8 @@ export default function AnalysisHome() {
         });
 
         return filtered.sort((a, b) => {
-            const aTime = a.dueDate ? new Date(a.dueDate).getTime() : Number.MAX_SAFE_INTEGER;
-            const bTime = b.dueDate ? new Date(b.dueDate).getTime() : Number.MAX_SAFE_INTEGER;
+            const aTime = parseTaskDueDate(a.dueDate)?.getTime() ?? Number.MAX_SAFE_INTEGER;
+            const bTime = parseTaskDueDate(b.dueDate)?.getTime() ?? Number.MAX_SAFE_INTEGER;
             if (selectedTaskFilter === "completed") return bTime - aTime;
             return aTime - bTime;
         });
@@ -1697,26 +1714,30 @@ export default function AnalysisHome() {
         isTaskListLoading || isSummaryPersonalTasksLoading || (userGroups.length > 0 && isSummaryGroupTasksLoading);
     const taskPopupError = taskListError ?? joinedGroupsError ?? summaryGroupTasksError ?? summaryPersonalTasksError;
 
+    const closeAnalysisTaskPopup = React.useCallback(() => {
+        setOpenTaskPopup(false);
+    }, []);
+
     const openAnalysisTaskPopup = (filter: AnalysisTaskFilter) => {
         setSelectedTaskFilter(filter);
         setSelectedSourceFilter("all");
         setOpenTaskPopup(true);
     };
 
-    const handleTaskClick = (item: SummaryPopupTaskItem) => {
+    const handleTaskClick = React.useCallback((item: SummaryPopupTaskItem) => {
         if (item.sourceKind === "personal") {
             const taskId = String(item.taskId ?? "").trim();
             if (!taskId) return;
-            setOpenTaskPopup(false);
+            closeAnalysisTaskPopup();
             router.push(`/${locale}/home?personalTaskId=${encodeURIComponent(taskId)}`);
             return;
         }
 
         const href = buildTaskDetailHref(item);
         if (href === "#") return;
-        setOpenTaskPopup(false);
+        closeAnalysisTaskPopup();
         router.push(href);
-    };
+    }, [closeAnalysisTaskPopup, locale, router]);
 
     return (
         <div className="relative overflow-hidden bg-[linear-gradient(180deg,#F8FAFC_0%,#FFF7ED_34%,#FFFBF5_66%,#F8FAFC_100%)]">
@@ -2440,7 +2461,7 @@ export default function AnalysisHome() {
 
             <AnalysisTaskListLayer
                 open={openTaskPopup}
-                onClose={() => setOpenTaskPopup(false)}
+                onClose={closeAnalysisTaskPopup}
                 filter={selectedTaskFilter}
                 items={taskPopupItems}
                 sourceFilter={selectedSourceFilter}

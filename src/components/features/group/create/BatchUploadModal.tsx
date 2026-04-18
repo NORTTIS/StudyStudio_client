@@ -96,6 +96,7 @@ export function BatchUploadModal({ open, onClose, studioId, onSuccess }: BatchUp
 
             // Nếu file không hợp lệ thì hiển thị lỗi
             if (validationError) {
+                setSelectedFile(null);
                 setErrorMessage(validationError);
                 return;
             }
@@ -160,7 +161,7 @@ export function BatchUploadModal({ open, onClose, studioId, onSuccess }: BatchUp
                 setState("success");
             } else {
                 // Nếu API trả về lỗi nghiệp vụ
-                setErrorMessage(response.message || "Tải lên thất bại");
+                setErrorMessage(response.message || t("errors.uploadFailed"));
                 setState("error");
             }
         } catch (err) {
@@ -173,19 +174,31 @@ export function BatchUploadModal({ open, onClose, studioId, onSuccess }: BatchUp
         }
     }, [selectedFile, studioId, t]);
 
+    const sanitizeTsvCell = useCallback((value: unknown) => {
+        const raw = String(value ?? "");
+        const normalized = raw.replace(/\r\n|\r|\n/g, " ").replace(/\t/g, " ").trim();
+
+        // Prefix spreadsheet formula markers to avoid formula execution in Excel-like apps.
+        if (/^[=+\-@]/.test(normalized)) {
+            return `'${normalized}`;
+        }
+
+        return normalized;
+    }, []);
+
     // Tải danh sách lỗi về máy dưới dạng TSV để mở bằng Excel
     const handleDownloadErrors = useCallback(() => {
         if (!uploadResult?.errors || uploadResult.errors.length === 0) return;
 
         // Header cho file export
-        const headers = ["STT", "Email", "Nhóm", "Lý do"];
+        const headers = ["STT", "Email", "Nhóm", "Lý do"].map(sanitizeTsvCell);
 
         // Map danh sách lỗi thành từng dòng dữ liệu
         const rows = uploadResult.errors.map((error: BatchErrorRow) => [
-            error.row?.toString() || "",
-            error.email || "",
-            error.groupName || "",
-            error.reason || error.message || ""
+            sanitizeTsvCell(error.row?.toString() || ""),
+            sanitizeTsvCell(error.email || ""),
+            sanitizeTsvCell(error.groupName || ""),
+            sanitizeTsvCell(error.reason || error.message || "")
         ]);
 
         // Ghép thành nội dung TSV
@@ -201,7 +214,7 @@ export function BatchUploadModal({ open, onClose, studioId, onSuccess }: BatchUp
         a.click();
 
         URL.revokeObjectURL(url);
-    }, [uploadResult, t]);
+    }, [sanitizeTsvCell, uploadResult, t]);
 
     // Đóng modal; nếu upload thành công thì gọi callback onSuccess
     const handleClose = useCallback(() => {

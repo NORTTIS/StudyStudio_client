@@ -298,7 +298,27 @@ export default function GroupDocumentsPage() {
         // Reset role ngay khi group đổi để tránh trạng thái stale
         setCurrentUserRole(null);
 
-        fetchGroupDetailRole(groupId).then((role) => setCurrentUserRole(role));
+        let cancelled = false;
+
+        const loadCurrentUserRole = async () => {
+            try {
+                const role = await fetchGroupDetailRole(groupId);
+                if (!cancelled) {
+                    setCurrentUserRole(role);
+                }
+            } catch (error) {
+                if (!cancelled) {
+                    setCurrentUserRole(null);
+                }
+                console.error("[GroupDocumentsPage] Failed to fetch group role:", error);
+            }
+        };
+
+        void loadCurrentUserRole();
+
+        return () => {
+            cancelled = true;
+        };
     }, [groupId]);
 
     /**

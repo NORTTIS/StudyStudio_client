@@ -746,7 +746,7 @@ function matchesSummaryTaskFilter(item: HomeTaskListItemResponse, filter: Summar
 
     if (filter === "completed") return completed;
     if (filter === "overdue") return overdue && !completed;
-    return !completed && !overdue;
+    return !completed;
 }
 
 function formatTaskDueDate(dueDate: string | null | undefined, locale: string, noDateLabel: string) {
@@ -1066,6 +1066,10 @@ function TaskListLayer({
     locale
 }: TaskListLayerProps) {
     const titleId = React.useId();
+    const overlayRef = React.useRef<HTMLDivElement | null>(null);
+    const dialogRef = React.useRef<HTMLDivElement | null>(null);
+    const closeButtonRef = React.useRef<HTMLButtonElement | null>(null);
+    const previousFocusRef = React.useRef<HTMLElement | null>(null);
     const meta = getTaskFilterMeta(filter, t);
     const noDateLabel = taskListT("noDate");
     const toneStyles = {
@@ -1089,8 +1093,52 @@ function TaskListLayer({
     React.useEffect(() => {
         if (!open) return;
 
+        previousFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+        const focusTarget = closeButtonRef.current ?? dialogRef.current;
+        window.setTimeout(() => {
+            focusTarget?.focus();
+        }, 0);
+
         const onKeyDown = (e: KeyboardEvent) => {
-            if (e.key === "Escape") onClose();
+            if (e.key === "Escape") {
+                e.preventDefault();
+                onClose();
+                return;
+            }
+
+            if (e.key !== "Tab") return;
+
+            const dialog = dialogRef.current;
+            if (!dialog) return;
+
+            const focusableElements = Array.from(
+                dialog.querySelectorAll<HTMLElement>(
+                    'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+                )
+            ).filter((element) => !element.hasAttribute("disabled") && element.tabIndex >= 0);
+
+            if (!focusableElements.length) {
+                e.preventDefault();
+                dialog.focus();
+                return;
+            }
+
+            const firstElement = focusableElements[0];
+            const lastElement = focusableElements[focusableElements.length - 1];
+            const activeElement = document.activeElement;
+
+            if (e.shiftKey) {
+                if (activeElement === firstElement || !dialog.contains(activeElement)) {
+                    e.preventDefault();
+                    lastElement.focus();
+                }
+                return;
+            }
+
+            if (activeElement === lastElement || !dialog.contains(activeElement)) {
+                e.preventDefault();
+                firstElement.focus();
+            }
         };
 
         window.addEventListener("keydown", onKeyDown);
@@ -1099,6 +1147,7 @@ function TaskListLayer({
         return () => {
             window.removeEventListener("keydown", onKeyDown);
             document.body.style.overflow = "";
+            previousFocusRef.current?.focus();
         };
     }, [open, onClose]);
 
@@ -1106,11 +1155,16 @@ function TaskListLayer({
         <AnimatePresence>
             {open ? (
                 <motion.div
+                    ref={overlayRef}
                     className="fixed inset-0 z-[110] flex items-center justify-center bg-slate-950/38 p-4 backdrop-blur-[4px]"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}>
+                    exit={{ opacity: 0 }}
+                    onMouseDown={(event) => {
+                        if (event.target === overlayRef.current) onClose();
+                    }}>
                     <motion.div
+                        ref={dialogRef}
                         initial={{ opacity: 0, y: 28, scale: 0.98 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 18, scale: 0.98 }}
@@ -1118,6 +1172,7 @@ function TaskListLayer({
                         role="dialog"
                         aria-modal="true"
                         aria-labelledby={titleId}
+                        tabIndex={-1}
                         className="relative flex max-h-[88vh] w-full max-w-4xl flex-col overflow-hidden rounded-[32px] border border-white/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(255,249,244,0.96))] shadow-[0_28px_90px_rgba(15,23,42,0.18)]">
                         <div className="flex items-start justify-between gap-4 border-b border-[#F0DED0] px-6 py-5 md:px-8">
                             <div className="min-w-0">
@@ -1132,6 +1187,7 @@ function TaskListLayer({
                             </div>
 
                             <button
+                                ref={closeButtonRef}
                                 type="button"
                                 onClick={onClose}
                                 aria-label={t("close")}
@@ -1259,12 +1315,60 @@ function GroupListLayer({
     t
 }: GroupListLayerProps) {
     const titleId = React.useId();
+    const overlayRef = React.useRef<HTMLDivElement | null>(null);
+    const dialogRef = React.useRef<HTMLDivElement | null>(null);
+    const closeButtonRef = React.useRef<HTMLButtonElement | null>(null);
+    const previousFocusRef = React.useRef<HTMLElement | null>(null);
 
     React.useEffect(() => {
         if (!open) return;
 
+        previousFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+        const focusTarget = closeButtonRef.current ?? dialogRef.current;
+        window.setTimeout(() => {
+            focusTarget?.focus();
+        }, 0);
+
         const onKeyDown = (e: KeyboardEvent) => {
-            if (e.key === "Escape") onClose();
+            if (e.key === "Escape") {
+                e.preventDefault();
+                onClose();
+                return;
+            }
+
+            if (e.key !== "Tab") return;
+
+            const dialog = dialogRef.current;
+            if (!dialog) return;
+
+            const focusableElements = Array.from(
+                dialog.querySelectorAll<HTMLElement>(
+                    'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+                )
+            ).filter((element) => !element.hasAttribute("disabled") && element.tabIndex >= 0);
+
+            if (!focusableElements.length) {
+                e.preventDefault();
+                dialog.focus();
+                return;
+            }
+
+            const firstElement = focusableElements[0];
+            const lastElement = focusableElements[focusableElements.length - 1];
+            const activeElement = document.activeElement;
+
+            if (e.shiftKey) {
+                if (activeElement === firstElement || !dialog.contains(activeElement)) {
+                    e.preventDefault();
+                    lastElement.focus();
+                }
+                return;
+            }
+
+            if (activeElement === lastElement || !dialog.contains(activeElement)) {
+                e.preventDefault();
+                firstElement.focus();
+            }
         };
 
         window.addEventListener("keydown", onKeyDown);
@@ -1273,6 +1377,7 @@ function GroupListLayer({
         return () => {
             window.removeEventListener("keydown", onKeyDown);
             document.body.style.overflow = "";
+            previousFocusRef.current?.focus();
         };
     }, [open, onClose]);
 
@@ -1280,11 +1385,16 @@ function GroupListLayer({
         <AnimatePresence>
             {open ? (
                 <motion.div
+                    ref={overlayRef}
                     className="fixed inset-0 z-[115] flex items-center justify-center bg-slate-950/38 p-4 backdrop-blur-[4px]"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}>
+                    exit={{ opacity: 0 }}
+                    onMouseDown={(event) => {
+                        if (event.target === overlayRef.current) onClose();
+                    }}>
                     <motion.div
+                        ref={dialogRef}
                         initial={{ opacity: 0, y: 28, scale: 0.98 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 18, scale: 0.98 }}
@@ -1292,6 +1402,7 @@ function GroupListLayer({
                         role="dialog"
                         aria-modal="true"
                         aria-labelledby={titleId}
+                        tabIndex={-1}
                         className="relative flex max-h-[88vh] w-full max-w-4xl flex-col overflow-hidden rounded-[32px] border border-white/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(255,249,244,0.96))] shadow-[0_28px_90px_rgba(15,23,42,0.18)]">
                         <div className="flex items-start justify-between gap-4 border-b border-[#F0DED0] px-6 py-5 md:px-8">
                             <div className="min-w-0">
@@ -1306,6 +1417,7 @@ function GroupListLayer({
                             </div>
 
                             <button
+                                ref={closeButtonRef}
                                 type="button"
                                 onClick={onClose}
                                 aria-label={t("close")}
@@ -1598,11 +1710,19 @@ export default function HomeSummary() {
         setOpenGroupPopup(true);
     };
 
-    const handleTaskClick = (item: SummaryPopupTaskItem) => {
+    const closeTaskPopup = React.useCallback(() => {
+        setOpenTaskPopup(false);
+    }, []);
+
+    const closeGroupPopup = React.useCallback(() => {
+        setOpenGroupPopup(false);
+    }, []);
+
+    const handleTaskClick = React.useCallback((item: SummaryPopupTaskItem) => {
         if (item.sourceKind === "personal") {
             const taskId = String(item.taskId ?? "").trim();
             if (!taskId) return;
-            setOpenTaskPopup(false);
+            closeTaskPopup();
             document.getElementById("home-personal-task-section")?.scrollIntoView({ behavior: "smooth", block: "start" });
             window.dispatchEvent(new CustomEvent("home:open-personal-task-detail", { detail: { taskId } }));
             return;
@@ -1610,16 +1730,16 @@ export default function HomeSummary() {
 
         const href = buildTaskDetailHref(item);
         if (href === "#") return;
-        setOpenTaskPopup(false);
+        closeTaskPopup();
         router.push(href);
-    };
+    }, [closeTaskPopup, router]);
 
-    const handleGroupClick = (group: SummaryGroupItem) => {
+    const handleGroupClick = React.useCallback((group: SummaryGroupItem) => {
         const groupId = String(group.groupId ?? group.id ?? "").trim();
         if (!groupId) return;
-        setOpenGroupPopup(false);
+        closeGroupPopup();
         router.push(`/group/${groupId}`);
-    };
+    }, [closeGroupPopup, router]);
 
     return (
         <>
@@ -1756,7 +1876,7 @@ export default function HomeSummary() {
 
             <TaskListLayer
                 open={openTaskPopup}
-                onClose={() => setOpenTaskPopup(false)}
+                onClose={closeTaskPopup}
                 filter={selectedTaskFilter}
                 items={summaryTaskItems}
                 sourceFilter={selectedSourceFilter}
@@ -1771,7 +1891,7 @@ export default function HomeSummary() {
 
             <GroupListLayer
                 open={openGroupPopup}
-                onClose={() => setOpenGroupPopup(false)}
+                onClose={closeGroupPopup}
                 filter={selectedGroupFilter}
                 onFilterChange={setSelectedGroupFilter}
                 groups={summaryGroups}
