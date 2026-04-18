@@ -1118,7 +1118,7 @@ export default function MasterPageClient({
                     )
                 );
                 toast({
-                    description: result.message || (nextIsArchived ? "LÆ°u trá»¯ studio tháº¥t báº¡i" : "Má»Ÿ láº¡i studio tháº¥t báº¡i"),
+                    description: result.message || (nextIsArchived ? "Lưu trữ studio thất bại" : "Mở lại studio thất bại"),
                     variant: "destructive"
                 });
                 return;
@@ -1139,7 +1139,7 @@ export default function MasterPageClient({
                 )
             );
             toast({
-                description: nextIsArchived ? "LÆ°u trá»¯ studio tháº¥t báº¡i" : "Má»Ÿ láº¡i studio tháº¥t báº¡i",
+                description: nextIsArchived ? "Lưu trữ studio thất bại" : "Mở lại studio thất bại",
                 variant: "destructive"
             });
         } finally {

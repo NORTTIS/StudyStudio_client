@@ -1722,7 +1722,9 @@ export default function StudioDetailPage({
                                             <div
                                                 className={`grid grid-cols-1 gap-5 ${activeFilteredGroups.length === 0 && archivedFilteredGroups.length === 0
                                                     ? "w-full"
-                                                    : "justify-start sm:[grid-template-columns:repeat(auto-fit,minmax(320px,390px))]"
+                                                    : isStudioOwner
+                                                        ? "md:grid-cols-2"
+                                                        : "md:grid-cols-2 xl:grid-cols-3"
                                                     }`}>
                                                 {activeFilteredGroups.length > 0 ? (
                                                     activeFilteredGroups.map((group) => (
@@ -1968,7 +1970,7 @@ export default function StudioDetailPage({
                                                         </span>
                                                     </div>
 
-                                                    <div className="grid grid-cols-1 justify-start gap-3 sm:[grid-template-columns:repeat(auto-fit,minmax(260px,1fr))]">
+                                                    <div className={`grid grid-cols-1 gap-3 ${isStudioOwner ? "md:grid-cols-2" : "md:grid-cols-2 xl:grid-cols-3"}`}>
                                                         {archivedFilteredGroups.map((group) => {
                                                             const isTogglingArchive = updatingGroupArchiveId === group.id;
                                                             const canUnarchiveGroup = isStudioOwner && !isStudioArchived;

@@ -859,6 +859,7 @@
       "content": "Nội dung",
       "contentPlaceholder": "Mô tả chi tiết vấn đề của bạn...",
       "cancelButton": "Hủy",
+      "submitting": "Đang gửi...",
       "submitButton": "Gửi báo cáo",
       "validationError": "Vui lòng điền tất cả các trường",
       "submitSuccess": "Báo cáo của bạn đã được gửi thành công!",
@@ -867,6 +868,10 @@
     "faq": {
       "title": "Câu hỏi thường gặp",
       "subtitle": "Tìm câu trả lời nhanh cho các câu hỏi phổ biến",
+      "contactCard": {
+        "title": "Không tìm thấy câu trả lời?",
+        "description": "Điền form bên trái hoặc gửi email cho chúng tôi. Đội ngũ hỗ trợ sẽ phản hồi sớm nhất có thể."
+      },
       "item1": {
         "question": "Làm thế nào để đặt lại mật khẩu?",
         "answer": "Bạn có thể đặt lại mật khẩu bằng cách vào trang Đăng nhập và nhấp vào 'Quên mật khẩu'. Làm theo hướng dẫn được gửi đến email của bạn."
@@ -883,6 +888,11 @@
         "question": "Làm thế nào để liên hệ hỗ trợ?",
         "answer": "Bạn có thể liên hệ với chúng tôi bằng cách sử dụng biểu mẫu trên trang này hoặc gửi email trực tiếp đến support@studystudio.com."
       }
+    },
+    "success": {
+      "title": "Đã gửi thành công!",
+      "description": "Chúng tôi sẽ phản hồi qua email của bạn sớm nhất có thể.",
+      "sendAnother": "Gửi báo cáo khác"
     }
   },
   "MasterPage": {
@@ -1135,13 +1145,18 @@
     "success": "Bạn đã tham gia studio thành công",
     "redirecting": "Đang chuyển hướng...",
     "redirectingToStudio": "Đang chuyển hướng đến studio...",
+    "pendingTitle": "Yêu cầu tham gia đang chờ xét duyệt",
+    "pendingMessage": "Yêu cầu tham gia của bạn đã được gửi. Vui lòng chờ chủ studio phê duyệt.",
+    "cancelRequest": "Hủy yêu cầu",
+    "cancelingRequest": "Đang hủy yêu cầu...",
     "alreadyMemberTitle": "Thông báo",
     "alreadyMember": "Bạn đã ở trong studio này rồi.",
     "goToStudio": "Đi tới Studio",
     "backToStudios": "Về danh sách studio",
     "errorMissingToken": "Thiếu mã tham gia.",
     "errorInvalidToken": "Mã tham gia không hợp lệ hoặc đã hết hạn.",
-    "errorAcceptFailed": "Chấp nhận lời mời thất bại."
+    "errorAcceptFailed": "Chấp nhận lời mời thất bại.",
+    "cancelRequestFailed": "Hủy yêu cầu tham gia thất bại."
   },
   "LandingGroupPage": {
     "badge": "Không gian nhóm",
@@ -1911,10 +1926,15 @@
     "title": "Gói đăng ký",
     "subtitle": "Chọn gói phù hợp với nhu cầu của bạn",
     "historyButton": "Lịch sử thanh toán",
+    "common": {
+      "currency": "VNĐ",
+      "periodMonthly": "/tháng"
+    },
     "plans": {
       "popular": "Phổ biến",
       "current": "Gói hiện tại",
       "free": {
+        "name": "Free",
         "feature1": "Tối đa 3 Không gian quản lý",
         "feature2": "Tối đa 5 Không gian nhóm",
         "feature3": "Tối đa 10 thành viên/nhóm",
@@ -1922,6 +1942,7 @@
         "feature5": "20 yêu cầu AI/ngày"
       },
       "premium": {
+        "name": "Premium",
         "feature1": "Tối đa 10 Không gian quản lý",
         "feature2": "Tối đa 10 Không gian nhóm",
         "feature3": "Tối đa 20 thành viên/nhóm",
@@ -1929,6 +1950,7 @@
         "feature5": "100 yêu cầu AI/ngày"
       },
       "enterprise": {
+        "name": "Enterprise",
         "feature1": "Không giới hạn Không gian quản lý",
         "feature2": "Không giới hạn Không gian nhóm",
         "feature3": "Không giới hạn thành viên",
@@ -1984,6 +2006,7 @@
     },
     "details": {
       "title": "Thông tin thanh toán",
+      "paymentId": "Mã giao dịch",
       "plan": "Gói đăng ký",
       "amount": "Số tiền",
       "createdAt": "Ngày tạo",
@@ -2191,6 +2214,7 @@
     "title": "Tổng quan công việc",
     "close": "Đóng",
     "calendar": "Lịch",
+    "openTask": "Mở công việc",
     "detailedBadge": "Thống kê chi tiết",
     "detailsTitle": "Chi tiết thống kê",
     "loadingError": "Lỗi tải dữ liệu",
@@ -2201,11 +2225,34 @@
     "overdueTasksNote": "Các công việc đã quá hạn",
     "completedTasksLabel": "Công việc đã hoàn thành",
     "completedTasksNote": "Các công việc đã hoàn thành",
-    "joinedGroupsLabel": "Nhóm đã tham gia",
-    "joinedGroupsNote": "Các nhóm bạn đang tham gia",
+    "joinedGroupsLabel": "Tổng các nhóm",
+    "joinedGroupsNote": "Tổng số nhóm khả dụng",
     "currentOverview": "Tổng quan hiện tại",
     "quantity": "Số lượng",
     "viewDetails": "Xem chi tiết",
+    "sourceFilters": {
+      "all": "Tất cả",
+      "personal": "Cá nhân",
+      "group": "Nhóm"
+    },
+    "emptyStates": {
+      "remainingTitle": "Không còn công việc nào",
+      "overdueTitle": "Không có công việc quá hạn",
+      "completedTitle": "Chưa có công việc hoàn thành"
+    },
+    "groupList": {
+      "title": "Danh sách nhóm",
+      "subtitle": "Xem nhanh các nhóm bạn sở hữu hoặc đã tham gia",
+      "openGroup": "Mở nhóm",
+      "untitledGroup": "Nhóm chưa đặt tên",
+      "emptyTitle": "Không có nhóm nào",
+      "emptyHint": "Hãy đổi bộ lọc hoặc tham gia thêm nhóm để xem danh sách.",
+      "filters": {
+        "all": "Tất cả",
+        "owned": "Sở hữu",
+        "joined": "Tham gia"
+      }
+    },
     "close": "Đóng",
     "overview": {
       "completedTitle": "Công việc đã hoàn thành",
@@ -2298,6 +2345,7 @@
     "columnMenu": "Menu cột",
     "editStatusName": "Chỉnh sửa tên trạng thái",
     "deleteStatus": "Xóa trạng thái",
+    "movingStatus": "Đang di chuyển trạng thái",
     "noTasksInStatus": "Không có công việc",
     "addTaskHint": "Thêm công việc mới",
     "addTask": "Thêm công việc",
@@ -2334,11 +2382,13 @@
     "enterTaskDescription": "Nhập mô tả công việc...",
     "creatingTask": "Đang tạo...",
     "createTask": "Tạo công việc",
+    "loadingBoard": "Đang tải board...",
     "failedLoadPersonalTask": "Lỗi tải công việc cá nhân",
     "failedLoadPersonalTaskData": "Không thể tải dữ liệu công việc cá nhân",
     "pleaseEnterStatusName": "Vui lòng nhập tên trạng thái",
     "statusNameDuplicated": "Tên trạng thái đã tồn tại",
     "createStatusFailed": "Tạo trạng thái thất bại",
+    "updateStatusFailed": "Cập nhật trạng thái thất bại",
     "confirmedDeleteStatus": "Xác nhận xóa trạng thái",
     "deleteTask": "Xóa công việc",
     "title": "Công việc cá nhân",

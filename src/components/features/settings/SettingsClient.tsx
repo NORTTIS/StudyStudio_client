@@ -574,9 +574,7 @@ export default function SettingsClient({ initialData }: SettingsClientProps) {
                                 <div>
                                     <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
                                         <InfoCircleOutlined style={{ color: PRIMARY, fontSize: 15 }} />
-                                        <Text strong style={{ color: DARK, fontSize: 14 }}>
-                                            Giới thiệu bản thân
-                                        </Text>
+                                        <Text strong style={{ color: DARK, fontSize: 14 }}>{t("profile.sectionBio")}</Text>
                                         <div style={{ flex: 1, height: 1, background: BORDER, marginLeft: 8 }} />
                                     </div>
                                     <FieldWrapper label={t("profile.bio")} error={errors.bio}>

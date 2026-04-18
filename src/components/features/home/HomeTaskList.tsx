@@ -24,6 +24,7 @@ import "react-day-picker/dist/style.css";
 import { apiFetch } from "@/api/api-client";
 import type { components } from "@/api/types";
 import { Container } from "@/components/common";
+import { fetchGroupsPageData } from "@/components/features/group/group.api";
 import { Button } from "@/components/ui/button";
 import {
     DropdownMenu,
@@ -85,6 +86,23 @@ type GroupPreviewItem = {
     highestSeverity?: components["schemas"]["TaskSeverity"];
     highestPriority?: components["schemas"]["TaskPriority"];
 };
+
+function mergeUserGroups(...sources: Array<UserGroupDto[] | null | undefined>) {
+    const merged: UserGroupDto[] = [];
+    const seen = new Set<string>();
+
+    sources.flatMap((source) => source ?? []).forEach((group) => {
+        const groupId = String(group.groupId ?? "").trim();
+        if (!groupId || seen.has(groupId)) return;
+        seen.add(groupId);
+        merged.push({
+            groupId,
+            groupName: group.groupName ?? null
+        });
+    });
+
+    return merged;
+}
 
 type TaskListDetailLayerProps = {
     open: boolean;
@@ -400,13 +418,31 @@ function getSourceLabel(item: HomeTaskListItemResponse, t?: (key: string) => str
     return item.groupName || item.sourceName || (t ? t("groupSource") : "Nhóm");
 }
 
-function buildTaskDetailHref(item: HomeTaskListItemResponse) {
-    const taskId = item.taskId ?? "";
-    if (!taskId || !item.groupId) return "#";
-
-    return `/group/${item.groupId}?taskId=${taskId}&openTaskDetail=1`;
+function normalizeSourceName(value?: string | null) {
+    return String(value ?? "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .trim()
+        .toLowerCase();
 }
 
+function isGroupTaskItem(item: HomeTaskListItemResponse) {
+    const sourceType = String(item.sourceType ?? "").trim().toLowerCase();
+    const sourceName = String(item.sourceName ?? "").trim();
+    const groupName = String(item.groupName ?? "").trim();
+    const normalizedSourceName = normalizeSourceName(sourceName);
+    const isClearlyPersonal = sourceType === "personal" || normalizedSourceName === "ca nhan" || normalizedSourceName === "personal";
+
+    return !isClearlyPersonal && !!String(item.taskId ?? "").trim() && (!!item.groupId || !!groupName || !!sourceName || sourceType === "group");
+}
+
+function buildTaskDetailHref(item: HomeTaskListItemResponse) {
+    const taskId = item.taskId ?? "";
+    if (!taskId) return "#";
+    if (item.groupId) return `/group/${item.groupId}?taskId=${taskId}&openTaskDetail=1`;
+
+    return `/group/task/${encodeURIComponent(taskId)}`;
+}
 function TaskStatusBadge({
     label,
     overdue = false
@@ -1451,16 +1487,29 @@ export default function HomeTaskList() {
                 if (nextData) {
                     setData(nextData);
 
-                    const nextGroups = nextData.userGroups ?? [];
+                    const joinedGroupsData = await fetchGroupsPageData().catch(() => null);
+                    const joinedGroups: UserGroupDto[] = [];
+                    for (const group of joinedGroupsData?.joined ?? []) {
+                        const candidate = group as {
+                            id?: string | null;
+                            groupId?: string | null;
+                            name?: string | null;
+                            groupName?: string | null;
+                        };
+                        const groupId = String(candidate.groupId ?? candidate.id ?? "").trim();
+                        const groupName = String(candidate.groupName ?? candidate.name ?? "").trim();
+                        if (!groupId) continue;
+                        joinedGroups.push({ groupId, groupName: groupName || null });
+                    }
+
+                    const nextGroups = mergeUserGroups(nextData.userGroups, joinedGroups);
                     if (nextGroups.length > 0) {
                         setAllGroups((prev) => {
-                            if (prev.length >= nextGroups.length) return prev;
-                            return nextGroups;
+                            const merged = mergeUserGroups(prev, nextGroups);
+                            if (merged.length === prev.length) return prev;
+                            return merged;
                         });
                     }
-                } else {
-                    console.error("Home task list response format unexpected:", response);
-                    setData(null);
                 }
             } catch (error) {
                 console.error("Failed to fetch home task list:", error);
@@ -1484,11 +1533,16 @@ export default function HomeTaskList() {
     }, [allGroups, data?.userGroups]);
 
     const validGroupIds = React.useMemo(() => new Set(groups.map((group) => group.groupId).filter(Boolean)), [groups]);
-
     const sanitizedItems = React.useMemo(
-        () => rawItems.filter((item) => !!item.groupId && validGroupIds.has(item.groupId)),
+        () =>
+            rawItems.filter((item) => {
+                if (!isGroupTaskItem(item)) return false;
+                if (!item.groupId) return true;
+                return validGroupIds.size === 0 || validGroupIds.has(item.groupId);
+            }),
         [rawItems, validGroupIds]
     );
+
 
     const assignedGroups = React.useMemo(() => {
         const assignedGroupIds = new Set(sanitizedItems.map((item) => item.groupId).filter(Boolean));

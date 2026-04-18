@@ -735,8 +735,8 @@ function ConfirmModal({
     open,
     title,
     description,
-    confirmLabel = "Xác nhận",
-    cancelLabel = "Hủy",
+    confirmLabel = "Confirm",
+    cancelLabel = "Cancel",
     zIndexClassName = "z-[10000]",
     onConfirm,
     onCancel
@@ -1331,7 +1331,7 @@ function ColumnOverlay({ status, t }: { status: PersonalTaskStatusDto; t: (key: 
             <div className="rounded-[28px] border border-[#E7DDD3] bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(248,245,241,0.98))] shadow-[0_16px_36px_rgba(15,23,42,0.08)]">
                 <div className="rounded-t-[28px] border-[#EFE6DD] border-b bg-[linear-gradient(180deg,rgba(248,244,240,0.98),rgba(241,236,231,0.96))] px-4 pt-4 pb-3">
                     <p className="truncate font-bold text-sm text-zinc-900">{status.statusName || t("untitledStatus")}</p>
-                    <p className="text-[11px] text-zinc-600">Đang di chuyển trạng thái…</p>
+                    <p className="text-[11px] text-zinc-600">{t("movingStatus")}</p>
                 </div>
 
                 <div className="px-3 pb-3">
@@ -1348,7 +1348,7 @@ function ColumnOverlay({ status, t }: { status: PersonalTaskStatusDto; t: (key: 
 
                         {tasks.length === 0 ? (
                             <div className="rounded-[24px] border border-[#D8D1CA] border-dashed bg-white/95 px-3 py-8 text-center text-sm text-zinc-500">
-                                (Trạng thái trống)
+                                {t("emptyStatus")}
                             </div>
                         ) : null}
                     </div>
@@ -2763,6 +2763,7 @@ export default function HomePersonalTaskScreen() {
 
     const [detailTask, setDetailTask] = React.useState<PersonalTaskItemResponse | null>(null);
     const [detailOpen, setDetailOpen] = React.useState(false);
+    const [pendingExternalTaskId, setPendingExternalTaskId] = React.useState<string | null>(null);
 
     const [editingColumn, setEditingColumn] = React.useState<{
         id: string | null;
@@ -3009,6 +3010,39 @@ export default function HomePersonalTaskScreen() {
         setDetailOpen(true);
     }, [statuses]);
 
+    React.useEffect(() => {
+        const openTaskById = (taskId: string) => {
+            const normalizedTaskId = String(taskId ?? "").trim();
+            if (!normalizedTaskId) return;
+
+            const foundTask = findTaskInStatuses(statuses, normalizedTaskId);
+            if (!foundTask) {
+                setPendingExternalTaskId(normalizedTaskId);
+                return;
+            }
+
+            setPendingExternalTaskId(null);
+            handleOpenTaskDetail(foundTask);
+        };
+
+        const onOpenExternal = (event: Event) => {
+            const customEvent = event as CustomEvent<{ taskId?: string }>;
+            openTaskById(String(customEvent.detail?.taskId ?? ""));
+        };
+
+        window.addEventListener("home:open-personal-task-detail", onOpenExternal as EventListener);
+        return () => window.removeEventListener("home:open-personal-task-detail", onOpenExternal as EventListener);
+    }, [handleOpenTaskDetail, statuses]);
+
+    React.useEffect(() => {
+        if (!pendingExternalTaskId) return;
+        const foundTask = findTaskInStatuses(statuses, pendingExternalTaskId);
+        if (!foundTask) return;
+
+        setPendingExternalTaskId(null);
+        handleOpenTaskDetail(foundTask);
+    }, [handleOpenTaskDetail, pendingExternalTaskId, statuses]);
+
     const handleCloseTaskDetail = React.useCallback(() => {
         if (confirmDeleteTask.open && confirmDeleteTask.fromDetail) return;
         setDetailOpen(false);
@@ -3146,7 +3180,7 @@ export default function HomePersonalTaskScreen() {
             console.error("Failed to update personal status:", error);
             setEditingColumn((prev) => ({
                 ...prev,
-                error: error?.message ?? "Cập nhật trạng thái thất bại"
+                error: error?.message ?? t("updateStatusFailed")
             }));
         } finally {
             setIsSubmitting(false);
@@ -3627,7 +3661,7 @@ export default function HomePersonalTaskScreen() {
             <div className="bg-white">
                 <Container>
                     <div className="mt-6 rounded-2xl border border-zinc-200 bg-white px-4 py-4 text-sm text-zinc-700">
-                        Đang tải board…
+                        {t("loadingBoard")}
                     </div>
                 </Container>
             </div>
