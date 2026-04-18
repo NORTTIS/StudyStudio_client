@@ -14,9 +14,9 @@ import { useToast } from "@/hooks/use-toast";
 const PLANS = [
     {
         id: "free",
-        name: "Free",
+        nameKey: "plans.free.name",
         price: 0,
-        currency: "VNĐ",
+        currencyKey: "common.currency",
         features: [
             "plans.free.feature1",
             "plans.free.feature2",
@@ -28,10 +28,10 @@ const PLANS = [
     },
     {
         id: "premium",
-        name: "Premium",
+        nameKey: "plans.premium.name",
         price: 99000,
-        currency: "VNĐ",
-        period: "/tháng",
+        currencyKey: "common.currency",
+        periodKey: "common.periodMonthly",
         features: [
             "plans.premium.feature1",
             "plans.premium.feature2",
@@ -43,10 +43,10 @@ const PLANS = [
     },
     {
         id: "enterprise",
-        name: "Enterprise",
+        nameKey: "plans.enterprise.name",
         price: 299000,
-        currency: "VNĐ",
-        period: "/tháng",
+        currencyKey: "common.currency",
+        periodKey: "common.periodMonthly",
         features: [
             "plans.enterprise.feature1",
             "plans.enterprise.feature2",
@@ -147,14 +147,14 @@ export function PaymentPage() {
                                     )}
 
                                     <div className="mb-4">
-                                        <h3 className="mb-2 font-bold text-[#261E33] text-xl">{plan.name}</h3>
+                                        <h3 className="mb-2 font-bold text-[#261E33] text-xl">{t(plan.nameKey)}</h3>
                                         <div className="flex items-baseline gap-1">
                                             <span className="font-bold text-3xl text-[#261E33]">
                                                 {plan.price.toLocaleString()}
                                             </span>
-                                            <span className="text-[#6F6B99] text-sm">{plan.currency}</span>
-                                            {plan.period && (
-                                                <span className="text-[#6F6B99] text-sm">{plan.period}</span>
+                                            <span className="text-[#6F6B99] text-sm">{t(plan.currencyKey)}</span>
+                                            {plan.periodKey && (
+                                                <span className="text-[#6F6B99] text-sm">{t(plan.periodKey)}</span>
                                             )}
                                         </div>
                                     </div>

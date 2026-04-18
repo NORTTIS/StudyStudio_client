@@ -491,7 +491,7 @@ export function StudioInviteAcceptPage() {
                         </h1>
                         <p className="mb-6 text-muted-foreground text-sm">
                             {locale === "vi"
-                                ? "Owner đã từ chối yêu cầu tham gia studio này."
+                                ? "Chủ studio đã từ chối yêu cầu tham gia studio này."
                                 : "The owner rejected your request to join this studio."}
                         </p>
 

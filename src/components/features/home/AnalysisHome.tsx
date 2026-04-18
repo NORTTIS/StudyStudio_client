@@ -1,23 +1,28 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import {
     Activity,
     AlertCircle,
+    AlertTriangle,
     ArrowDownRight,
     ArrowUpRight,
     CheckCircle2,
     Clock,
     Filter,
+    Flame,
     HelpCircle,
     Star,
     Target,
     TrendingUp,
+    X,
     Zap
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import * as React from "react";
 import { useCallback, useEffect, useState } from "react";
+import useSWR from "swr";
 
 type TrendPeriod = 7 | 14 | 30;
 type BenchmarkPeriod = 4 | 7 | 12;
@@ -58,8 +63,11 @@ import {
     type UserTaskStatusResponse,
     type UserUrgencyDistributionResponse
 } from "@/api/analytics-personal";
+import { apiFetch } from "@/api/api-client";
 import { getUserData } from "@/api/auth";
+import type { components } from "@/api/types";
 import { Container } from "@/components/common";
+import { fetchGroupsPageData } from "@/components/features/group/group.api";
 import HomeTopTabs from "./HomeTopTabs";
 
 // ─── Color Tokens ───────────────────────────────────────────
@@ -93,6 +101,27 @@ const STATUS_COLORS = {
 
 // Donut colors matching GroupAnalyticPage: Todo/InProgress/Done/Overdue
 const DONUT_STATUS_COLORS = ["#3b82f6", "#f59e0b", "#10b981", "#ef4444"];
+const SUMMARY_GROUP_TASK_PAGE_SIZE = 100;
+const SUMMARY_GROUP_TASK_MAX_PAGES = 3;
+const SUMMARY_GROUP_TASK_GROUP_CONCURRENCY = 3;
+
+type HomeTaskListResponse = components["schemas"]["HomeTaskListResponse"];
+type HomeTaskListResponseApiResponse = components["schemas"]["HomeTaskListResponseApiResponse"];
+type HomeTaskListItemResponse = components["schemas"]["HomeTaskListItemResponse"];
+type GroupTaskListResponse = components["schemas"]["GroupTaskListResponse"];
+type GroupTaskListResponseApiResponse = components["schemas"]["GroupTaskListResponseApiResponse"];
+type PersonalTaskBoardResponse = components["schemas"]["PersonalTaskBoardResponse"];
+type PersonalTaskBoardResponseApiResponse = components["schemas"]["PersonalTaskBoardResponseApiResponse"];
+type TaskStatusDto = components["schemas"]["TaskStatusDto"];
+type TaskItemResponse = components["schemas"]["TaskItemResponse"];
+type UserGroupDto = components["schemas"]["UserGroupDto"];
+
+type AnalysisTaskFilter = "all" | "completed" | "inProgress" | "overdue";
+type SummaryPopupTaskItem = HomeTaskListItemResponse & {
+    sourceKind: "group" | "personal";
+    groupId?: string | null;
+    groupName?: string | null;
+};
 
 // ─── Skeleton Helper ──────────────────────────────────────────
 function SkeletonBlock({ className = "", style }: { className?: string; style?: React.CSSProperties }) {
@@ -101,9 +130,9 @@ function SkeletonBlock({ className = "", style }: { className?: string; style?: 
 
 function SkeletonCard() {
     return (
-        <div className="rounded-[26px] border border-white/70 bg-white/85 p-5 shadow-[0_12px_34px_rgba(15,23,42,0.06)] backdrop-blur-xl">
-            <SkeletonBlock className="mb-3 h-3 w-24" />
-            <SkeletonBlock className="h-8 w-16" />
+        <div className="min-h-[138px] rounded-[20px] border border-white/70 bg-white/85 p-3.5 shadow-[0_12px_34px_rgba(15,23,42,0.06)] backdrop-blur-xl">
+            <SkeletonBlock className="mb-2.5 h-3 w-20" />
+            <SkeletonBlock className="h-7 w-14" />
         </div>
     );
 }
@@ -120,6 +149,379 @@ function _SkeletonChart({ height = 256 }: { height?: number }) {
 // ─── Utility ─────────────────────────────────────────────────
 function cn(...classes: Array<string | false | null | undefined>) {
     return classes.filter(Boolean).join(" ");
+}
+
+function buildTaskListUrl(params: { page: number; pageSize: number; search?: string; sortBy?: string }) {
+    const rawBase = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_API_URL || "";
+    const base = rawBase.replace(/\/+$/, "");
+
+    if (!base) return "";
+
+    const endpoint = /\/api$/i.test(base) ? `${base}/Home/TaskList` : `${base}/api/Home/TaskList`;
+    const searchParams = new URLSearchParams();
+    searchParams.set("page", String(params.page));
+    searchParams.set("pageSize", String(params.pageSize));
+
+    if (params.search?.trim()) searchParams.set("search", params.search.trim());
+    if (params.sortBy && params.sortBy !== "none") searchParams.set("sortBy", params.sortBy);
+
+    return `${endpoint}?${searchParams.toString()}`;
+}
+
+function extractTaskListData(payload: unknown): HomeTaskListResponse | null {
+    const source = payload as
+        | HomeTaskListResponseApiResponse
+        | {
+            status?: string;
+            data?: HomeTaskListResponseApiResponse | HomeTaskListResponse | null;
+        }
+        | null
+        | undefined;
+
+    const firstLayer = source?.data;
+
+    if (
+        firstLayer &&
+        typeof firstLayer === "object" &&
+        "items" in firstLayer &&
+        "page" in firstLayer &&
+        "pageSize" in firstLayer
+    ) {
+        return firstLayer as HomeTaskListResponse;
+    }
+
+    if (
+        firstLayer &&
+        typeof firstLayer === "object" &&
+        "data" in firstLayer &&
+        (firstLayer as HomeTaskListResponseApiResponse).data
+    ) {
+        return (firstLayer as HomeTaskListResponseApiResponse).data ?? null;
+    }
+
+    if (source && typeof source === "object" && "data" in source && (source as HomeTaskListResponseApiResponse).data) {
+        return (source as HomeTaskListResponseApiResponse).data ?? null;
+    }
+
+    return null;
+}
+
+const fetchHomeTaskList = async (): Promise<HomeTaskListResponse | null> => {
+    const url = buildTaskListUrl({
+        page: 1,
+        pageSize: 1000
+    });
+    if (!url) return null;
+
+    const response = await apiFetch<HomeTaskListResponseApiResponse>(url, {
+        method: "GET"
+    });
+
+    return extractTaskListData(response);
+};
+
+async function fetchGroupTaskPage(args: {
+    groupId: string;
+    locale: string;
+    page: number;
+    pageSize: number;
+    assigneeId?: string;
+}): Promise<GroupTaskListResponse | null> {
+    const query = new URLSearchParams();
+    query.set("page", String(args.page));
+    query.set("pageSize", String(args.pageSize));
+    query.set("sortBy", "createdAt");
+    query.set("sortAscending", "false");
+    if (args.assigneeId) query.set("assigneeId", args.assigneeId);
+
+    const response = await apiFetch<GroupTaskListResponseApiResponse>(
+        `/group/${encodeURIComponent(args.groupId)}/tasks?${query.toString()}`,
+        {
+            method: "GET",
+            locale: args.locale
+        }
+    );
+
+    const source = response as
+        | GroupTaskListResponseApiResponse
+        | {
+            status?: string;
+            data?: GroupTaskListResponseApiResponse | GroupTaskListResponse | null;
+        }
+        | null
+        | undefined;
+
+    const firstLayer = source?.data;
+
+    if (firstLayer && typeof firstLayer === "object" && "items" in firstLayer && "page" in firstLayer) {
+        return firstLayer as GroupTaskListResponse;
+    }
+
+    if (
+        firstLayer &&
+        typeof firstLayer === "object" &&
+        "data" in firstLayer &&
+        (firstLayer as GroupTaskListResponseApiResponse).data
+    ) {
+        return (firstLayer as GroupTaskListResponseApiResponse).data ?? null;
+    }
+
+    if (source && typeof source === "object" && "data" in source && (source as GroupTaskListResponseApiResponse).data) {
+        return (source as GroupTaskListResponseApiResponse).data ?? null;
+    }
+
+    return null;
+}
+
+async function fetchSummaryGroupTasks(args: {
+    groups: UserGroupDto[];
+    locale: string;
+    currentUserId?: string;
+}): Promise<SummaryPopupTaskItem[]> {
+    const validGroups = args.groups.filter((group) => !!group.groupId);
+    if (!validGroups.length || !args.currentUserId) return [];
+
+    const groupResults: SummaryPopupTaskItem[][] = [];
+
+    for (let start = 0; start < validGroups.length; start += SUMMARY_GROUP_TASK_GROUP_CONCURRENCY) {
+        const groupBatch = validGroups.slice(start, start + SUMMARY_GROUP_TASK_GROUP_CONCURRENCY);
+        const batchResults = await Promise.all(
+            groupBatch.map(async (group) => {
+                const groupId = String(group.groupId);
+                const firstPage = await fetchGroupTaskPage({
+                    groupId,
+                    locale: args.locale,
+                    page: 1,
+                    pageSize: SUMMARY_GROUP_TASK_PAGE_SIZE,
+                    assigneeId: args.currentUserId
+                });
+
+                const totalPages = Math.max(1, Number(firstPage?.totalPages ?? 1));
+                const pagesToFetch = Math.min(totalPages, SUMMARY_GROUP_TASK_MAX_PAGES);
+                const restPages =
+                    pagesToFetch > 1
+                        ? await Promise.all(
+                            Array.from({ length: pagesToFetch - 1 }, (_, index) =>
+                                fetchGroupTaskPage({
+                                    groupId,
+                                    locale: args.locale,
+                                    page: index + 2,
+                                    pageSize: SUMMARY_GROUP_TASK_PAGE_SIZE,
+                                    assigneeId: args.currentUserId
+                                })
+                            )
+                        )
+                        : [];
+
+                return [firstPage, ...restPages]
+                    .flatMap((page) => page?.items ?? [])
+                    .map((item) => ({
+                        dueDate: item.dueDate ?? null,
+                        groupId,
+                        groupName: group.groupName ?? null,
+                        progress: item.progress ?? 0,
+                        sourceKind: "group" as const,
+                        sourceName: group.groupName ?? null,
+                        sourceType: "group",
+                        statusName: item.statusName ?? null,
+                        taskId: item.taskId,
+                        taskPriority: item.taskPriority,
+                        taskSeverity: item.taskSeverity,
+                        taskTitle: item.taskTitle ?? null
+                    }) satisfies SummaryPopupTaskItem);
+            })
+        );
+
+        groupResults.push(...batchResults);
+    }
+
+    return groupResults.flat();
+}
+
+async function fetchPersonalTaskBoard(locale: string): Promise<PersonalTaskBoardResponse | null> {
+    const response = await apiFetch<PersonalTaskBoardResponseApiResponse>("/Home/personal-task", {
+        method: "GET",
+        locale
+    });
+
+    const firstLayer = response?.data;
+    if (firstLayer && typeof firstLayer === "object" && "personalTaskStatuses" in firstLayer) {
+        return firstLayer as PersonalTaskBoardResponse;
+    }
+
+    return null;
+}
+
+async function fetchSummaryPersonalTasks(locale: string, personalSourceLabel: string): Promise<SummaryPopupTaskItem[]> {
+    const board = await fetchPersonalTaskBoard(locale);
+    const statuses = (board?.personalTaskStatuses ?? []) as TaskStatusDto[];
+
+    return statuses.flatMap((status) =>
+        ((status.taskList ?? []) as TaskItemResponse[]).map((task) => ({
+            dueDate: task.dueDate ?? null,
+            groupId: null,
+            groupName: null,
+            progress: task.progress ?? 0,
+            sourceKind: "personal" as const,
+            sourceName: personalSourceLabel,
+            sourceType: "personal",
+            statusName: status.statusName ?? task.personalStatus?.statusName ?? null,
+            taskId: task.taskId,
+            taskPriority: task.taskPriority,
+            taskSeverity: task.taskSeverity,
+            taskTitle: task.taskTitle ?? null
+        }))
+    );
+}
+
+function mapHomeTaskListGroupItems(items: HomeTaskListItemResponse[] | null | undefined): SummaryPopupTaskItem[] {
+    return (items ?? [])
+        .filter((item) => {
+            const sourceType = String(item.sourceType ?? "").trim().toLowerCase();
+            const sourceName = String(item.sourceName ?? "").trim();
+            const groupName = String(item.groupName ?? "").trim();
+            const normalizedSourceName = normalizeStatusName(sourceName);
+            const isClearlyPersonal =
+                sourceType === "personal" || normalizedSourceName === "ca nhan" || normalizedSourceName === "personal";
+            return (
+                !isClearlyPersonal &&
+                !!String(item.taskId ?? "").trim() &&
+                (!!item.groupId || !!groupName || !!sourceName || sourceType === "group")
+            );
+        })
+        .map((item) => ({
+            ...item,
+            sourceKind: "group" as const,
+            groupId: item.groupId ?? null,
+            groupName: item.groupName ?? item.sourceName ?? null,
+            sourceName: item.groupName ?? item.sourceName ?? null,
+            sourceType: "group"
+        }));
+}
+
+function dedupeSummaryItems(items: SummaryPopupTaskItem[]) {
+    const seen = new Set<string>();
+    return items.filter((item) => {
+        const key = `${item.sourceKind}:${item.groupId ?? "personal"}:${item.taskId ?? item.taskTitle ?? "unknown"}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+    });
+}
+
+async function fetchJoinedGroups(): Promise<UserGroupDto[]> {
+    const data = await fetchGroupsPageData();
+    const result: UserGroupDto[] = [];
+
+    for (const group of data.joined ?? []) {
+        const candidate = group as { id?: string | null; groupId?: string | null; name?: string | null; groupName?: string | null };
+        const groupId = String(candidate.groupId ?? candidate.id ?? "").trim();
+        const groupName = String(candidate.groupName ?? candidate.name ?? "").trim();
+        if (!groupId) continue;
+        result.push({ groupId, groupName: groupName || null });
+    }
+
+    return result;
+}
+
+function normalizeProgressValue(value?: number | null) {
+    return typeof value === "number" && Number.isFinite(value) ? value : 0;
+}
+
+function normalizeStatusName(value?: string | null) {
+    return String(value ?? "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .trim()
+        .toLowerCase();
+}
+
+function parseTaskDueDate(dueDate?: string | null) {
+    const raw = String(dueDate ?? "").trim();
+    if (!raw) return null;
+
+    const dateOnlyMatch = raw.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (dateOnlyMatch) {
+        const year = Number(dateOnlyMatch[1]);
+        const month = Number(dateOnlyMatch[2]) - 1;
+        const day = Number(dateOnlyMatch[3]);
+        const parsed = new Date(year, month, day);
+        return Number.isNaN(parsed.getTime()) ? null : parsed;
+    }
+
+    const parsed = new Date(raw);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+function isCompletedStatus(statusName?: string | null) {
+    const normalized = normalizeStatusName(statusName);
+    return normalized.includes("hoan thanh") || normalized.includes("done") || normalized.includes("completed");
+}
+
+function isOverdueStatus(statusName?: string | null) {
+    const normalized = normalizeStatusName(statusName);
+    return normalized.includes("qua han") || normalized.includes("overdue") || normalized.includes("tre han");
+}
+
+function isOverdueTask(dueDate?: string | null, progress?: number | null) {
+    if (!dueDate || normalizeProgressValue(progress) >= 100) return false;
+    const parsed = parseTaskDueDate(dueDate);
+    if (!parsed) return false;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    parsed.setHours(0, 0, 0, 0);
+    return parsed < today;
+}
+
+function isInProgressStatus(statusName?: string | null) {
+    const normalized = normalizeStatusName(statusName);
+    return (
+        normalized.includes("dang lam") ||
+        normalized.includes("thuc hien") ||
+        normalized.includes("in progress") ||
+        normalized.includes("progress") ||
+        normalized.includes("started") ||
+        normalized.includes("review")
+    );
+}
+
+function matchesAnalysisTaskFilter(item: SummaryPopupTaskItem, filter: AnalysisTaskFilter) {
+    const completed = normalizeProgressValue(item.progress) >= 100 || isCompletedStatus(item.statusName);
+    const overdue = isOverdueStatus(item.statusName) || isOverdueTask(item.dueDate, item.progress);
+    const inProgress =
+        !completed && !overdue && (normalizeProgressValue(item.progress) > 0 || isInProgressStatus(item.statusName));
+
+    if (filter === "all") return true;
+    if (filter === "completed") return completed;
+    if (filter === "overdue") return overdue && !completed;
+    return inProgress;
+}
+
+function formatTaskDueDate(dueDate: string | null | undefined, locale: string, noDateLabel: string) {
+    if (!dueDate) return noDateLabel;
+    const parsed = parseTaskDueDate(dueDate);
+    if (!parsed) return noDateLabel;
+    return new Intl.DateTimeFormat(locale === "vi" ? "vi-VN" : "en-US", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric"
+    }).format(parsed);
+}
+
+function resolveSourceLabel(
+    item: SummaryPopupTaskItem,
+    summaryT: (key: string) => string,
+    taskListT: (key: string) => string
+) {
+    if (item.sourceKind === "personal") return summaryT("sourceFilters.personal");
+    return item.groupName || item.sourceName || taskListT("groupSource");
+}
+
+function buildTaskDetailHref(item: HomeTaskListItemResponse) {
+    const taskId = item.taskId ?? "";
+    if (!taskId) return "#";
+    if (item.groupId) return `/group/${item.groupId}?taskId=${taskId}&openTaskDetail=1`;
+    return `/group/task/${encodeURIComponent(taskId)}`;
 }
 
 // Parse ISO week string "2026-W08" → label "02/03–08/03"
@@ -247,13 +649,22 @@ function BenchmarkTooltip() {
 }
 
 // ─── Card Shell ─────────────────────────────────────────────
-function Card({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+function Card({
+    children,
+    className = "",
+    style
+}: {
+    children: React.ReactNode;
+    className?: string;
+    style?: React.CSSProperties;
+}) {
     return (
         <div
             className={cn(
                 "rounded-[26px] border border-white/70 bg-white/85 p-5 shadow-[0_12px_34px_rgba(15,23,42,0.06)] backdrop-blur-xl",
                 className
-            )}>
+            )}
+            style={style}>
             {children}
         </div>
     );
@@ -267,7 +678,8 @@ function KpiCard({
     badgeType = "neutral",
     sub,
     progress,
-    accentColor
+    accentColor,
+    onClick
 }: {
     title: string;
     value: string | number;
@@ -276,6 +688,7 @@ function KpiCard({
     sub?: string;
     progress?: number;
     accentColor?: string;
+    onClick?: () => void;
 }) {
     const badgeColors = {
         up: "bg-orange-50 text-orange-600",
@@ -284,39 +697,50 @@ function KpiCard({
     };
 
     return (
-        <Card className="flex flex-col gap-3">
-            <p className="font-medium text-slate-400 text-xs uppercase tracking-wider">{title}</p>
-            <div className="flex items-end gap-2">
-                <p className="font-bold text-3xl text-slate-900 tracking-tight">{value}</p>
-                {sub && <span className="mb-1 text-slate-400 text-sm">{sub}</span>}
-            </div>
-            {badge && (
-                <div className="flex items-center gap-1.5">
-                    <span
-                        className={cn(
-                            "inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-medium text-xs",
-                            badgeColors[badgeType]
-                        )}>
-                        {badgeType === "up" && <ArrowUpRight className="h-3 w-3" />}
-                        {badgeType === "down" && <ArrowDownRight className="h-3 w-3" />}
-                        {badge}
-                    </span>
-                </div>
-            )}
-            {progress !== undefined && (
-                <div className="mt-auto">
-                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
-                        <div
-                            className="h-full rounded-full transition-all duration-700"
-                            style={{
-                                width: `${progress}%`,
-                                backgroundColor: accentColor ?? C.orange
-                            }}
-                        />
+        <button
+            type="button"
+            onClick={onClick}
+            className={cn("group h-full w-full text-left", onClick && "cursor-pointer")}>
+            <Card className="flex h-full min-h-[136px] flex-col justify-between gap-2 rounded-[20px] p-3.5 transition group-hover:-translate-y-0.5 group-hover:shadow-[0_16px_38px_rgba(15,23,42,0.08)]">
+                <div className="flex min-h-0 flex-1 flex-col gap-1.5">
+                    <p className="font-semibold text-[11px] text-slate-500 uppercase tracking-[0.16em]">{title}</p>
+                    <div className="flex items-end gap-1.5">
+                        <p className="font-bold text-[2rem] leading-none text-slate-900 tracking-tight">{value}</p>
+                        {sub && <span className="mb-0.5 text-slate-500 text-xs leading-none">{sub}</span>}
                     </div>
+                    {badge && (
+                        <div className="flex items-center gap-1.5">
+                            <span
+                                className={cn(
+                                    "inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-medium text-[11px] leading-none",
+                                    badgeColors[badgeType]
+                                )}>
+                                {badgeType === "up" && <ArrowUpRight className="h-3 w-3" />}
+                                {badgeType === "down" && <ArrowDownRight className="h-3 w-3" />}
+                                {badge}
+                            </span>
+                        </div>
+                    )}
                 </div>
-            )}
-        </Card>
+                {progress !== undefined ? (
+                    <div className="mt-0.5">
+                        <div className="mb-1.5 flex items-center justify-between text-[10px] uppercase tracking-[0.14em] text-slate-400">
+                            <span>Progress</span>
+                            <span className="font-semibold text-slate-500">{Math.round(progress)}%</span>
+                        </div>
+                        <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
+                            <div
+                                className="h-full rounded-full transition-all duration-700"
+                                style={{
+                                    width: `${progress}%`,
+                                    backgroundColor: accentColor ?? C.orange
+                                }}
+                            />
+                        </div>
+                    </div>
+                ) : null}
+            </Card>
+        </button>
     );
 }
 
@@ -359,6 +783,288 @@ function _DeltaBadge({ delta }: { delta: number }) {
             {positive ? "+" : ""}
             {delta}%
         </span>
+    );
+}
+
+function AnalysisTaskListLayer({
+    open,
+    onClose,
+    filter,
+    items,
+    sourceFilter,
+    onSourceFilterChange,
+    isLoading,
+    error,
+    onTaskClick,
+    locale,
+    t,
+    summaryT,
+    taskListT
+}: {
+    open: boolean;
+    onClose: () => void;
+    filter: AnalysisTaskFilter;
+    items: SummaryPopupTaskItem[];
+    sourceFilter: "all" | "personal" | "group";
+    onSourceFilterChange: (value: "all" | "personal" | "group") => void;
+    isLoading: boolean;
+    error: unknown;
+    onTaskClick: (item: SummaryPopupTaskItem) => void;
+    locale: string;
+    t: (key: string) => string;
+    summaryT: (key: string) => string;
+    taskListT: (key: string) => string;
+}) {
+    const titleId = React.useId();
+    const overlayRef = React.useRef<HTMLDivElement | null>(null);
+    const dialogRef = React.useRef<HTMLDivElement | null>(null);
+    const closeButtonRef = React.useRef<HTMLButtonElement | null>(null);
+    const previousFocusRef = React.useRef<HTMLElement | null>(null);
+    const noDateLabel = taskListT("noDate");
+    const meta = {
+        all: {
+            title: t("cards.totalTasks.title"),
+            note: t("cards.totalTasks.note"),
+            badge: "bg-slate-100 text-slate-700",
+            panel: "border-slate-200 bg-white hover:border-slate-300",
+            count: "text-slate-900",
+            icon: <Activity className="h-5 w-5" />
+        },
+        completed: {
+            title: t("cards.completed.title"),
+            note: t("cards.completed.note"),
+            badge: "bg-emerald-50 text-emerald-700",
+            panel: "border-emerald-100 bg-[linear-gradient(180deg,#FFFFFF_0%,#F3FCF7_100%)] hover:border-emerald-200",
+            count: "text-emerald-700",
+            icon: <CheckCircle2 className="h-5 w-5" />
+        },
+        inProgress: {
+            title: t("cards.inProgress.title"),
+            note: t("cards.inProgress.note"),
+            badge: "bg-sky-50 text-sky-700",
+            panel: "border-sky-100 bg-[linear-gradient(180deg,#FFFFFF_0%,#F3F9FF_100%)] hover:border-sky-200",
+            count: "text-sky-700",
+            icon: <Clock className="h-5 w-5" />
+        },
+        overdue: {
+            title: t("cards.overdue.title"),
+            note: t("cards.overdue.badge"),
+            badge: "bg-red-50 text-red-600",
+            panel: "border-red-100 bg-[linear-gradient(180deg,#FFFFFF_0%,#FFF6F4_100%)] hover:border-red-200",
+            count: "text-red-600",
+            icon: <Flame className="h-5 w-5" />
+        }
+    }[filter];
+
+    useEffect(() => {
+        if (!open) return;
+
+        previousFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+        const focusTarget = closeButtonRef.current ?? dialogRef.current;
+        window.setTimeout(() => {
+            focusTarget?.focus();
+        }, 0);
+
+        const onKeyDown = (e: KeyboardEvent) => {
+            if (e.key === "Escape") {
+                e.preventDefault();
+                onClose();
+                return;
+            }
+
+            if (e.key !== "Tab") return;
+
+            const dialog = dialogRef.current;
+            if (!dialog) return;
+
+            const focusableElements = Array.from(
+                dialog.querySelectorAll<HTMLElement>(
+                    'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+                )
+            ).filter((element) => !element.hasAttribute("disabled") && element.tabIndex >= 0);
+
+            if (!focusableElements.length) {
+                e.preventDefault();
+                dialog.focus();
+                return;
+            }
+
+            const firstElement = focusableElements[0];
+            const lastElement = focusableElements[focusableElements.length - 1];
+            const activeElement = document.activeElement;
+
+            if (e.shiftKey) {
+                if (activeElement === firstElement || !dialog.contains(activeElement)) {
+                    e.preventDefault();
+                    lastElement.focus();
+                }
+                return;
+            }
+
+            if (activeElement === lastElement || !dialog.contains(activeElement)) {
+                e.preventDefault();
+                firstElement.focus();
+            }
+        };
+
+        window.addEventListener("keydown", onKeyDown);
+        document.body.style.overflow = "hidden";
+        return () => {
+            window.removeEventListener("keydown", onKeyDown);
+            document.body.style.overflow = "";
+            previousFocusRef.current?.focus();
+        };
+    }, [open, onClose]);
+
+    return (
+        <AnimatePresence>
+            {open ? (
+                <motion.div
+                    ref={overlayRef}
+                    className="fixed inset-0 z-[110] flex items-center justify-center bg-slate-950/38 p-4 backdrop-blur-[4px]"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    onMouseDown={(event) => {
+                        if (event.target === overlayRef.current) onClose();
+                    }}>
+                    <motion.div
+                        ref={dialogRef}
+                        initial={{ opacity: 0, y: 28, scale: 0.98 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 18, scale: 0.98 }}
+                        transition={{ duration: 0.25 }}
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby={titleId}
+                        tabIndex={-1}
+                        className="relative flex max-h-[88vh] w-full max-w-4xl flex-col overflow-hidden rounded-[32px] border border-white/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(255,249,244,0.96))] shadow-[0_28px_90px_rgba(15,23,42,0.18)]">
+                        <div className="flex items-start justify-between gap-4 border-b border-[#F0DED0] px-6 py-5 md:px-8">
+                            <div className="min-w-0">
+                                <div className={cn("inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold", meta.badge)}>
+                                    {meta.icon}
+                                    <span>{meta.title}</span>
+                                </div>
+                                <h2 id={titleId} className="mt-3 font-bold text-2xl tracking-tight text-slate-900 md:text-3xl">
+                                    {meta.title}
+                                </h2>
+                                <p className="mt-2 text-sm text-slate-500">{meta.note}</p>
+                            </div>
+
+                            <button
+                                ref={closeButtonRef}
+                                type="button"
+                                onClick={onClose}
+                                aria-label={summaryT("close")}
+                                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-[#F0DDCF] bg-white/90 text-[#9A6B4A] transition hover:bg-[#FFF8F3]">
+                                <X className="h-5 w-5" />
+                            </button>
+                        </div>
+
+                        <div className="flex-1 overflow-y-auto bg-[linear-gradient(180deg,#FFFBF7_0%,#FDF4EC_100%)] px-6 py-6 md:px-8">
+                            {isLoading ? (
+                                <div className="space-y-4">
+                                    {Array.from({ length: 4 }).map((_, index) => (
+                                        <SkeletonCard key={index} />
+                                    ))}
+                                </div>
+                            ) : error ? (
+                                <motion.div
+                                    initial={{ opacity: 0, y: 12 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    className="rounded-[28px] border border-red-200 bg-[linear-gradient(180deg,rgba(255,255,255,0.9),rgba(254,242,242,0.96))] px-5 py-4 text-sm text-red-600 shadow-sm">
+                                    <div className="flex items-center gap-3">
+                                        <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-red-50 text-red-500">
+                                            <AlertTriangle className="h-5 w-5" />
+                                        </div>
+                                        <div>
+                                            <p className="font-semibold">{summaryT("loadingError")}</p>
+                                            <p className="mt-1 text-red-400">{summaryT("loadingErrorHint")}</p>
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            ) : (
+                                <div className="space-y-4">
+                                    <div className="flex items-center justify-between gap-3">
+                                        <p className="text-sm text-slate-500">{taskListT("detailedSubtitle")}</p>
+                                        <p className={cn("font-semibold text-sm", meta.count)}>{items.length}</p>
+                                    </div>
+
+                                    <div className="flex flex-wrap gap-2">
+                                        {([
+                                            { value: "all", label: summaryT("sourceFilters.all") },
+                                            { value: "personal", label: summaryT("sourceFilters.personal") },
+                                            { value: "group", label: summaryT("sourceFilters.group") }
+                                        ] as const).map((option) => (
+                                            <button
+                                                key={option.value}
+                                                type="button"
+                                                onClick={() => onSourceFilterChange(option.value)}
+                                                className={cn(
+                                                    "rounded-full border px-4 py-2 text-sm font-medium transition",
+                                                    sourceFilter === option.value
+                                                        ? "border-[#EA580C] bg-[#EA580C] text-white shadow-[0_10px_24px_rgba(234,88,12,0.22)]"
+                                                        : "border-[#F3D6B4] bg-white text-[#9A6B4A] hover:bg-[#FFF7ED] hover:text-[#C2410C]"
+                                                )}>
+                                                {option.label}
+                                            </button>
+                                        ))}
+                                    </div>
+
+                                    {items.length === 0 ? (
+                                        <div className="rounded-[28px] border border-dashed border-slate-200 bg-white/70 px-6 py-10 text-center shadow-sm">
+                                            <p className="font-semibold text-slate-900">{taskListT("noTasks")}</p>
+                                            <p className="mt-2 text-sm text-slate-500">{meta.note}</p>
+                                        </div>
+                                    ) : (
+                                        <div className="space-y-3">
+                                            {items.map((item) => {
+                                                const dueLabel = formatTaskDueDate(item.dueDate, locale, noDateLabel);
+                                                const sourceLabel = resolveSourceLabel(item, summaryT, taskListT);
+                                                return (
+                                                    <motion.button
+                                                        key={`${item.groupId ?? "group"}-${item.taskId ?? item.taskTitle}`}
+                                                        type="button"
+                                                        whileHover={{ y: -3 }}
+                                                        onClick={() => onTaskClick(item)}
+                                                        className={cn(
+                                                            "flex w-full items-start justify-between gap-4 rounded-[24px] border p-5 text-left shadow-sm transition",
+                                                            meta.panel
+                                                        )}>
+                                                        <div className="min-w-0 flex-1">
+                                                            <div className="flex flex-wrap items-center gap-2">
+                                                                <h3 className="truncate font-semibold text-base text-slate-900">
+                                                                    {item.taskTitle || taskListT("tableHeaderTask")}
+                                                                </h3>
+                                                                <span className="rounded-full border border-orange-200 bg-orange-50 px-2.5 py-1 text-[11px] font-medium text-orange-700">
+                                                                    {item.statusName || meta.title}
+                                                                </span>
+                                                            </div>
+
+                                                            <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-sm text-slate-500">
+                                                                <span>{sourceLabel}</span>
+                                                                <span>
+                                                                    {taskListT("tableHeaderDueDate")}: {dueLabel}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="flex shrink-0 items-center gap-2 rounded-2xl bg-white/80 px-3 py-2 text-sm font-medium text-slate-700">
+                                                            <span>{summaryT("openTask")}</span>
+                                                            <ArrowUpRight className="h-4 w-4" />
+                                                        </div>
+                                                    </motion.button>
+                                                );
+                                            })}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    </motion.div>
+                </motion.div>
+            ) : null}
+        </AnimatePresence>
     );
 }
 
@@ -715,11 +1421,17 @@ function SectionReveal({ children, delay = 0 }: { children: React.ReactNode; del
 export default function AnalysisHome() {
     const locale = useLocale();
     const t = useTranslations("AnalysisHome");
+    const summaryT = useTranslations("HomeSummary");
+    const taskListT = useTranslations("HomeTaskList");
+    const router = useRouter();
 
     // ── API State ────────────────────────────────────────────────
     const [userId, setUserId] = useState<string | null>(null);
     const [selectedGroupId, setSelectedGroupId] = useState<string>("");
     const [selectedGroupName, setSelectedGroupName] = useState<string>("");
+    const [openTaskPopup, setOpenTaskPopup] = useState(false);
+    const [selectedTaskFilter, setSelectedTaskFilter] = useState<AnalysisTaskFilter>("all");
+    const [selectedSourceFilter, setSelectedSourceFilter] = useState<"all" | "personal" | "group">("all");
 
     // Data states
     const [kpiData, setKpiData] = useState<UserKpiSummaryResponse | null>(null);
@@ -745,6 +1457,82 @@ export default function AnalysisHome() {
     const [trendPeriod, setTrendPeriod] = useState<TrendPeriod>(30);
     const [benchmarkPeriod, setBenchmarkPeriod] = useState<BenchmarkPeriod>(7);
     const [priorityTab, setPriorityTab] = useState<"priority" | "urgency">("priority");
+
+    const {
+        data: taskListData,
+        isLoading: isTaskListLoading,
+        error: taskListError
+    } = useSWR(openTaskPopup ? ["analysis-home-task-list"] : null, fetchHomeTaskList, {
+        refreshInterval: 0,
+        revalidateOnFocus: false,
+        revalidateOnReconnect: true,
+        dedupingInterval: 60000,
+        revalidateIfStale: false
+    });
+
+    const { data: joinedGroups, error: joinedGroupsError } = useSWR(
+        openTaskPopup ? ["analysis-home-joined-groups"] : null,
+        fetchJoinedGroups,
+        {
+            refreshInterval: 0,
+            revalidateOnFocus: false,
+            revalidateOnReconnect: true,
+            dedupingInterval: 60000,
+            revalidateIfStale: false
+        }
+    );
+
+    const personalSourceLabel = summaryT("sourceFilters.personal");
+
+    const {
+        data: summaryPersonalTasks,
+        isLoading: isSummaryPersonalTasksLoading,
+        error: summaryPersonalTasksError
+    } = useSWR(
+        openTaskPopup ? ["analysis-home-personal-tasks", locale] : null,
+        () => fetchSummaryPersonalTasks(locale, personalSourceLabel),
+        {
+            refreshInterval: 0,
+            revalidateOnFocus: false,
+            revalidateOnReconnect: true,
+            dedupingInterval: 60000,
+            revalidateIfStale: false
+        }
+    );
+
+    const userGroups = React.useMemo(() => {
+        const merged = [...(taskListData?.userGroups ?? []), ...(joinedGroups ?? [])].filter((group) => !!group.groupId);
+        const seen = new Set<string>();
+        return merged.filter((group) => {
+            const groupId = String(group.groupId ?? "").trim();
+            if (!groupId || seen.has(groupId)) return false;
+            seen.add(groupId);
+            return true;
+        });
+    }, [joinedGroups, taskListData?.userGroups]);
+
+    const {
+        data: summaryGroupTasks,
+        isLoading: isSummaryGroupTasksLoading,
+        error: summaryGroupTasksError
+    } = useSWR(
+        openTaskPopup && userGroups.length && userId
+            ? ["analysis-home-group-tasks", locale, userId, userGroups.map((group) => group.groupId).join(",")]
+            : null,
+        () =>
+            fetchSummaryGroupTasks({
+                groups: userGroups,
+                locale,
+                currentUserId: userId ?? undefined
+            }),
+        {
+            refreshInterval: 0,
+            revalidateOnFocus: false,
+            revalidateOnReconnect: true,
+            dedupingInterval: 60000,
+            revalidateIfStale: false
+        }
+    );
 
     // ── Fetch on mount ───────────────────────────────────────────
     useEffect(() => {
@@ -902,6 +1690,55 @@ export default function AnalysisHome() {
         }
     }, [rankings, selectedGroupId]);
 
+    const combinedPopupTasks = React.useMemo(
+        () => dedupeSummaryItems([...(summaryPersonalTasks ?? []), ...mapHomeTaskListGroupItems(taskListData?.items), ...(summaryGroupTasks ?? [])]),
+        [summaryGroupTasks, summaryPersonalTasks, taskListData?.items]
+    );
+
+    const taskPopupItems = React.useMemo(() => {
+        const filtered = combinedPopupTasks.filter((item) => {
+            if (!matchesAnalysisTaskFilter(item, selectedTaskFilter)) return false;
+            if (selectedSourceFilter === "all") return true;
+            return item.sourceKind === selectedSourceFilter;
+        });
+
+        return filtered.sort((a, b) => {
+            const aTime = parseTaskDueDate(a.dueDate)?.getTime() ?? Number.MAX_SAFE_INTEGER;
+            const bTime = parseTaskDueDate(b.dueDate)?.getTime() ?? Number.MAX_SAFE_INTEGER;
+            if (selectedTaskFilter === "completed") return bTime - aTime;
+            return aTime - bTime;
+        });
+    }, [combinedPopupTasks, selectedSourceFilter, selectedTaskFilter]);
+
+    const taskPopupLoading =
+        isTaskListLoading || isSummaryPersonalTasksLoading || (userGroups.length > 0 && isSummaryGroupTasksLoading);
+    const taskPopupError = taskListError ?? joinedGroupsError ?? summaryGroupTasksError ?? summaryPersonalTasksError;
+
+    const closeAnalysisTaskPopup = React.useCallback(() => {
+        setOpenTaskPopup(false);
+    }, []);
+
+    const openAnalysisTaskPopup = (filter: AnalysisTaskFilter) => {
+        setSelectedTaskFilter(filter);
+        setSelectedSourceFilter("all");
+        setOpenTaskPopup(true);
+    };
+
+    const handleTaskClick = React.useCallback((item: SummaryPopupTaskItem) => {
+        if (item.sourceKind === "personal") {
+            const taskId = String(item.taskId ?? "").trim();
+            if (!taskId) return;
+            closeAnalysisTaskPopup();
+            router.push(`/${locale}/home?personalTaskId=${encodeURIComponent(taskId)}`);
+            return;
+        }
+
+        const href = buildTaskDetailHref(item);
+        if (href === "#") return;
+        closeAnalysisTaskPopup();
+        router.push(href);
+    }, [closeAnalysisTaskPopup, locale, router]);
+
     return (
         <div className="relative overflow-hidden bg-[linear-gradient(180deg,#F8FAFC_0%,#FFF7ED_34%,#FFFBF5_66%,#F8FAFC_100%)]">
             {/* Decorative blobs */}
@@ -942,8 +1779,11 @@ export default function AnalysisHome() {
                                 title={t("cards.totalTasks.title")}
                                 value={kpiData.totalTasks ?? 0}
                                 sub={t("common.tasks")}
+                                onClick={() => openAnalysisTaskPopup("all")}
                                 badge={
-                                    kpiData.totalChangePercent !== undefined && kpiData.totalChangePercent !== null
+                                    kpiData.totalChangePercent !== undefined &&
+                                    kpiData.totalChangePercent !== null &&
+                                    kpiData.totalChangePercent !== 0
                                         ? t("cards.totalTasks.badge", {
                                             percent:
                                                 kpiData.totalChangePercent > 0
@@ -953,7 +1793,9 @@ export default function AnalysisHome() {
                                         : undefined
                                 }
                                 badgeType={
-                                    kpiData.totalChangePercent !== undefined && kpiData.totalChangePercent !== null
+                                    kpiData.totalChangePercent !== undefined &&
+                                    kpiData.totalChangePercent !== null &&
+                                    kpiData.totalChangePercent !== 0
                                         ? kpiData.totalChangePercent >= 0
                                             ? "up"
                                             : "down"
@@ -967,6 +1809,7 @@ export default function AnalysisHome() {
                                 sub={t("common.tasks")}
                                 progress={kpiData.completionRate ?? 0}
                                 accentColor={C.teal}
+                                onClick={() => openAnalysisTaskPopup("completed")}
                             />
                             <KpiCard
                                 title={t("cards.inProgress.title")}
@@ -975,6 +1818,7 @@ export default function AnalysisHome() {
                                 badge={t("cards.inProgress.badge")}
                                 badgeType="neutral"
                                 accentColor={C.amber}
+                                onClick={() => openAnalysisTaskPopup("inProgress")}
                             />
                             <KpiCard
                                 title={t("cards.overdue.title")}
@@ -982,6 +1826,7 @@ export default function AnalysisHome() {
                                 badge={t("cards.overdue.badge")}
                                 badgeType={kpiData.overdueTasks ? "down" : "neutral"}
                                 accentColor={C.red}
+                                onClick={() => openAnalysisTaskPopup("overdue")}
                             />
                         </div>
                     ) : (
@@ -1613,6 +2458,22 @@ export default function AnalysisHome() {
                     </Card>
                 </div>
             </Container>
+
+            <AnalysisTaskListLayer
+                open={openTaskPopup}
+                onClose={closeAnalysisTaskPopup}
+                filter={selectedTaskFilter}
+                items={taskPopupItems}
+                sourceFilter={selectedSourceFilter}
+                onSourceFilterChange={setSelectedSourceFilter}
+                isLoading={taskPopupLoading}
+                error={taskPopupError}
+                onTaskClick={handleTaskClick}
+                locale={locale}
+                t={t}
+                summaryT={summaryT}
+                taskListT={taskListT}
+            />
         </div>
     );
 }

@@ -567,9 +567,6 @@ export function InviteAcceptPage() {
                             <Button className="w-full" onClick={goLogin}>
                                 {t("loginToContinue")}
                             </Button>
-                            <Button className={GROUP_PRIMARY_BUTTON_CLASS} onClick={onBackHome}>
-                                {t("backToGroups")}
-                            </Button>
                         </div>
                     </>
                 ) : (

@@ -85,7 +85,7 @@ export function PaymentHistoryPage() {
                                 <div className="flex items-center justify-center p-12">
                                     <div className="text-center">
                                         <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-4 border-gray-200 border-t-[#FF5F3D]" />
-                                        <p className="text-[#6F6B99] text-sm">Đang tải...</p>
+                                        <p className="text-[#6F6B99] text-sm">{t("loading")}</p>
                                     </div>
                                 </div>
                             ) : payments.length === 0 ? (
@@ -94,13 +94,11 @@ export function PaymentHistoryPage() {
                                         <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gray-100">
                                             <Clock className="h-8 w-8 text-gray-400" />
                                         </div>
-                                        <h3 className="mb-2 font-semibold text-[#261E33]">Chưa có giao dịch nào</h3>
-                                        <p className="mb-4 text-[#6F6B99] text-sm">
-                                            Bạn chưa thực hiện giao dịch thanh toán nào
-                                        </p>
+                                        <h3 className="mb-2 font-semibold text-[#261E33]">{t("empty.title")}</h3>
+                                        <p className="mb-4 text-[#6F6B99] text-sm">{t("empty.description")}</p>
                                         <Link href={`/${locale}/payment`}>
                                             <Button className="bg-[#FF5F3D] hover:bg-[#FF5F3D]/90">
-                                                Nâng cấp gói ngay
+                                                {t("empty.upgradeButton")}
                                             </Button>
                                         </Link>
                                     </div>
@@ -111,19 +109,19 @@ export function PaymentHistoryPage() {
                                         <thead className="border-gray-200 border-b bg-gray-50">
                                             <tr>
                                                 <th className="px-6 py-3 text-left font-semibold text-[#261E33] text-sm">
-                                                    Mã thanh toán
+                                                    {t("table.paymentId")}
                                                 </th>
                                                 <th className="px-6 py-3 text-left font-semibold text-[#261E33] text-sm">
-                                                    Gói đăng ký
+                                                    {t("table.plan")}
                                                 </th>
                                                 <th className="px-6 py-3 text-left font-semibold text-[#261E33] text-sm">
-                                                    Trạng thái
+                                                    {t("table.status")}
                                                 </th>
                                                 <th className="px-6 py-3 text-left font-semibold text-[#261E33] text-sm">
-                                                    Ngày thanh toán
+                                                    {t("table.date")}
                                                 </th>
                                                 <th className="px-6 py-3 text-left font-semibold text-[#261E33] text-sm">
-                                                    Hành động
+                                                    {t("table.actions")}
                                                 </th>
                                             </tr>
                                         </thead>
@@ -152,14 +150,16 @@ export function PaymentHistoryPage() {
                                                     <td className="px-6 py-4">
                                                         <span className="text-[#6F6B99] text-sm">
                                                             {payment.paidAt
-                                                                ? new Date(payment.paidAt).toLocaleDateString("vi-VN")
+                                                                ? new Date(payment.paidAt).toLocaleDateString(
+                                                                      locale === "vi" ? "vi-VN" : "en-US"
+                                                                  )
                                                                 : "—"}
                                                         </span>
                                                     </td>
                                                     <td className="px-6 py-4">
                                                         <Link href={`/${locale}/payment/status/${payment.paymentId}`}>
                                                             <Button variant="ghost" size="sm">
-                                                                Xem chi tiết
+                                                                {t("table.viewDetails")}
                                                             </Button>
                                                         </Link>
                                                     </td>

@@ -82,13 +82,11 @@ export default function HelpPage() {
 
     const contactCardTitle =
         messages.HelpPage?.faq?.contactCard?.title ??
-        (locale === "vi" ? "Không tìm thấy câu trả lời?" : "Still can't find the answer?");
+        t("faq.contactCard.title");
 
     const contactCardDescription =
         messages.HelpPage?.faq?.contactCard?.description ??
-        (locale === "vi"
-            ? "Điền form bên trái để gửi báo cáo, đội hỗ trợ sẽ phản hồi trong 24 giờ làm việc."
-            : "Fill out the form on the left to send a report. Our support team will respond within 24 business hours.");
+        t("faq.contactCard.description");
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
@@ -112,7 +110,7 @@ export default function HelpPage() {
                 localStorage.setItem("helpEmail", form.email);
                 setForm((p) => ({ ...p, title: "", content: "" }));
                 setSubmitted(true);
-                messageApi.success(response.message || "Báo cáo đã được gửi thành công");
+                messageApi.success(response.message || t("form.submitSuccess"));
             } else {
                 messageApi.error(response.message);
             }
@@ -195,10 +193,10 @@ export default function HelpPage() {
                                         </svg>
                                     </div>
                                     <Title level={5} style={{ color: DARK, margin: "0 0 8px" }}>
-                                        Đã gửi thành công!
+                                        {t("success.title")}
                                     </Title>
                                     <Text style={{ color: MUTED, fontSize: 13 }}>
-                                        Chúng tôi sẽ phản hồi qua email của bạn sớm nhất có thể.
+                                        {t("success.description")}
                                     </Text>
                                     <br />
                                     <Button
@@ -210,7 +208,7 @@ export default function HelpPage() {
                                             borderRadius: 10
                                         }}
                                         onClick={() => setSubmitted(false)}>
-                                        Gửi báo cáo khác
+                                        {t("success.sendAnother")}
                                     </Button>
                                 </div>
                             ) : (
@@ -369,7 +367,7 @@ export default function HelpPage() {
                                                 paddingInline: 24,
                                                 transition: "background 0.3s"
                                             }}>
-                                            {isSubmitting ? "Đang gửi..." : t("form.submitButton")}
+                                            {isSubmitting ? t("form.submitting") : t("form.submitButton")}
                                         </Button>
                                     </div>
                                 </form>
