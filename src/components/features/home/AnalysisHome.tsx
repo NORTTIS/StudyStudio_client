@@ -67,7 +67,6 @@ import { apiFetch } from "@/api/api-client";
 import { getUserData } from "@/api/auth";
 import type { components } from "@/api/types";
 import { Container } from "@/components/common";
-import { fetchGroupsPageData } from "@/components/features/group/group.api";
 import HomeTopTabs from "./HomeTopTabs";
 
 // ─── Color Tokens ───────────────────────────────────────────
@@ -101,20 +100,15 @@ const STATUS_COLORS = {
 
 // Donut colors matching GroupAnalyticPage: Todo/InProgress/Done/Overdue
 const DONUT_STATUS_COLORS = ["#3b82f6", "#f59e0b", "#10b981", "#ef4444"];
-const SUMMARY_GROUP_TASK_PAGE_SIZE = 100;
-const SUMMARY_GROUP_TASK_MAX_PAGES = 3;
-const SUMMARY_GROUP_TASK_GROUP_CONCURRENCY = 3;
+const PAGE_SIZE = 1000;
 
 type HomeTaskListResponse = components["schemas"]["HomeTaskListResponse"];
 type HomeTaskListResponseApiResponse = components["schemas"]["HomeTaskListResponseApiResponse"];
 type HomeTaskListItemResponse = components["schemas"]["HomeTaskListItemResponse"];
-type GroupTaskListResponse = components["schemas"]["GroupTaskListResponse"];
-type GroupTaskListResponseApiResponse = components["schemas"]["GroupTaskListResponseApiResponse"];
 type PersonalTaskBoardResponse = components["schemas"]["PersonalTaskBoardResponse"];
 type PersonalTaskBoardResponseApiResponse = components["schemas"]["PersonalTaskBoardResponseApiResponse"];
 type TaskStatusDto = components["schemas"]["TaskStatusDto"];
 type TaskItemResponse = components["schemas"]["TaskItemResponse"];
-type UserGroupDto = components["schemas"]["UserGroupDto"];
 
 type AnalysisTaskFilter = "all" | "completed" | "inProgress" | "overdue";
 type SummaryPopupTaskItem = HomeTaskListItemResponse & {
@@ -209,7 +203,7 @@ function extractTaskListData(payload: unknown): HomeTaskListResponse | null {
 const fetchHomeTaskList = async (): Promise<HomeTaskListResponse | null> => {
     const url = buildTaskListUrl({
         page: 1,
-        pageSize: 1000
+        pageSize: PAGE_SIZE
     });
     if (!url) return null;
 
@@ -219,124 +213,6 @@ const fetchHomeTaskList = async (): Promise<HomeTaskListResponse | null> => {
 
     return extractTaskListData(response);
 };
-
-async function fetchGroupTaskPage(args: {
-    groupId: string;
-    locale: string;
-    page: number;
-    pageSize: number;
-    assigneeId?: string;
-}): Promise<GroupTaskListResponse | null> {
-    const query = new URLSearchParams();
-    query.set("page", String(args.page));
-    query.set("pageSize", String(args.pageSize));
-    query.set("sortBy", "createdAt");
-    query.set("sortAscending", "false");
-    if (args.assigneeId) query.set("assigneeId", args.assigneeId);
-
-    const response = await apiFetch<GroupTaskListResponseApiResponse>(
-        `/group/${encodeURIComponent(args.groupId)}/tasks?${query.toString()}`,
-        {
-            method: "GET",
-            locale: args.locale
-        }
-    );
-
-    const source = response as
-        | GroupTaskListResponseApiResponse
-        | {
-            status?: string;
-            data?: GroupTaskListResponseApiResponse | GroupTaskListResponse | null;
-        }
-        | null
-        | undefined;
-
-    const firstLayer = source?.data;
-
-    if (firstLayer && typeof firstLayer === "object" && "items" in firstLayer && "page" in firstLayer) {
-        return firstLayer as GroupTaskListResponse;
-    }
-
-    if (
-        firstLayer &&
-        typeof firstLayer === "object" &&
-        "data" in firstLayer &&
-        (firstLayer as GroupTaskListResponseApiResponse).data
-    ) {
-        return (firstLayer as GroupTaskListResponseApiResponse).data ?? null;
-    }
-
-    if (source && typeof source === "object" && "data" in source && (source as GroupTaskListResponseApiResponse).data) {
-        return (source as GroupTaskListResponseApiResponse).data ?? null;
-    }
-
-    return null;
-}
-
-async function fetchSummaryGroupTasks(args: {
-    groups: UserGroupDto[];
-    locale: string;
-    currentUserId?: string;
-}): Promise<SummaryPopupTaskItem[]> {
-    const validGroups = args.groups.filter((group) => !!group.groupId);
-    if (!validGroups.length || !args.currentUserId) return [];
-
-    const groupResults: SummaryPopupTaskItem[][] = [];
-
-    for (let start = 0; start < validGroups.length; start += SUMMARY_GROUP_TASK_GROUP_CONCURRENCY) {
-        const groupBatch = validGroups.slice(start, start + SUMMARY_GROUP_TASK_GROUP_CONCURRENCY);
-        const batchResults = await Promise.all(
-            groupBatch.map(async (group) => {
-                const groupId = String(group.groupId);
-                const firstPage = await fetchGroupTaskPage({
-                    groupId,
-                    locale: args.locale,
-                    page: 1,
-                    pageSize: SUMMARY_GROUP_TASK_PAGE_SIZE,
-                    assigneeId: args.currentUserId
-                });
-
-                const totalPages = Math.max(1, Number(firstPage?.totalPages ?? 1));
-                const pagesToFetch = Math.min(totalPages, SUMMARY_GROUP_TASK_MAX_PAGES);
-                const restPages =
-                    pagesToFetch > 1
-                        ? await Promise.all(
-                            Array.from({ length: pagesToFetch - 1 }, (_, index) =>
-                                fetchGroupTaskPage({
-                                    groupId,
-                                    locale: args.locale,
-                                    page: index + 2,
-                                    pageSize: SUMMARY_GROUP_TASK_PAGE_SIZE,
-                                    assigneeId: args.currentUserId
-                                })
-                            )
-                        )
-                        : [];
-
-                return [firstPage, ...restPages]
-                    .flatMap((page) => page?.items ?? [])
-                    .map((item) => ({
-                        dueDate: item.dueDate ?? null,
-                        groupId,
-                        groupName: group.groupName ?? null,
-                        progress: item.progress ?? 0,
-                        sourceKind: "group" as const,
-                        sourceName: group.groupName ?? null,
-                        sourceType: "group",
-                        statusName: item.statusName ?? null,
-                        taskId: item.taskId,
-                        taskPriority: item.taskPriority,
-                        taskSeverity: item.taskSeverity,
-                        taskTitle: item.taskTitle ?? null
-                    }) satisfies SummaryPopupTaskItem);
-            })
-        );
-
-        groupResults.push(...batchResults);
-    }
-
-    return groupResults.flat();
-}
 
 async function fetchPersonalTaskBoard(locale: string): Promise<PersonalTaskBoardResponse | null> {
     const response = await apiFetch<PersonalTaskBoardResponseApiResponse>("/Home/personal-task", {
@@ -374,29 +250,28 @@ async function fetchSummaryPersonalTasks(locale: string, personalSourceLabel: st
     );
 }
 
-function mapHomeTaskListGroupItems(items: HomeTaskListItemResponse[] | null | undefined): SummaryPopupTaskItem[] {
+function mapHomeTaskListAllItems(
+    items: HomeTaskListItemResponse[] | null | undefined,
+    personalLabel: string
+): SummaryPopupTaskItem[] {
     return (items ?? [])
-        .filter((item) => {
+        .filter((item) => !!String(item.taskId ?? "").trim())
+        .map((item) => {
             const sourceType = String(item.sourceType ?? "").trim().toLowerCase();
-            const sourceName = String(item.sourceName ?? "").trim();
-            const groupName = String(item.groupName ?? "").trim();
-            const normalizedSourceName = normalizeStatusName(sourceName);
-            const isClearlyPersonal =
-                sourceType === "personal" || normalizedSourceName === "ca nhan" || normalizedSourceName === "personal";
-            return (
-                !isClearlyPersonal &&
-                !!String(item.taskId ?? "").trim() &&
-                (!!item.groupId || !!groupName || !!sourceName || sourceType === "group")
-            );
-        })
-        .map((item) => ({
-            ...item,
-            sourceKind: "group" as const,
-            groupId: item.groupId ?? null,
-            groupName: item.groupName ?? item.sourceName ?? null,
-            sourceName: item.groupName ?? item.sourceName ?? null,
-            sourceType: "group"
-        }));
+            const normalizedName = normalizeStatusName(item.sourceName ?? "");
+            const isPersonal =
+                sourceType === "personal" ||
+                normalizedName === "personal" ||
+                normalizedName === "ca nhan";
+            return {
+                ...item,
+                sourceKind: (isPersonal ? "personal" : "group") as "group" | "personal",
+                groupId: isPersonal ? null : (item.groupId ?? null),
+                groupName: isPersonal ? null : (item.groupName ?? item.sourceName ?? null),
+                sourceName: isPersonal ? personalLabel : (item.groupName ?? item.sourceName ?? null),
+                sourceType: isPersonal ? "personal" : "group"
+            };
+        });
 }
 
 function dedupeSummaryItems(items: SummaryPopupTaskItem[]) {
@@ -409,20 +284,6 @@ function dedupeSummaryItems(items: SummaryPopupTaskItem[]) {
     });
 }
 
-async function fetchJoinedGroups(): Promise<UserGroupDto[]> {
-    const data = await fetchGroupsPageData();
-    const result: UserGroupDto[] = [];
-
-    for (const group of data.joined ?? []) {
-        const candidate = group as { id?: string | null; groupId?: string | null; name?: string | null; groupName?: string | null };
-        const groupId = String(candidate.groupId ?? candidate.id ?? "").trim();
-        const groupName = String(candidate.groupName ?? candidate.name ?? "").trim();
-        if (!groupId) continue;
-        result.push({ groupId, groupName: groupName || null });
-    }
-
-    return result;
-}
 
 function normalizeProgressValue(value?: number | null) {
     return typeof value === "number" && Number.isFinite(value) ? value : 0;
@@ -708,19 +569,6 @@ function KpiCard({
                         <p className="font-bold text-[2rem] leading-none text-slate-900 tracking-tight">{value}</p>
                         {sub && <span className="mb-0.5 text-slate-500 text-xs leading-none">{sub}</span>}
                     </div>
-                    {badge && (
-                        <div className="flex items-center gap-1.5">
-                            <span
-                                className={cn(
-                                    "inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-medium text-[11px] leading-none",
-                                    badgeColors[badgeType]
-                                )}>
-                                {badgeType === "up" && <ArrowUpRight className="h-3 w-3" />}
-                                {badgeType === "down" && <ArrowDownRight className="h-3 w-3" />}
-                                {badge}
-                            </span>
-                        </div>
-                    )}
                 </div>
                 {progress !== undefined ? (
                     <div className="mt-0.5">
@@ -790,9 +638,15 @@ function AnalysisTaskListLayer({
     open,
     onClose,
     filter,
-    items,
+    personalItems,
+    groupItems,
     sourceFilter,
     onSourceFilterChange,
+    personalPage,
+    groupPage,
+    onPersonalPageChange,
+    onGroupPageChange,
+    pageSize,
     isLoading,
     error,
     onTaskClick,
@@ -804,9 +658,15 @@ function AnalysisTaskListLayer({
     open: boolean;
     onClose: () => void;
     filter: AnalysisTaskFilter;
-    items: SummaryPopupTaskItem[];
-    sourceFilter: "all" | "personal" | "group";
-    onSourceFilterChange: (value: "all" | "personal" | "group") => void;
+    personalItems: SummaryPopupTaskItem[];
+    groupItems: SummaryPopupTaskItem[];
+    sourceFilter: "personal" | "group";
+    onSourceFilterChange: (value: "personal" | "group") => void;
+    personalPage: number;
+    groupPage: number;
+    onPersonalPageChange: (page: number) => void;
+    onGroupPageChange: (page: number) => void;
+    pageSize: number;
     isLoading: boolean;
     error: unknown;
     onTaskClick: (item: SummaryPopupTaskItem) => void;
@@ -821,6 +681,11 @@ function AnalysisTaskListLayer({
     const closeButtonRef = React.useRef<HTMLButtonElement | null>(null);
     const previousFocusRef = React.useRef<HTMLElement | null>(null);
     const noDateLabel = taskListT("noDate");
+    const currentItems = sourceFilter === "personal" ? personalItems : groupItems;
+    const currentPage = sourceFilter === "personal" ? personalPage : groupPage;
+    const onPageChange = sourceFilter === "personal" ? onPersonalPageChange : onGroupPageChange;
+    const totalPages = Math.max(1, Math.ceil(currentItems.length / pageSize));
+    const paginatedItems = currentItems.slice((currentPage - 1) * pageSize, currentPage * pageSize);
     const meta = {
         all: {
             title: t("cards.totalTasks.title"),
@@ -855,6 +720,10 @@ function AnalysisTaskListLayer({
             icon: <Flame className="h-5 w-5" />
         }
     }[filter];
+
+    useEffect(() => {
+        if (currentPage > totalPages) onPageChange(totalPages);
+    }, [currentPage, onPageChange, totalPages]);
 
     useEffect(() => {
         if (!open) return;
@@ -987,12 +856,11 @@ function AnalysisTaskListLayer({
                                 <div className="space-y-4">
                                     <div className="flex items-center justify-between gap-3">
                                         <p className="text-sm text-slate-500">{taskListT("detailedSubtitle")}</p>
-                                        <p className={cn("font-semibold text-sm", meta.count)}>{items.length}</p>
+                                        <p className={cn("font-semibold text-sm", meta.count)}>{currentItems.length}</p>
                                     </div>
 
                                     <div className="flex flex-wrap gap-2">
                                         {([
-                                            { value: "all", label: summaryT("sourceFilters.all") },
                                             { value: "personal", label: summaryT("sourceFilters.personal") },
                                             { value: "group", label: summaryT("sourceFilters.group") }
                                         ] as const).map((option) => (
@@ -1011,14 +879,14 @@ function AnalysisTaskListLayer({
                                         ))}
                                     </div>
 
-                                    {items.length === 0 ? (
+                                    {currentItems.length === 0 ? (
                                         <div className="rounded-[28px] border border-dashed border-slate-200 bg-white/70 px-6 py-10 text-center shadow-sm">
                                             <p className="font-semibold text-slate-900">{taskListT("noTasks")}</p>
                                             <p className="mt-2 text-sm text-slate-500">{meta.note}</p>
                                         </div>
                                     ) : (
                                         <div className="space-y-3">
-                                            {items.map((item) => {
+                                            {paginatedItems.map((item) => {
                                                 const dueLabel = formatTaskDueDate(item.dueDate, locale, noDateLabel);
                                                 const sourceLabel = resolveSourceLabel(item, summaryT, taskListT);
                                                 return (
@@ -1056,6 +924,28 @@ function AnalysisTaskListLayer({
                                                     </motion.button>
                                                 );
                                             })}
+
+                                            <div className="mt-4 flex items-center justify-between">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => onPageChange(currentPage - 1)}
+                                                    disabled={currentPage === 1}
+                                                    className="rounded-xl border border-slate-200 px-4 py-2 text-sm disabled:opacity-40">
+                                                    ← Prev
+                                                </button>
+
+                                                <span className="text-slate-500 text-sm">
+                                                    {currentPage} / {totalPages}
+                                                </span>
+
+                                                <button
+                                                    type="button"
+                                                    onClick={() => onPageChange(currentPage + 1)}
+                                                    disabled={currentPage >= totalPages}
+                                                    className="rounded-xl border border-slate-200 px-4 py-2 text-sm disabled:opacity-40">
+                                                    Next →
+                                                </button>
+                                            </div>
                                         </div>
                                     )}
                                 </div>
@@ -1431,7 +1321,6 @@ export default function AnalysisHome() {
     const [selectedGroupName, setSelectedGroupName] = useState<string>("");
     const [openTaskPopup, setOpenTaskPopup] = useState(false);
     const [selectedTaskFilter, setSelectedTaskFilter] = useState<AnalysisTaskFilter>("all");
-    const [selectedSourceFilter, setSelectedSourceFilter] = useState<"all" | "personal" | "group">("all");
 
     // Data states
     const [kpiData, setKpiData] = useState<UserKpiSummaryResponse | null>(null);
@@ -1457,6 +1346,9 @@ export default function AnalysisHome() {
     const [trendPeriod, setTrendPeriod] = useState<TrendPeriod>(30);
     const [benchmarkPeriod, setBenchmarkPeriod] = useState<BenchmarkPeriod>(7);
     const [priorityTab, setPriorityTab] = useState<"priority" | "urgency">("priority");
+    const [sourceFilter, setSourceFilter] = useState<"personal" | "group">("personal");
+    const [personalPage, setPersonalPage] = useState(1);
+    const [groupPage, setGroupPage] = useState(1);
 
     const {
         data: taskListData,
@@ -1470,18 +1362,6 @@ export default function AnalysisHome() {
         revalidateIfStale: false
     });
 
-    const { data: joinedGroups, error: joinedGroupsError } = useSWR(
-        openTaskPopup ? ["analysis-home-joined-groups"] : null,
-        fetchJoinedGroups,
-        {
-            refreshInterval: 0,
-            revalidateOnFocus: false,
-            revalidateOnReconnect: true,
-            dedupingInterval: 60000,
-            revalidateIfStale: false
-        }
-    );
-
     const personalSourceLabel = summaryT("sourceFilters.personal");
 
     const {
@@ -1491,47 +1371,7 @@ export default function AnalysisHome() {
     } = useSWR(
         openTaskPopup ? ["analysis-home-personal-tasks", locale] : null,
         () => fetchSummaryPersonalTasks(locale, personalSourceLabel),
-        {
-            refreshInterval: 0,
-            revalidateOnFocus: false,
-            revalidateOnReconnect: true,
-            dedupingInterval: 60000,
-            revalidateIfStale: false
-        }
-    );
-
-    const userGroups = React.useMemo(() => {
-        const merged = [...(taskListData?.userGroups ?? []), ...(joinedGroups ?? [])].filter((group) => !!group.groupId);
-        const seen = new Set<string>();
-        return merged.filter((group) => {
-            const groupId = String(group.groupId ?? "").trim();
-            if (!groupId || seen.has(groupId)) return false;
-            seen.add(groupId);
-            return true;
-        });
-    }, [joinedGroups, taskListData?.userGroups]);
-
-    const {
-        data: summaryGroupTasks,
-        isLoading: isSummaryGroupTasksLoading,
-        error: summaryGroupTasksError
-    } = useSWR(
-        openTaskPopup && userGroups.length && userId
-            ? ["analysis-home-group-tasks", locale, userId, userGroups.map((group) => group.groupId).join(",")]
-            : null,
-        () =>
-            fetchSummaryGroupTasks({
-                groups: userGroups,
-                locale,
-                currentUserId: userId ?? undefined
-            }),
-        {
-            refreshInterval: 0,
-            revalidateOnFocus: false,
-            revalidateOnReconnect: true,
-            dedupingInterval: 60000,
-            revalidateIfStale: false
-        }
+        { refreshInterval: 0, revalidateOnFocus: false, revalidateOnReconnect: true, dedupingInterval: 60000, revalidateIfStale: false }
     );
 
     // ── Fetch on mount ───────────────────────────────────────────
@@ -1690,29 +1530,58 @@ export default function AnalysisHome() {
         }
     }, [rankings, selectedGroupId]);
 
-    const combinedPopupTasks = React.useMemo(
-        () => dedupeSummaryItems([...(summaryPersonalTasks ?? []), ...mapHomeTaskListGroupItems(taskListData?.items), ...(summaryGroupTasks ?? [])]),
-        [summaryGroupTasks, summaryPersonalTasks, taskListData?.items]
+    // ── Derived items from /Home/TaskList — all items (personal + group) ──
+    const allMappedItems = React.useMemo(
+        () => mapHomeTaskListAllItems(taskListData?.items, personalSourceLabel),
+        [taskListData?.items, personalSourceLabel]
     );
 
-    const taskPopupItems = React.useMemo(() => {
-        const filtered = combinedPopupTasks.filter((item) => {
-            if (!matchesAnalysisTaskFilter(item, selectedTaskFilter)) return false;
-            if (selectedSourceFilter === "all") return true;
-            return item.sourceKind === selectedSourceFilter;
-        });
+    // Separate personal and group items from /Home/TaskList
+    const personalTaskListItems = React.useMemo(
+        () => allMappedItems.filter((item) => item.sourceKind === "personal"),
+        [allMappedItems]
+    );
 
-        return filtered.sort((a, b) => {
-            const aTime = parseTaskDueDate(a.dueDate)?.getTime() ?? Number.MAX_SAFE_INTEGER;
-            const bTime = parseTaskDueDate(b.dueDate)?.getTime() ?? Number.MAX_SAFE_INTEGER;
-            if (selectedTaskFilter === "completed") return bTime - aTime;
-            return aTime - bTime;
-        });
-    }, [combinedPopupTasks, selectedSourceFilter, selectedTaskFilter]);
+    const groupTaskListItems = React.useMemo(
+        () => allMappedItems.filter((item) => item.sourceKind === "group"),
+        [allMappedItems]
+    );
 
-    const taskPopupLoading =
-        isTaskListLoading || isSummaryPersonalTasksLoading || (userGroups.length > 0 && isSummaryGroupTasksLoading);
-    const taskPopupError = taskListError ?? joinedGroupsError ?? summaryGroupTasksError ?? summaryPersonalTasksError;
+    // Combine personal items: from /Home/TaskList + from /Home/personal-task, deduplicated
+    const allPersonalItems = React.useMemo(() => {
+        const seen = new Set<string>();
+        return [...personalTaskListItems, ...(summaryPersonalTasks ?? [])].filter((item) => {
+            const key = item.taskId ?? item.taskTitle ?? "unknown";
+            if (seen.has(key)) return false;
+            seen.add(key);
+            return true;
+        });
+    }, [personalTaskListItems, summaryPersonalTasks]);
+
+    const filteredPersonalItems = React.useMemo(() => {
+        return allPersonalItems
+            .filter((item) => matchesAnalysisTaskFilter(item, selectedTaskFilter))
+            .sort((a, b) => {
+                const aTime = parseTaskDueDate(a.dueDate)?.getTime() ?? Number.MAX_SAFE_INTEGER;
+                const bTime = parseTaskDueDate(b.dueDate)?.getTime() ?? Number.MAX_SAFE_INTEGER;
+                if (selectedTaskFilter === "completed") return bTime - aTime;
+                return aTime - bTime;
+            });
+    }, [allPersonalItems, selectedTaskFilter]);
+
+    const filteredGroupItems = React.useMemo(() => {
+        return groupTaskListItems
+            .filter((item) => matchesAnalysisTaskFilter(item, selectedTaskFilter))
+            .sort((a, b) => {
+                const aTime = parseTaskDueDate(a.dueDate)?.getTime() ?? Number.MAX_SAFE_INTEGER;
+                const bTime = parseTaskDueDate(b.dueDate)?.getTime() ?? Number.MAX_SAFE_INTEGER;
+                if (selectedTaskFilter === "completed") return bTime - aTime;
+                return aTime - bTime;
+            });
+    }, [groupTaskListItems, selectedTaskFilter]);
+
+    const taskPopupLoading = isTaskListLoading || isSummaryPersonalTasksLoading;
+    const taskPopupError = taskListError ?? summaryPersonalTasksError;
 
     const closeAnalysisTaskPopup = React.useCallback(() => {
         setOpenTaskPopup(false);
@@ -1720,9 +1589,20 @@ export default function AnalysisHome() {
 
     const openAnalysisTaskPopup = (filter: AnalysisTaskFilter) => {
         setSelectedTaskFilter(filter);
-        setSelectedSourceFilter("all");
+        setSourceFilter("personal");
+        setPersonalPage(1);
+        setGroupPage(1);
         setOpenTaskPopup(true);
     };
+
+    const handleSourceFilterChange = React.useCallback((value: "personal" | "group") => {
+        setSourceFilter(value);
+        if (value === "personal") {
+            setPersonalPage(1);
+            return;
+        }
+        setGroupPage(1);
+    }, []);
 
     const handleTaskClick = React.useCallback((item: SummaryPopupTaskItem) => {
         if (item.sourceKind === "personal") {
@@ -2463,9 +2343,15 @@ export default function AnalysisHome() {
                 open={openTaskPopup}
                 onClose={closeAnalysisTaskPopup}
                 filter={selectedTaskFilter}
-                items={taskPopupItems}
-                sourceFilter={selectedSourceFilter}
-                onSourceFilterChange={setSelectedSourceFilter}
+                personalItems={filteredPersonalItems}
+                groupItems={filteredGroupItems}
+                sourceFilter={sourceFilter}
+                onSourceFilterChange={handleSourceFilterChange}
+                personalPage={personalPage}
+                groupPage={groupPage}
+                onPersonalPageChange={setPersonalPage}
+                onGroupPageChange={setGroupPage}
+                pageSize={PAGE_SIZE}
                 isLoading={taskPopupLoading}
                 error={taskPopupError}
                 onTaskClick={handleTaskClick}
