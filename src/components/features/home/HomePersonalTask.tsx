@@ -27,6 +27,7 @@ import {
     verticalListSortingStrategy
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import * as React from "react";
 import { DayPicker } from "react-day-picker";
 import { createPortal } from "react-dom";
@@ -2728,6 +2729,9 @@ function PersonalTaskDetailModal({
 
 export default function HomePersonalTaskScreen() {
     const t = useTranslations("HomePersonalTask");
+    const router = useRouter();
+    const pathname = usePathname();
+    const searchParams = useSearchParams();
     const { toast } = useToast();
     const [board, setBoard] = React.useState<PersonalTaskBoardResponse | null>(null);
     const [statuses, setStatuses] = React.useState<PersonalTaskStatusDto[]>([]);
@@ -3010,21 +3014,22 @@ export default function HomePersonalTaskScreen() {
         setDetailOpen(true);
     }, [statuses]);
 
+    const openTaskById = React.useCallback((taskId: string) => {
+        const normalizedTaskId = String(taskId ?? "").trim();
+        if (!normalizedTaskId) return false;
+
+        const foundTask = findTaskInStatuses(statuses, normalizedTaskId);
+        if (!foundTask) {
+            setPendingExternalTaskId(normalizedTaskId);
+            return false;
+        }
+
+        setPendingExternalTaskId(null);
+        handleOpenTaskDetail(foundTask);
+        return true;
+    }, [handleOpenTaskDetail, statuses]);
+
     React.useEffect(() => {
-        const openTaskById = (taskId: string) => {
-            const normalizedTaskId = String(taskId ?? "").trim();
-            if (!normalizedTaskId) return;
-
-            const foundTask = findTaskInStatuses(statuses, normalizedTaskId);
-            if (!foundTask) {
-                setPendingExternalTaskId(normalizedTaskId);
-                return;
-            }
-
-            setPendingExternalTaskId(null);
-            handleOpenTaskDetail(foundTask);
-        };
-
         const onOpenExternal = (event: Event) => {
             const customEvent = event as CustomEvent<{ taskId?: string }>;
             openTaskById(String(customEvent.detail?.taskId ?? ""));
@@ -3032,16 +3037,26 @@ export default function HomePersonalTaskScreen() {
 
         window.addEventListener("home:open-personal-task-detail", onOpenExternal as EventListener);
         return () => window.removeEventListener("home:open-personal-task-detail", onOpenExternal as EventListener);
-    }, [handleOpenTaskDetail, statuses]);
+    }, [openTaskById]);
 
     React.useEffect(() => {
         if (!pendingExternalTaskId) return;
-        const foundTask = findTaskInStatuses(statuses, pendingExternalTaskId);
-        if (!foundTask) return;
+        openTaskById(pendingExternalTaskId);
+    }, [openTaskById, pendingExternalTaskId]);
 
-        setPendingExternalTaskId(null);
-        handleOpenTaskDetail(foundTask);
-    }, [handleOpenTaskDetail, pendingExternalTaskId, statuses]);
+    React.useEffect(() => {
+        const requestedTaskId = String(searchParams?.get("personalTaskId") ?? "").trim();
+        if (!requestedTaskId) return;
+
+        document.getElementById("home-personal-task-section")?.scrollIntoView({ behavior: "smooth", block: "start" });
+
+        if (!openTaskById(requestedTaskId)) return;
+
+        const nextParams = new URLSearchParams(searchParams?.toString() ?? "");
+        nextParams.delete("personalTaskId");
+        const nextQuery = nextParams.toString();
+        router.replace(nextQuery ? `${pathname}?${nextQuery}` : pathname, { scroll: false });
+    }, [openTaskById, pathname, router, searchParams]);
 
     const handleCloseTaskDetail = React.useCallback(() => {
         if (confirmDeleteTask.open && confirmDeleteTask.fromDetail) return;

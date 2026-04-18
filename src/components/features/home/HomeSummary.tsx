@@ -47,6 +47,9 @@ type SummaryPopupTaskItem = HomeTaskListItemResponse & {
     groupId?: string | null;
     groupName?: string | null;
 };
+const SUMMARY_GROUP_TASK_PAGE_SIZE = 100;
+const SUMMARY_GROUP_TASK_MAX_PAGES = 3;
+const SUMMARY_GROUP_TASK_GROUP_CONCURRENCY = 3;
 
 type SummaryGroupItem = {
     groupId?: string | null;
@@ -545,55 +548,68 @@ async function fetchSummaryGroupTasks(args: {
     const validGroups = args.groups.filter((group) => !!group.groupId);
     if (!validGroups.length || !args.currentUserId) return [];
 
-    const pageSize = 100;
+    const groupResults: SummaryPopupTaskItem[][] = [];
 
-    const groupResults = await Promise.all(
-        validGroups.map(async (group) => {
-            const groupId = String(group.groupId);
-            const firstPage = await fetchGroupTaskPage({
-                groupId,
-                filter: args.filter,
-                locale: args.locale,
-                page: 1,
-                pageSize,
-                assigneeId: args.currentUserId
-            });
-
-            const totalPages = Math.max(1, Number(firstPage?.totalPages ?? 1));
-            const restPages =
-                totalPages > 1
-                    ? await Promise.all(
-                        Array.from({ length: totalPages - 1 }, (_, index) =>
-                            fetchGroupTaskPage({
-                                groupId,
-                                filter: args.filter,
-                                locale: args.locale,
-                                page: index + 2,
-                                pageSize,
-                                assigneeId: args.currentUserId
-                            })
-                        )
-                    )
-                    : [];
-
-            return [firstPage, ...restPages]
-                .flatMap((page) => page?.items ?? [])
-                .map((item) => ({
-                    dueDate: item.dueDate ?? null,
+    for (let start = 0; start < validGroups.length; start += SUMMARY_GROUP_TASK_GROUP_CONCURRENCY) {
+        const groupBatch = validGroups.slice(start, start + SUMMARY_GROUP_TASK_GROUP_CONCURRENCY);
+        const batchResults = await Promise.allSettled(
+            groupBatch.map(async (group) => {
+                const groupId = String(group.groupId);
+                const firstPage = await fetchGroupTaskPage({
                     groupId,
-                    groupName: group.groupName ?? null,
-                    progress: item.progress ?? 0,
-                    sourceKind: "group" as const,
-                    sourceName: group.groupName ?? null,
-                    sourceType: "group",
-                    statusName: item.statusName ?? null,
-                    taskId: item.taskId,
-                    taskPriority: item.taskPriority,
-                    taskSeverity: item.taskSeverity,
-                    taskTitle: item.taskTitle ?? null
-                }) satisfies SummaryPopupTaskItem);
-        })
-    );
+                    filter: args.filter,
+                    locale: args.locale,
+                    page: 1,
+                    pageSize: SUMMARY_GROUP_TASK_PAGE_SIZE,
+                    assigneeId: args.currentUserId
+                });
+
+                const totalPages = Math.max(1, Number(firstPage?.totalPages ?? 1));
+                const pagesToFetch = Math.min(totalPages, SUMMARY_GROUP_TASK_MAX_PAGES);
+                const restPages =
+                    pagesToFetch > 1
+                        ? await Promise.allSettled(
+                            Array.from({ length: pagesToFetch - 1 }, (_, index) =>
+                                fetchGroupTaskPage({
+                                    groupId,
+                                    filter: args.filter,
+                                    locale: args.locale,
+                                    page: index + 2,
+                                    pageSize: SUMMARY_GROUP_TASK_PAGE_SIZE,
+                                    assigneeId: args.currentUserId
+                                })
+                            )
+                        )
+                        : [];
+
+                return [firstPage, ...restPages
+                    .filter(
+                        (result): result is PromiseFulfilledResult<GroupTaskListResponse | null> => result.status === "fulfilled"
+                    )
+                    .map((result) => result.value)]
+                    .flatMap((page) => page?.items ?? [])
+                    .map((item) => ({
+                        dueDate: item.dueDate ?? null,
+                        groupId,
+                        groupName: group.groupName ?? null,
+                        progress: item.progress ?? 0,
+                        sourceKind: "group" as const,
+                        sourceName: group.groupName ?? null,
+                        sourceType: "group",
+                        statusName: item.statusName ?? null,
+                        taskId: item.taskId,
+                        taskPriority: item.taskPriority,
+                        taskSeverity: item.taskSeverity,
+                        taskTitle: item.taskTitle ?? null
+                    }) satisfies SummaryPopupTaskItem);
+            })
+        );
+
+        for (const result of batchResults) {
+            if (result.status !== "fulfilled") continue;
+            groupResults.push(result.value);
+        }
+    }
 
     return groupResults.flat();
 }
@@ -697,11 +713,12 @@ function normalizeStatusName(value?: string | null) {
 
 function isCompletedStatus(statusName?: string | null) {
     const normalized = normalizeStatusName(statusName);
+    const tokens = normalized.split(/[^a-z]+/).filter(Boolean);
     return (
         normalized.includes("hoan thanh") ||
         normalized.includes("done") ||
         normalized.includes("completed") ||
-        normalized.includes("complete")
+        tokens.includes("complete")
     );
 }
 
@@ -1411,7 +1428,7 @@ export default function HomeSummary() {
         data: taskListData,
         isLoading: isTaskListLoading,
         error: taskListError
-    } = useSWR(["home-summary-task-list", cacheKey], fetchHomeTaskList, {
+    } = useSWR(openTaskPopup ? ["home-summary-task-list", cacheKey] : null, fetchHomeTaskList, {
         refreshInterval: 0,
         revalidateOnFocus: false,
         revalidateOnReconnect: true,
@@ -1444,6 +1461,7 @@ export default function HomeSummary() {
     );
 
     const userGroups = React.useMemo(() => {
+        if (!openTaskPopup) return [];
         const merged = [...(taskListData?.userGroups ?? []), ...(joinedGroups ?? [])].filter((group) => !!group.groupId);
         const seen = new Set<string>();
         return merged.filter((group) => {
@@ -1452,14 +1470,14 @@ export default function HomeSummary() {
             seen.add(groupId);
             return true;
         });
-    }, [joinedGroups, taskListData?.userGroups]);
+    }, [joinedGroups, openTaskPopup, taskListData?.userGroups]);
 
     const {
         data: summaryGroupTasks,
         isLoading: isSummaryGroupTasksLoading,
         error: summaryGroupTasksError
     } = useSWR(
-        userGroups.length && currentUserId
+        openTaskPopup && userGroups.length && currentUserId
             ? [
                 "home-summary-group-tasks",
                 cacheKey,

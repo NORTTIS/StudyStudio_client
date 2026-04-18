@@ -101,6 +101,9 @@ const STATUS_COLORS = {
 
 // Donut colors matching GroupAnalyticPage: Todo/InProgress/Done/Overdue
 const DONUT_STATUS_COLORS = ["#3b82f6", "#f59e0b", "#10b981", "#ef4444"];
+const SUMMARY_GROUP_TASK_PAGE_SIZE = 100;
+const SUMMARY_GROUP_TASK_MAX_PAGES = 3;
+const SUMMARY_GROUP_TASK_GROUP_CONCURRENCY = 3;
 
 type HomeTaskListResponse = components["schemas"]["HomeTaskListResponse"];
 type HomeTaskListResponseApiResponse = components["schemas"]["HomeTaskListResponseApiResponse"];
@@ -278,52 +281,59 @@ async function fetchSummaryGroupTasks(args: {
     const validGroups = args.groups.filter((group) => !!group.groupId);
     if (!validGroups.length || !args.currentUserId) return [];
 
-    const pageSize = 100;
-    const groupResults = await Promise.all(
-        validGroups.map(async (group) => {
-            const groupId = String(group.groupId);
-            const firstPage = await fetchGroupTaskPage({
-                groupId,
-                locale: args.locale,
-                page: 1,
-                pageSize,
-                assigneeId: args.currentUserId
-            });
+    const groupResults: SummaryPopupTaskItem[][] = [];
 
-            const totalPages = Math.max(1, Number(firstPage?.totalPages ?? 1));
-            const restPages =
-                totalPages > 1
-                    ? await Promise.all(
-                        Array.from({ length: totalPages - 1 }, (_, index) =>
-                            fetchGroupTaskPage({
-                                groupId,
-                                locale: args.locale,
-                                page: index + 2,
-                                pageSize,
-                                assigneeId: args.currentUserId
-                            })
-                        )
-                    )
-                    : [];
-
-            return [firstPage, ...restPages]
-                .flatMap((page) => page?.items ?? [])
-                .map((item) => ({
-                    dueDate: item.dueDate ?? null,
+    for (let start = 0; start < validGroups.length; start += SUMMARY_GROUP_TASK_GROUP_CONCURRENCY) {
+        const groupBatch = validGroups.slice(start, start + SUMMARY_GROUP_TASK_GROUP_CONCURRENCY);
+        const batchResults = await Promise.all(
+            groupBatch.map(async (group) => {
+                const groupId = String(group.groupId);
+                const firstPage = await fetchGroupTaskPage({
                     groupId,
-                    groupName: group.groupName ?? null,
-                    progress: item.progress ?? 0,
-                    sourceKind: "group" as const,
-                    sourceName: group.groupName ?? null,
-                    sourceType: "group",
-                    statusName: item.statusName ?? null,
-                    taskId: item.taskId,
-                    taskPriority: item.taskPriority,
-                    taskSeverity: item.taskSeverity,
-                    taskTitle: item.taskTitle ?? null
-                }) satisfies SummaryPopupTaskItem);
-        })
-    );
+                    locale: args.locale,
+                    page: 1,
+                    pageSize: SUMMARY_GROUP_TASK_PAGE_SIZE,
+                    assigneeId: args.currentUserId
+                });
+
+                const totalPages = Math.max(1, Number(firstPage?.totalPages ?? 1));
+                const pagesToFetch = Math.min(totalPages, SUMMARY_GROUP_TASK_MAX_PAGES);
+                const restPages =
+                    pagesToFetch > 1
+                        ? await Promise.all(
+                            Array.from({ length: pagesToFetch - 1 }, (_, index) =>
+                                fetchGroupTaskPage({
+                                    groupId,
+                                    locale: args.locale,
+                                    page: index + 2,
+                                    pageSize: SUMMARY_GROUP_TASK_PAGE_SIZE,
+                                    assigneeId: args.currentUserId
+                                })
+                            )
+                        )
+                        : [];
+
+                return [firstPage, ...restPages]
+                    .flatMap((page) => page?.items ?? [])
+                    .map((item) => ({
+                        dueDate: item.dueDate ?? null,
+                        groupId,
+                        groupName: group.groupName ?? null,
+                        progress: item.progress ?? 0,
+                        sourceKind: "group" as const,
+                        sourceName: group.groupName ?? null,
+                        sourceType: "group",
+                        statusName: item.statusName ?? null,
+                        taskId: item.taskId,
+                        taskPriority: item.taskPriority,
+                        taskSeverity: item.taskSeverity,
+                        taskTitle: item.taskTitle ?? null
+                    }) satisfies SummaryPopupTaskItem);
+            })
+        );
+
+        groupResults.push(...batchResults);
+    }
 
     return groupResults.flat();
 }
@@ -789,6 +799,10 @@ function AnalysisTaskListLayer({
     taskListT: (key: string) => string;
 }) {
     const titleId = React.useId();
+    const overlayRef = React.useRef<HTMLDivElement | null>(null);
+    const dialogRef = React.useRef<HTMLDivElement | null>(null);
+    const closeButtonRef = React.useRef<HTMLButtonElement | null>(null);
+    const previousFocusRef = React.useRef<HTMLElement | null>(null);
     const noDateLabel = taskListT("noDate");
     const meta = {
         all: {
@@ -827,14 +841,61 @@ function AnalysisTaskListLayer({
 
     useEffect(() => {
         if (!open) return;
+
+        previousFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+        const focusTarget = closeButtonRef.current ?? dialogRef.current;
+        window.setTimeout(() => {
+            focusTarget?.focus();
+        }, 0);
+
         const onKeyDown = (e: KeyboardEvent) => {
-            if (e.key === "Escape") onClose();
+            if (e.key === "Escape") {
+                e.preventDefault();
+                onClose();
+                return;
+            }
+
+            if (e.key !== "Tab") return;
+
+            const dialog = dialogRef.current;
+            if (!dialog) return;
+
+            const focusableElements = Array.from(
+                dialog.querySelectorAll<HTMLElement>(
+                    'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+                )
+            ).filter((element) => !element.hasAttribute("disabled") && element.tabIndex >= 0);
+
+            if (!focusableElements.length) {
+                e.preventDefault();
+                dialog.focus();
+                return;
+            }
+
+            const firstElement = focusableElements[0];
+            const lastElement = focusableElements[focusableElements.length - 1];
+            const activeElement = document.activeElement;
+
+            if (e.shiftKey) {
+                if (activeElement === firstElement || !dialog.contains(activeElement)) {
+                    e.preventDefault();
+                    lastElement.focus();
+                }
+                return;
+            }
+
+            if (activeElement === lastElement || !dialog.contains(activeElement)) {
+                e.preventDefault();
+                firstElement.focus();
+            }
         };
+
         window.addEventListener("keydown", onKeyDown);
         document.body.style.overflow = "hidden";
         return () => {
             window.removeEventListener("keydown", onKeyDown);
             document.body.style.overflow = "";
+            previousFocusRef.current?.focus();
         };
     }, [open, onClose]);
 
@@ -842,11 +903,16 @@ function AnalysisTaskListLayer({
         <AnimatePresence>
             {open ? (
                 <motion.div
+                    ref={overlayRef}
                     className="fixed inset-0 z-[110] flex items-center justify-center bg-slate-950/38 p-4 backdrop-blur-[4px]"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}>
+                    exit={{ opacity: 0 }}
+                    onMouseDown={(event) => {
+                        if (event.target === overlayRef.current) onClose();
+                    }}>
                     <motion.div
+                        ref={dialogRef}
                         initial={{ opacity: 0, y: 28, scale: 0.98 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 18, scale: 0.98 }}
@@ -854,6 +920,7 @@ function AnalysisTaskListLayer({
                         role="dialog"
                         aria-modal="true"
                         aria-labelledby={titleId}
+                        tabIndex={-1}
                         className="relative flex max-h-[88vh] w-full max-w-4xl flex-col overflow-hidden rounded-[32px] border border-white/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(255,249,244,0.96))] shadow-[0_28px_90px_rgba(15,23,42,0.18)]">
                         <div className="flex items-start justify-between gap-4 border-b border-[#F0DED0] px-6 py-5 md:px-8">
                             <div className="min-w-0">
@@ -868,6 +935,7 @@ function AnalysisTaskListLayer({
                             </div>
 
                             <button
+                                ref={closeButtonRef}
                                 type="button"
                                 onClick={onClose}
                                 aria-label={summaryT("close")}
@@ -1640,8 +1708,7 @@ export default function AnalysisHome() {
             const taskId = String(item.taskId ?? "").trim();
             if (!taskId) return;
             setOpenTaskPopup(false);
-            document.getElementById("home-personal-task-section")?.scrollIntoView({ behavior: "smooth", block: "start" });
-            window.dispatchEvent(new CustomEvent("home:open-personal-task-detail", { detail: { taskId } }));
+            router.push(`/${locale}/home?personalTaskId=${encodeURIComponent(taskId)}`);
             return;
         }
 
