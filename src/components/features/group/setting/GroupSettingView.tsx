@@ -206,9 +206,10 @@ const ROLE_FORMATS = (role: string) => {
 const normalizeInviteRoleForApi = (role: InviteRole) => {
     const normalized = String(role).trim().toLowerCase();
 
-    if (normalized === "moderator") return "admin";
-    if (normalized === "commenter") return "viewer";
+    if (normalized === "moderator") return "moderator";
+    if (normalized === "commenter") return "commenter";
     if (normalized === "viewer") return "viewer";
+    if (normalized === "member") return "member";
     return "member";
 };
 
