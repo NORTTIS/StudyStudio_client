@@ -378,11 +378,13 @@ function resolveSourceLabel(
     return item.groupName || item.sourceName || taskListT("groupSource");
 }
 
-function buildTaskDetailHref(item: HomeTaskListItemResponse) {
+function buildTaskDetailHref(item: HomeTaskListItemResponse, locale: string) {
     const taskId = item.taskId ?? "";
     if (!taskId) return "#";
-    if (item.groupId) return `/group/${item.groupId}?taskId=${taskId}&openTaskDetail=1`;
-    return `/group/task/${encodeURIComponent(taskId)}`;
+    if (item.groupId) {
+        return `/${locale}/group/${item.groupId}?taskId=${encodeURIComponent(taskId)}&openTaskDetail=1`;
+    }
+    return `/${locale}/group/task/${encodeURIComponent(taskId)}`;
 }
 
 // Parse ISO week string "2026-W08" → label "02/03–08/03"
@@ -1613,7 +1615,7 @@ export default function AnalysisHome() {
             return;
         }
 
-        const href = buildTaskDetailHref(item);
+        const href = buildTaskDetailHref(item, locale);
         if (href === "#") return;
         closeAnalysisTaskPopup();
         router.push(href);

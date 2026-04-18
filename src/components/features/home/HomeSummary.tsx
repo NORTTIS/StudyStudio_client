@@ -615,11 +615,13 @@ function resolveSummarySourceLabel(
     return item.groupName || item.sourceName || taskListT("groupSource");
 }
 
-function buildTaskDetailHref(item: HomeTaskListItemResponse) {
+function buildTaskDetailHref(item: HomeTaskListItemResponse, locale: string) {
     const taskId = item.taskId ?? "";
     if (!taskId) return "#";
-    if (item.groupId) return `/group/${item.groupId}?taskId=${taskId}&openTaskDetail=1`;
-    return `/group/task/${encodeURIComponent(taskId)}`;
+    if (item.groupId) {
+        return `/${locale}/group/${item.groupId}?taskId=${encodeURIComponent(taskId)}&openTaskDetail=1`;
+    }
+    return `/${locale}/group/task/${encodeURIComponent(taskId)}`;
 }
 
 function normalizeSummaryGroupItem(group: SummaryGroupItem | Record<string, unknown>, membershipKind: "owned" | "joined"): SummaryGroupItem | null {
@@ -1591,18 +1593,18 @@ export default function HomeSummary() {
             return;
         }
 
-        const href = buildTaskDetailHref(item);
+        const href = buildTaskDetailHref(item, locale);
         if (href === "#") return;
         closeTaskPopup();
         router.push(href);
-    }, [closeTaskPopup, router]);
+    }, [closeTaskPopup, locale, router]);
 
     const handleGroupClick = React.useCallback((group: SummaryGroupItem) => {
         const groupId = String(group.groupId ?? group.id ?? "").trim();
         if (!groupId) return;
         closeGroupPopup();
-        router.push(`/group/${groupId}`);
-    }, [closeGroupPopup, router]);
+        router.push(`/${locale}/group/${groupId}`);
+    }, [closeGroupPopup, locale, router]);
 
     return (
         <>
