@@ -161,7 +161,7 @@ export function BatchUploadModal({ open, onClose, studioId, onSuccess }: BatchUp
                 setState("success");
             } else {
                 // Nếu API trả về lỗi nghiệp vụ
-                setErrorMessage(response.message || "Tải lên thất bại");
+                setErrorMessage(response.message || t("errors.uploadFailed"));
                 setState("error");
             }
         } catch (err) {

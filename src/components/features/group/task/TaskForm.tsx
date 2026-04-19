@@ -8,6 +8,7 @@ import { useLocale, useTranslations } from "next-intl";
 import "react-day-picker/dist/style.css";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { components } from "@/api/types";
+import { toApiDateTimeOrNull } from "@/utils/task-date";
 import AssigneeAvatar from "./AssigneeAvatar";
 
 function cn(...classes: Array<string | false | null | undefined>) {
@@ -480,12 +481,6 @@ function TrelloDatePicker({ label, value, onChange, min, locale, i18n }: TrelloD
     );
 }
 
-function toApiDateTimeOrNull(input: string) {
-    const s = String(input ?? "").trim();
-    if (!s) return undefined;
-    return `${s}T00:00:00+07:00`;
-}
-
 function isRestrictedMemberRole(memberRole?: string | null | number): boolean {
     if (!memberRole) return false;
     const roleStr = String(memberRole).trim().toLowerCase();
@@ -740,7 +735,7 @@ export default function TaskFormModal({
                 taskPriority: priority,
                 taskSeverity: severity,
                 startDate: toApiDateTimeOrNull(startDate),
-                dueDate: toApiDateTimeOrNull(dueDate)
+                dueDate: toApiDateTimeOrNull(dueDate, { endExclusiveNextDay: true })
             };
 
             if (estimatedHours != null && estimatedHours > 0) {

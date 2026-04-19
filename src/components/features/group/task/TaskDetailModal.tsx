@@ -37,6 +37,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { toApiDateTimeOrNull, toDueDateInputValue } from "@/utils/task-date";
 import AssigneeAvatar from "./AssigneeAvatar";
 
 type ApiResponse<T> = { status?: string; code?: string; message?: string; data?: T };
@@ -1150,45 +1151,6 @@ function toDateInputValue(input?: string | null) {
     return `${y}-${m}-${day}`;
 }
 
-function toDueDateInputValue(input?: string | null) {
-    const s = String(input ?? "").trim();
-    if (!s || s.startsWith("0001-01-01")) return "";
-    if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
-
-    const d = new Date(s);
-    if (Number.isNaN(d.getTime())) {
-        const dateOnly = s.slice(0, 10);
-        return /^\d{4}-\d{2}-\d{2}$/.test(dateOnly) ? dateOnly : "";
-    }
-
-    const timeFormatter = new Intl.DateTimeFormat("en-GB", {
-        timeZone: "Asia/Ho_Chi_Minh",
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-        hour12: false
-    });
-    const vnTime = timeFormatter.format(d);
-
-    if (vnTime === "00:00:00") {
-        d.setTime(d.getTime() - 86400000);
-    }
-
-    const formatter = new Intl.DateTimeFormat("en-CA", {
-        timeZone: "Asia/Ho_Chi_Minh",
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit"
-    });
-
-    const parts = formatter.formatToParts(d);
-    const y = parts.find((part) => part.type === "year")?.value ?? "";
-    const m = parts.find((part) => part.type === "month")?.value ?? "";
-    const day = parts.find((part) => part.type === "day")?.value ?? "";
-    if (!(y && m && day)) return "";
-    return `${y}-${m}-${day}`;
-}
-
 function safeAvatarUrl(input?: string | null) {
     const raw = String(input ?? "").trim();
     if (!raw) return "";
@@ -2017,24 +1979,6 @@ async function apiDeleteTaskComment(commentId: string) {
     return json;
 }
 
-function toApiDateTimeOrNull(input: string, options?: { endExclusiveNextDay?: boolean }) {
-    const s = String(input ?? "").trim();
-    if (!s) return null;
-
-    if (!options?.endExclusiveNextDay) {
-        return `${s}T00:00:00+07:00`;
-    }
-
-    const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s);
-    if (!match) return `${s}T00:00:00+07:00`;
-
-    const nextDay = new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3]) + 1));
-    const y = nextDay.getUTCFullYear();
-    const m = String(nextDay.getUTCMonth() + 1).padStart(2, "0");
-    const d = String(nextDay.getUTCDate()).padStart(2, "0");
-    return `${y}-${m}-${d}T00:00:00+07:00`;
-}
-
 function delay(ms: number) {
     return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -2318,11 +2262,17 @@ export default function TaskDetailModal(props: {
     const [taskNameError, setTaskNameError] = React.useState<string | null>(null);
     const [startDateError, setStartDateError] = React.useState<string | null>(null);
     const [dueDateError, setDueDateError] = React.useState<string | null>(null);
+    const [estimatedHoursServerError, setEstimatedHoursServerError] = React.useState<string | null>(null);
+    const [actualHoursServerError, setActualHoursServerError] = React.useState<string | null>(null);
     const [isEditing, setIsEditing] = React.useState(false);
     const lastEditedDateFieldRef = React.useRef<"start" | "due" | null>(null);
     const clearDateErrors = React.useCallback(() => {
         setStartDateError(null);
         setDueDateError(null);
+    }, []);
+    const clearHoursServerErrors = React.useCallback(() => {
+        setEstimatedHoursServerError(null);
+        setActualHoursServerError(null);
     }, []);
 
     const isAliveRef = React.useRef(true);
@@ -2482,6 +2432,9 @@ export default function TaskDetailModal(props: {
         return t("actualHoursExceed", { max: maxHours });
     }, [actualHours, maxHours, t]);
 
+    const estimatedHoursDisplayError = estimatedHoursError ?? estimatedHoursServerError;
+    const actualHoursDisplayError = actualHoursError ?? actualHoursServerError;
+
     const handleHoursBeforeInput = React.useCallback((event: React.FormEvent<HTMLInputElement>) => {
         const nativeEvent = event.nativeEvent as InputEvent;
         const nextChunk = nativeEvent.data;
@@ -2502,6 +2455,7 @@ export default function TaskDetailModal(props: {
         const num = Number.parseFloat(val);
         const parsed = val === "" ? undefined : Number.isNaN(num) || num < 0 ? 0 : num;
         setSaveError(null);
+        setEstimatedHoursServerError(null);
         setEstimatedHours(parsed);
     };
 
@@ -2511,6 +2465,7 @@ export default function TaskDetailModal(props: {
         const num = Number.parseFloat(val);
         const parsed = val === "" ? undefined : Number.isNaN(num) || num < 0 ? 0 : num;
         setSaveError(null);
+        setActualHoursServerError(null);
         setActualHours(parsed);
     };
 
@@ -2833,8 +2788,9 @@ export default function TaskDetailModal(props: {
         setTaskNameError(null);
         lastEditedDateFieldRef.current = null;
         clearDateErrors();
+        clearHoursServerErrors();
         setIsEditing(false);
-    }, [task, clearDateErrors]);
+    }, [task, clearDateErrors, clearHoursServerErrors]);
 
     const assigneeOptions = React.useMemo(
         () =>
@@ -2941,6 +2897,7 @@ export default function TaskDetailModal(props: {
         setSaveError(null);
         setTaskNameError(null);
         clearDateErrors();
+        clearHoursServerErrors();
 
         const taskNameTrimmed = taskName.trim().slice(0, TASK_TITLE_MAX_LENGTH);
         const descriptionTrimmed = description.trim().slice(0, TASK_DESCRIPTION_MAX_LENGTH);
@@ -3053,6 +3010,7 @@ export default function TaskDetailModal(props: {
             setProgress(String(normalizedProgressValue));
             setEstimatedHours(estimatedHoursToSave ?? undefined);
             setActualHours(actualHoursToSave ?? undefined);
+            clearHoursServerErrors();
             setIsEditing(false);
 
             toast({ variant: "success", description: t("saveSuccess") });
@@ -3064,7 +3022,16 @@ export default function TaskDetailModal(props: {
             const errorMessage = getErrorMessage(e, t("errors.updateTaskFailed"));
             const hoursField = getHoursFieldFromErrorMessage(errorMessage);
 
-            if (hoursField && maxHours != null) {
+            if (hoursField === "estimated") {
+                setEstimatedHoursServerError(errorMessage);
+                setActualHoursServerError(null);
+                setSaveError(null);
+                return;
+            }
+
+            if (hoursField === "actual") {
+                setActualHoursServerError(errorMessage);
+                setEstimatedHoursServerError(null);
                 setSaveError(null);
                 return;
             }
@@ -3362,6 +3329,7 @@ export default function TaskDetailModal(props: {
                                     value={startDate}
                                     onChange={(nextValue) => {
                                         setSaveError(null);
+                                        clearHoursServerErrors();
                                         lastEditedDateFieldRef.current = "start";
                                         setStartDate(nextValue);
                                         applyDateRangeValidation("start", nextValue, dueDate);
@@ -3376,6 +3344,7 @@ export default function TaskDetailModal(props: {
                                     value={dueDate}
                                     onChange={(nextValue) => {
                                         setSaveError(null);
+                                        clearHoursServerErrors();
                                         lastEditedDateFieldRef.current = "due";
                                         setDueDate(nextValue);
                                         applyDateRangeValidation("due", startDate, nextValue);
@@ -3402,9 +3371,9 @@ export default function TaskDetailModal(props: {
                                         placeholder="0"
                                         className="mt-2 flex h-10 w-full items-center rounded-xl border border-zinc-200 bg-white px-3 text-sm text-zinc-800 outline-none disabled:cursor-not-allowed disabled:bg-zinc-50 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                                     />
-                                    {estimatedHoursError ? (
+                                    {estimatedHoursDisplayError ? (
                                         <div className="mt-1 font-medium text-rose-600 text-xs">
-                                            {estimatedHoursError}
+                                            {estimatedHoursDisplayError}
                                         </div>
                                     ) : null}
                                 </div>
@@ -3423,8 +3392,10 @@ export default function TaskDetailModal(props: {
                                         placeholder="0"
                                         className="mt-2 flex h-10 w-full items-center rounded-xl border border-zinc-200 bg-white px-3 text-sm text-zinc-800 outline-none disabled:cursor-not-allowed disabled:bg-zinc-50 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                                     />
-                                    {actualHoursError ? (
-                                        <div className="mt-1 font-medium text-rose-600 text-xs">{actualHoursError}</div>
+                                    {actualHoursDisplayError ? (
+                                        <div className="mt-1 font-medium text-rose-600 text-xs">
+                                            {actualHoursDisplayError}
+                                        </div>
                                     ) : null}
                                 </div>
 
