@@ -49,6 +49,11 @@ export function toDueDateInputValue(input?: string | null) {
     const vnTime = timeFormatter.format(d);
 
     if (vnTime === "00:00:00") {
+        // We currently treat midnight-in-Vietnam due dates as the
+        // exclusive-next-day format written by `endExclusiveNextDay: true`.
+        // Legacy tasks that were stored as inclusive same-day midnight cannot
+        // be distinguished here without a backend contract flag or a data
+        // migration, so this branch intentionally follows the new contract.
         d.setTime(d.getTime() - ONE_DAY_MS);
     }
 
