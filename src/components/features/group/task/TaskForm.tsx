@@ -483,7 +483,7 @@ function TrelloDatePicker({ label, value, onChange, min, locale, i18n }: TrelloD
 function toApiDateTimeOrNull(input: string) {
     const s = String(input ?? "").trim();
     if (!s) return undefined;
-    return `${s}T00:00:00`;
+    return `${s}T00:00:00+07:00`;
 }
 
 function isRestrictedMemberRole(memberRole?: string | null | number): boolean {
@@ -516,6 +516,9 @@ export default function TaskFormModal({
 
     const [startDate, setStartDate] = React.useState("");
     const [dueDate, setDueDate] = React.useState("");
+    const todayDateValue = formatDateToInputValue(startOfDay(new Date()));
+    const startDateMin = todayDateValue;
+    const dueDateMin = startDate && startDate > todayDateValue ? startDate : todayDateValue;
     const [estimatedHours, setEstimatedHours] = React.useState<number | undefined>(undefined);
     const [actualHours, setActualHours] = React.useState<number | undefined>(undefined);
     const [estimatedHoursError, setEstimatedHoursError] = React.useState<string | null>(null);
@@ -916,6 +919,7 @@ export default function TaskFormModal({
                             label={t("startDateLabel")}
                             value={startDate}
                             onChange={setStartDate}
+                            min={startDateMin}
                             locale={locale}
                             i18n={datePickerI18n}
                         />
@@ -924,7 +928,7 @@ export default function TaskFormModal({
                             label={t("dueDateLabel")}
                             value={dueDate}
                             onChange={setDueDate}
-                            min={startDate || undefined}
+                            min={dueDateMin}
                             locale={locale}
                             i18n={datePickerI18n}
                         />

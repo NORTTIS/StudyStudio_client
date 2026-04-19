@@ -329,6 +329,7 @@ type TrelloDatePickerProps = {
     i18n: DatePickerTranslations;
     displayText?: string;
     displayClassName?: string;
+    error?: string | null;
 };
 
 type DatePickerTranslations = {
@@ -808,83 +809,83 @@ const MentionTextarea = React.forwardRef<
     const popup =
         mounted && open && !disabled && popupPosition
             ? createPortal(
-                  <div
-                      ref={popupRef}
-                      className="fixed z-[22000] overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-[0_8px_30px_rgba(0,0,0,0.18)]"
-                      style={{
-                          left: popupPosition.left,
-                          top: popupPosition.top,
-                          width: popupPosition.width,
-                          maxHeight: 320,
-                          transform:
-                              popupPosition.top < (taRef.current?.getBoundingClientRect().top ?? 0)
-                                  ? "translateY(-100%)"
-                                  : undefined
-                      }}>
-                      {filtered.length > 0 ? (
-                          <div className="max-h-80 overflow-y-auto py-2">
-                              {filtered.map((u, idx) => {
-                                  const isActive = idx === activeIndex;
-                                  const displayName = u.isAll ? mentionAllLabel : u.name;
-                                  const subtitle = u.subtitle || (u.isAll ? mentionAllSubtitle : "");
+                <div
+                    ref={popupRef}
+                    className="fixed z-[22000] overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-[0_8px_30px_rgba(0,0,0,0.18)]"
+                    style={{
+                        left: popupPosition.left,
+                        top: popupPosition.top,
+                        width: popupPosition.width,
+                        maxHeight: 320,
+                        transform:
+                            popupPosition.top < (taRef.current?.getBoundingClientRect().top ?? 0)
+                                ? "translateY(-100%)"
+                                : undefined
+                    }}>
+                    {filtered.length > 0 ? (
+                        <div className="max-h-80 overflow-y-auto py-2">
+                            {filtered.map((u, idx) => {
+                                const isActive = idx === activeIndex;
+                                const displayName = u.isAll ? mentionAllLabel : u.name;
+                                const subtitle = u.subtitle || (u.isAll ? mentionAllSubtitle : "");
 
-                                  return (
-                                      <button
-                                          key={u.id}
-                                          type="button"
-                                          onMouseDown={(ev) => {
-                                              ev.preventDefault();
-                                              insertMention(u);
-                                          }}
-                                          className={cn(
-                                              "flex w-full items-center gap-3 px-4 py-2.5 text-left transition",
-                                              isActive ? "bg-[#E7F3FF]" : "hover:bg-zinc-100"
-                                          )}>
-                                          <div className="shrink-0">
-                                              {u.isAll ? (
-                                                  <div className="grid h-10 w-10 place-items-center rounded-full bg-white text-zinc-900">
-                                                      <svg viewBox="0 0 24 24" className="h-7 w-7 fill-current">
-                                                          <path d="M16 11c1.66 0 2.99-1.57 2.99-3.5S17.66 4 16 4s-3 1.57-3 3.5 1.34 3.5 3 3.5zm-8 0c1.66 0 2.99-1.57 2.99-3.5S9.66 4 8 4 5 5.57 5 7.5 6.34 11 8 11zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5C15 14.17 10.33 13 8 13zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.95 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" />
-                                                      </svg>
-                                                  </div>
-                                              ) : u.avatarUrl ? (
-                                                  <Image
-                                                      src={u.avatarUrl}
-                                                      alt={displayName}
-                                                      width={40}
-                                                      height={40}
-                                                      unoptimized
-                                                      className="h-10 w-10 rounded-full object-cover"
-                                                  />
-                                              ) : (
-                                                  <div className="grid h-10 w-10 place-items-center rounded-full bg-zinc-200 font-semibold text-sm text-zinc-700">
-                                                      {safeInitialsFromName(displayName)}
-                                                  </div>
-                                              )}
-                                          </div>
+                                return (
+                                    <button
+                                        key={u.id}
+                                        type="button"
+                                        onMouseDown={(ev) => {
+                                            ev.preventDefault();
+                                            insertMention(u);
+                                        }}
+                                        className={cn(
+                                            "flex w-full items-center gap-3 px-4 py-2.5 text-left transition",
+                                            isActive ? "bg-[#E7F3FF]" : "hover:bg-zinc-100"
+                                        )}>
+                                        <div className="shrink-0">
+                                            {u.isAll ? (
+                                                <div className="grid h-10 w-10 place-items-center rounded-full bg-white text-zinc-900">
+                                                    <svg viewBox="0 0 24 24" className="h-7 w-7 fill-current">
+                                                        <path d="M16 11c1.66 0 2.99-1.57 2.99-3.5S17.66 4 16 4s-3 1.57-3 3.5 1.34 3.5 3 3.5zm-8 0c1.66 0 2.99-1.57 2.99-3.5S9.66 4 8 4 5 5.57 5 7.5 6.34 11 8 11zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5C15 14.17 10.33 13 8 13zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.95 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" />
+                                                    </svg>
+                                                </div>
+                                            ) : u.avatarUrl ? (
+                                                <Image
+                                                    src={u.avatarUrl}
+                                                    alt={displayName}
+                                                    width={40}
+                                                    height={40}
+                                                    unoptimized
+                                                    className="h-10 w-10 rounded-full object-cover"
+                                                />
+                                            ) : (
+                                                <div className="grid h-10 w-10 place-items-center rounded-full bg-zinc-200 font-semibold text-sm text-zinc-700">
+                                                    {safeInitialsFromName(displayName)}
+                                                </div>
+                                            )}
+                                        </div>
 
-                                          <div className="min-w-0 flex-1">
-                                              <div className="truncate font-medium text-[17px] text-zinc-900 leading-5">
-                                                  {displayName}
-                                              </div>
-                                              {subtitle ? (
-                                                  <div className="truncate pt-0.5 text-[15px] text-zinc-500 leading-5">
-                                                      {subtitle}
-                                                  </div>
-                                              ) : null}
-                                          </div>
-                                      </button>
-                                  );
-                              })}
-                          </div>
-                      ) : (
-                          <div className="px-4 py-3 text-sm text-zinc-500">
-                              {noResultsText ?? "No members to mention."}
-                          </div>
-                      )}
-                  </div>,
-                  document.body
-              )
+                                        <div className="min-w-0 flex-1">
+                                            <div className="truncate font-medium text-[17px] text-zinc-900 leading-5">
+                                                {displayName}
+                                            </div>
+                                            {subtitle ? (
+                                                <div className="truncate pt-0.5 text-[15px] text-zinc-500 leading-5">
+                                                    {subtitle}
+                                                </div>
+                                            ) : null}
+                                        </div>
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    ) : (
+                        <div className="px-4 py-3 text-sm text-zinc-500">
+                            {noResultsText ?? "No members to mention."}
+                        </div>
+                    )}
+                </div>,
+                document.body
+            )
             : null;
 
     return (
@@ -974,6 +975,13 @@ function getErrorMessage(e: unknown, fallback: string) {
     return fallback;
 }
 
+function getHoursFieldFromErrorMessage(message: string) {
+    const normalized = message.trim().toLowerCase();
+    if (normalized.includes("actualhours")) return "actual";
+    if (normalized.includes("estimatedhours")) return "estimated";
+    return null;
+}
+
 function asObject(v: unknown): Record<string, unknown> | null {
     return typeof v === "object" && v !== null ? (v as Record<string, unknown>) : null;
 }
@@ -992,22 +1000,11 @@ const extractApiMessage = (text: string, json: unknown) => {
 };
 
 function formatDisplayDate(input?: string | null) {
-    const s = String(input ?? "").trim();
-    if (!s) return "";
-    if (s.startsWith("0001-01-01")) return "";
-    const d = new Date(s);
-    if (Number.isNaN(d.getTime())) {
-        const onlyDate = parseDateString(s);
-        if (onlyDate) {
-            return onlyDate.toLocaleDateString("en-US", {
-                month: "short",
-                day: "2-digit",
-                year: "numeric"
-            });
-        }
-        return s;
-    }
-    return d.toLocaleDateString("en-US", {
+    const normalizedInput = toDateInputValue(input);
+    const onlyDate = parseDateString(normalizedInput);
+    if (!onlyDate) return "";
+
+    return onlyDate.toLocaleDateString("en-US", {
         month: "short",
         day: "2-digit",
         year: "numeric"
@@ -1130,14 +1127,65 @@ const selectItemClassName =
 function toDateInputValue(input?: string | null) {
     const s = String(input ?? "").trim();
     if (!s || s.startsWith("0001-01-01")) return "";
-    const dateOnly = s.slice(0, 10);
-    if (/^\d{4}-\d{2}-\d{2}$/.test(dateOnly)) return dateOnly;
+    if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
 
     const d = new Date(s);
-    if (Number.isNaN(d.getTime())) return "";
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, "0");
-    const day = String(d.getDate()).padStart(2, "0");
+    if (Number.isNaN(d.getTime())) {
+        const dateOnly = s.slice(0, 10);
+        return /^\d{4}-\d{2}-\d{2}$/.test(dateOnly) ? dateOnly : "";
+    }
+
+    const formatter = new Intl.DateTimeFormat("en-CA", {
+        timeZone: "Asia/Ho_Chi_Minh",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit"
+    });
+
+    const parts = formatter.formatToParts(d);
+    const y = parts.find((part) => part.type === "year")?.value ?? "";
+    const m = parts.find((part) => part.type === "month")?.value ?? "";
+    const day = parts.find((part) => part.type === "day")?.value ?? "";
+    if (!(y && m && day)) return "";
+    return `${y}-${m}-${day}`;
+}
+
+function toDueDateInputValue(input?: string | null) {
+    const s = String(input ?? "").trim();
+    if (!s || s.startsWith("0001-01-01")) return "";
+    if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+
+    const d = new Date(s);
+    if (Number.isNaN(d.getTime())) {
+        const dateOnly = s.slice(0, 10);
+        return /^\d{4}-\d{2}-\d{2}$/.test(dateOnly) ? dateOnly : "";
+    }
+
+    const timeFormatter = new Intl.DateTimeFormat("en-GB", {
+        timeZone: "Asia/Ho_Chi_Minh",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: false
+    });
+    const vnTime = timeFormatter.format(d);
+
+    if (vnTime === "00:00:00") {
+        d.setTime(d.getTime() - 86400000);
+    }
+
+    const formatter = new Intl.DateTimeFormat("en-CA", {
+        timeZone: "Asia/Ho_Chi_Minh",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit"
+    });
+
+    const parts = formatter.formatToParts(d);
+    const y = parts.find((part) => part.type === "year")?.value ?? "";
+    const m = parts.find((part) => part.type === "month")?.value ?? "";
+    const day = parts.find((part) => part.type === "day")?.value ?? "";
+    if (!(y && m && day)) return "";
     return `${y}-${m}-${day}`;
 }
 
@@ -1183,6 +1231,11 @@ function addDays(date: Date, amount: number) {
 
 function startOfDay(date: Date) {
     return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+}
+
+function isPastDateValue(value: string | undefined, todayValue: string) {
+    if (!value) return false;
+    return value < todayValue;
 }
 
 function formatDateDisplay(
@@ -1236,7 +1289,8 @@ function TrelloDatePicker({
     locale,
     i18n,
     displayText,
-    displayClassName
+    displayClassName,
+    error
 }: TrelloDatePickerProps) {
     const [open, setOpen] = React.useState(false);
     const [mounted, setMounted] = React.useState(false);
@@ -1364,146 +1418,146 @@ function TrelloDatePicker({
     const popup =
         mounted && open && popupPosition && portalTarget
             ? createPortal(
-                  <div
-                      ref={rootRef}
-                      className="fixed z-[20000] rounded-[24px] border border-zinc-200 bg-white p-4 shadow-[0_20px_60px_rgba(0,0,0,0.18)]"
-                      style={{
-                          top: popupPosition.top,
-                          left: popupPosition.left,
-                          width: popupPosition.width,
-                          maxHeight: "calc(100vh - 40px)",
-                          overflowY: "auto"
-                      }}>
-                      <div className="mb-4 flex items-center gap-3">
-                          <div className="flex-1">
-                              <Select value={String(month.getMonth())} onValueChange={handleMonthChange}>
-                                  <SelectTrigger className="h-11 w-full font-semibold text-sm">
-                                      <SelectValue placeholder={i18n.months[month.getMonth()]} />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                      {i18n.months.map((monthLabel, monthIndex) => (
-                                          <SelectItem key={monthLabel} value={String(monthIndex)}>
-                                              {monthLabel}
-                                          </SelectItem>
-                                      ))}
-                                  </SelectContent>
-                              </Select>
-                          </div>
+                <div
+                    ref={rootRef}
+                    className="fixed z-[20000] rounded-[24px] border border-zinc-200 bg-white p-4 shadow-[0_20px_60px_rgba(0,0,0,0.18)]"
+                    style={{
+                        top: popupPosition.top,
+                        left: popupPosition.left,
+                        width: popupPosition.width,
+                        maxHeight: "calc(100vh - 40px)",
+                        overflowY: "auto"
+                    }}>
+                    <div className="mb-4 flex items-center gap-3">
+                        <div className="flex-1">
+                            <Select value={String(month.getMonth())} onValueChange={handleMonthChange}>
+                                <SelectTrigger className="h-11 w-full font-semibold text-sm">
+                                    <SelectValue placeholder={i18n.months[month.getMonth()]} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {i18n.months.map((monthLabel, monthIndex) => (
+                                        <SelectItem key={monthLabel} value={String(monthIndex)}>
+                                            {monthLabel}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
 
-                          <div className="w-[140px]">
-                              <Select value={String(month.getFullYear())} onValueChange={handleYearChange}>
-                                  <SelectTrigger className="h-11 w-full font-semibold text-sm">
-                                      <SelectValue placeholder={String(month.getFullYear())} />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                      {yearOptions.map((year) => (
-                                          <SelectItem key={year} value={String(year)}>
-                                              {year}
-                                          </SelectItem>
-                                      ))}
-                                  </SelectContent>
-                              </Select>
-                          </div>
-                      </div>
+                        <div className="w-[140px]">
+                            <Select value={String(month.getFullYear())} onValueChange={handleYearChange}>
+                                <SelectTrigger className="h-11 w-full font-semibold text-sm">
+                                    <SelectValue placeholder={String(month.getFullYear())} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {yearOptions.map((year) => (
+                                        <SelectItem key={year} value={String(year)}>
+                                            {year}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
 
-                      <div className="rounded-[20px] border border-zinc-200 p-4">
-                          <div className="mb-4 flex items-center justify-between">
-                              <button
-                                  type="button"
-                                  onClick={goPrevMonth}
-                                  disabled={isPrevDisabled}
-                                  className="grid h-10 w-10 place-items-center rounded-2xl border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-40">
-                                  <ChevronLeft className="h-5 w-5" />
-                              </button>
+                    <div className="rounded-[20px] border border-zinc-200 p-4">
+                        <div className="mb-4 flex items-center justify-between">
+                            <button
+                                type="button"
+                                onClick={goPrevMonth}
+                                disabled={isPrevDisabled}
+                                className="grid h-10 w-10 place-items-center rounded-2xl border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-40">
+                                <ChevronLeft className="h-5 w-5" />
+                            </button>
 
-                              <div className="font-bold text-base text-zinc-900">
-                                  {i18n.months[month.getMonth()]} {month.getFullYear()}
-                              </div>
+                            <div className="font-bold text-base text-zinc-900">
+                                {i18n.months[month.getMonth()]} {month.getFullYear()}
+                            </div>
 
-                              <button
-                                  type="button"
-                                  onClick={goNextMonth}
-                                  className="grid h-10 w-10 place-items-center rounded-2xl border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50">
-                                  <ChevronRight className="h-5 w-5" />
-                              </button>
-                          </div>
+                            <button
+                                type="button"
+                                onClick={goNextMonth}
+                                className="grid h-10 w-10 place-items-center rounded-2xl border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50">
+                                <ChevronRight className="h-5 w-5" />
+                            </button>
+                        </div>
 
-                          <DayPicker
-                              mode="single"
-                              month={month}
-                              onMonthChange={setMonth}
-                              selected={selectedDate}
-                              onSelect={pickDate}
-                              disabled={minDate ? { before: minDate } : undefined}
-                              showOutsideDays
-                              className="w-full"
-                              styles={{
-                                  day: { outline: "none", boxShadow: "none" },
-                                  button: { outline: "none", boxShadow: "none" }
-                              }}
-                              classNames={{
-                                  months: "flex w-full flex-col",
-                                  month: "w-full space-y-3",
-                                  caption: "hidden",
-                                  table: "w-full border-collapse",
-                                  tbody: "w-full",
-                                  head_row: "flex w-full justify-between",
-                                  head_cell: "h-10 w-10 text-center text-[12px] font-semibold text-zinc-500",
-                                  row: "mt-2 flex w-full justify-between",
-                                  cell: "h-10 w-10 p-0 text-center",
-                                  day: "h-10 w-10 rounded-xl border-0 bg-transparent p-0 text-sm font-medium text-zinc-800 shadow-none outline-none ring-0 transition hover:bg-orange-50 focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0",
-                                  day_button:
-                                      "h-10 w-10 rounded-xl border-0 bg-transparent p-0 font-medium text-inherit shadow-none outline-none ring-0 focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0",
-                                  selected: "!bg-orange-500 !text-white",
-                                  day_selected:
-                                      "!bg-orange-500 !text-white hover:!bg-orange-500 hover:!text-white focus:!bg-orange-500 focus:!text-white focus-visible:!bg-orange-500 focus-visible:!text-white",
-                                  today: "text-orange-600 font-bold",
-                                  day_today: "text-orange-600 font-bold",
-                                  outside: "text-zinc-300",
-                                  day_outside: "text-zinc-300",
-                                  disabled: "text-zinc-300 opacity-40",
-                                  day_disabled: "text-zinc-300 opacity-40",
-                                  hidden: "invisible",
-                                  day_hidden: "invisible"
-                              }}
-                          />
-                      </div>
+                        <DayPicker
+                            mode="single"
+                            month={month}
+                            onMonthChange={setMonth}
+                            selected={selectedDate}
+                            onSelect={pickDate}
+                            disabled={minDate ? { before: minDate } : undefined}
+                            showOutsideDays
+                            className="w-full"
+                            styles={{
+                                day: { outline: "none", boxShadow: "none" },
+                                button: { outline: "none", boxShadow: "none" }
+                            }}
+                            classNames={{
+                                months: "flex w-full flex-col",
+                                month: "w-full space-y-3",
+                                caption: "hidden",
+                                table: "w-full border-collapse",
+                                tbody: "w-full",
+                                head_row: "flex w-full justify-between",
+                                head_cell: "h-10 w-10 text-center text-[12px] font-semibold text-zinc-500",
+                                row: "mt-2 flex w-full justify-between",
+                                cell: "h-10 w-10 p-0 text-center",
+                                day: "h-10 w-10 rounded-xl border-0 bg-transparent p-0 text-sm font-medium text-zinc-800 shadow-none outline-none ring-0 transition hover:bg-orange-50 focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0",
+                                day_button:
+                                    "h-10 w-10 rounded-xl border-0 bg-transparent p-0 font-medium text-inherit shadow-none outline-none ring-0 focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0",
+                                selected: "!bg-orange-500 !text-white",
+                                day_selected:
+                                    "!bg-orange-500 !text-white hover:!bg-orange-500 hover:!text-white focus:!bg-orange-500 focus:!text-white focus-visible:!bg-orange-500 focus-visible:!text-white",
+                                today: "text-orange-600 font-bold",
+                                day_today: "text-orange-600 font-bold",
+                                outside: "text-zinc-300",
+                                day_outside: "text-zinc-300",
+                                disabled: "text-zinc-300 opacity-40",
+                                day_disabled: "text-zinc-300 opacity-40",
+                                hidden: "invisible",
+                                day_hidden: "invisible"
+                            }}
+                        />
+                    </div>
 
-                      <div className="mt-4 grid grid-cols-2 gap-3">
-                          <button
-                              type="button"
-                              onClick={() => pickDate(new Date())}
-                              className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 font-semibold text-sm text-zinc-700 hover:bg-zinc-50">
-                              {i18n.today}
-                          </button>
+                    <div className="mt-4 grid grid-cols-2 gap-3">
+                        <button
+                            type="button"
+                            onClick={() => pickDate(new Date())}
+                            className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 font-semibold text-sm text-zinc-700 hover:bg-zinc-50">
+                            {i18n.today}
+                        </button>
 
-                          <button
-                              type="button"
-                              onClick={() => pickDate(addDays(new Date(), 1))}
-                              className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 font-semibold text-sm text-zinc-700 hover:bg-zinc-50">
-                              {i18n.tomorrow}
-                          </button>
+                        <button
+                            type="button"
+                            onClick={() => pickDate(addDays(new Date(), 1))}
+                            className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 font-semibold text-sm text-zinc-700 hover:bg-zinc-50">
+                            {i18n.tomorrow}
+                        </button>
 
-                          <button
-                              type="button"
-                              onClick={() => pickDate(addDays(new Date(), 7))}
-                              className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 font-semibold text-sm text-zinc-700 hover:bg-zinc-50">
-                              {i18n.nextWeek}
-                          </button>
+                        <button
+                            type="button"
+                            onClick={() => pickDate(addDays(new Date(), 7))}
+                            className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 font-semibold text-sm text-zinc-700 hover:bg-zinc-50">
+                            {i18n.nextWeek}
+                        </button>
 
-                          <button
-                              type="button"
-                              onClick={() => {
-                                  onChange("");
-                                  setOpen(false);
-                              }}
-                              className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 font-semibold text-rose-500 text-sm hover:bg-rose-50">
-                              {i18n.noDate}
-                          </button>
-                      </div>
-                  </div>,
-                  portalTarget
-              )
+                        <button
+                            type="button"
+                            onClick={() => {
+                                onChange("");
+                                setOpen(false);
+                            }}
+                            className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 font-semibold text-rose-500 text-sm hover:bg-rose-50">
+                            {i18n.noDate}
+                        </button>
+                    </div>
+                </div>,
+                portalTarget
+            )
             : null;
 
     return (
@@ -1520,11 +1574,14 @@ function TrelloDatePicker({
                     }}
                     className={cn(
                         "mt-2 flex h-10 w-full items-center justify-between rounded-xl border px-3 text-sm transition",
+                        error
+                            ? "border-rose-300 bg-white text-zinc-800"
+                            : "",
                         disabled
                             ? "cursor-not-allowed border-zinc-200 bg-zinc-50 text-zinc-500 opacity-70"
                             : open
-                              ? "border-orange-400 bg-orange-50 text-zinc-900 ring-2 ring-orange-100"
-                              : "border-zinc-200 bg-white text-zinc-800 hover:border-zinc-300 hover:bg-zinc-50"
+                                ? "border-orange-400 bg-orange-50 text-zinc-900 ring-2 ring-orange-100"
+                                : "border-zinc-200 bg-white text-zinc-800 hover:border-zinc-300 hover:bg-zinc-50"
                     )}>
                     <div className="flex min-w-0 items-center gap-2">
                         <div
@@ -1533,8 +1590,8 @@ function TrelloDatePicker({
                                 disabled
                                     ? "bg-zinc-100 text-zinc-400"
                                     : open
-                                      ? "bg-orange-100 text-orange-600"
-                                      : "bg-zinc-100 text-zinc-500"
+                                        ? "bg-orange-100 text-orange-600"
+                                        : "bg-zinc-100 text-zinc-500"
                             )}>
                             <CalendarDays className="h-4 w-4" />
                         </div>
@@ -1550,6 +1607,7 @@ function TrelloDatePicker({
                         </span>
                     </div>
                 </button>
+                {error ? <div className="mt-1 font-medium text-rose-600 text-xs">{error}</div> : null}
             </div>
             {popup}
         </>
@@ -1635,7 +1693,7 @@ function mapTaskDetailFromTaskItem(
         startDateRaw: task?.startDate ?? null,
         dueDateRaw: task?.dueDate ?? null,
         startDateFmt: task?.startDate ? formatDisplayDate(String(task.startDate)) : "",
-        dueDateFmt: task?.dueDate ? formatDisplayDate(String(task.dueDate)) : "",
+        dueDateFmt: task?.dueDate ? formatDisplayDate(toDueDateInputValue(String(task.dueDate))) : "",
         estimatedHours: task?.estimatedHours ?? null,
         actualHours: task?.actualHours ?? null,
         raw: task
@@ -1959,10 +2017,22 @@ async function apiDeleteTaskComment(commentId: string) {
     return json;
 }
 
-function toApiDateTimeOrNull(input: string) {
+function toApiDateTimeOrNull(input: string, options?: { endExclusiveNextDay?: boolean }) {
     const s = String(input ?? "").trim();
     if (!s) return null;
-    return `${s}T00:00:00`;
+
+    if (!options?.endExclusiveNextDay) {
+        return `${s}T00:00:00+07:00`;
+    }
+
+    const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s);
+    if (!match) return `${s}T00:00:00+07:00`;
+
+    const nextDay = new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3]) + 1));
+    const y = nextDay.getUTCFullYear();
+    const m = String(nextDay.getUTCMonth() + 1).padStart(2, "0");
+    const d = String(nextDay.getUTCDate()).padStart(2, "0");
+    return `${y}-${m}-${d}T00:00:00+07:00`;
 }
 
 function delay(ms: number) {
@@ -1978,7 +2048,10 @@ function isRestrictedMemberRole(memberRole?: string | null | number): boolean {
 async function apiUpdateTask(args: {
     groupId: string;
     taskId: string;
-    payload: components["schemas"]["UpdateTaskRequest"];
+    payload: components["schemas"]["UpdateTaskRequest"] & {
+        startDateSelected?: boolean;
+        dueDateSelected?: boolean;
+    };
 }) {
     const token = getAccessTokenOrNull();
     const base = getApiBase();
@@ -2235,15 +2308,22 @@ export default function TaskDetailModal(props: {
     const [progress, setProgress] = React.useState("0");
     const [startDate, setStartDate] = React.useState("");
     const [dueDate, setDueDate] = React.useState("");
+    const todayDateValue = formatDateToInputValue(startOfDay(new Date()));
     const [estimatedHours, setEstimatedHours] = React.useState<number | undefined>(undefined);
     const [actualHours, setActualHours] = React.useState<number | undefined>(undefined);
-    const [estimatedHoursError, setEstimatedHoursError] = React.useState<string | null>(null);
-    const [actualHoursError, setActualHoursError] = React.useState<string | null>(null);
     const [description, setDescription] = React.useState("");
 
     const [submitting, setSubmitting] = React.useState(false);
     const [saveError, setSaveError] = React.useState<string | null>(null);
+    const [taskNameError, setTaskNameError] = React.useState<string | null>(null);
+    const [startDateError, setStartDateError] = React.useState<string | null>(null);
+    const [dueDateError, setDueDateError] = React.useState<string | null>(null);
     const [isEditing, setIsEditing] = React.useState(false);
+    const lastEditedDateFieldRef = React.useRef<"start" | "due" | null>(null);
+    const clearDateErrors = React.useCallback(() => {
+        setStartDateError(null);
+        setDueDateError(null);
+    }, []);
 
     const isAliveRef = React.useRef(true);
     const commentsCacheRef = React.useRef<Record<string, TaskCommentWithReplies[]>>({});
@@ -2382,60 +2462,57 @@ export default function TaskDetailModal(props: {
             new Date(dueDate).getMonth(),
             new Date(dueDate).getDate()
         );
-
         const diffDays = (endDay - startDay) / (1000 * 60 * 60 * 24);
         if (diffDays < 0) return null;
 
         return (diffDays + 1) * 24;
     }, [startDate, dueDate]);
 
+    const sanitizeHoursInput = React.useCallback((rawVal: string) => {
+        return rawVal.replace(/\D/g, "");
+    }, []);
+
+    const estimatedHoursError = React.useMemo(() => {
+        if (estimatedHours == null || maxHours == null || estimatedHours <= maxHours) return null;
+        return t("estimatedHoursExceed", { max: maxHours });
+    }, [estimatedHours, maxHours, t]);
+
+    const actualHoursError = React.useMemo(() => {
+        if (actualHours == null || maxHours == null || actualHours <= maxHours) return null;
+        return t("actualHoursExceed", { max: maxHours });
+    }, [actualHours, maxHours, t]);
+
+    const handleHoursBeforeInput = React.useCallback((event: React.FormEvent<HTMLInputElement>) => {
+        const nativeEvent = event.nativeEvent as InputEvent;
+        const nextChunk = nativeEvent.data;
+
+        if (!nextChunk || /^\d$/.test(nextChunk)) return;
+        event.preventDefault();
+    }, []);
+
+    const handleHoursPaste = React.useCallback((event: React.ClipboardEvent<HTMLInputElement>) => {
+        const pastedText = event.clipboardData.getData("text");
+        if (sanitizeHoursInput(pastedText) === pastedText) return;
+        event.preventDefault();
+    }, [sanitizeHoursInput]);
+
     // Validate and clamp estimated hours
     const handleEstimatedHoursChange = (rawVal: string) => {
-        const val = rawVal;
+        const val = sanitizeHoursInput(rawVal);
         const num = Number.parseFloat(val);
         const parsed = val === "" ? undefined : Number.isNaN(num) || num < 0 ? 0 : num;
-
-        if (parsed != null && maxHours != null && parsed > maxHours) {
-            setEstimatedHoursError(t("estimatedHoursExceed", { max: maxHours }));
-            setEstimatedHours(maxHours);
-        } else {
-            setEstimatedHoursError(null);
-            setEstimatedHours(parsed);
-        }
+        setSaveError(null);
+        setEstimatedHours(parsed);
     };
 
     // Validate and clamp actual hours
     const handleActualHoursChange = (rawVal: string) => {
-        const val = rawVal;
+        const val = sanitizeHoursInput(rawVal);
         const num = Number.parseFloat(val);
         const parsed = val === "" ? undefined : Number.isNaN(num) || num < 0 ? 0 : num;
-
-        if (parsed != null && maxHours != null && parsed > maxHours) {
-            setActualHoursError(t("actualHoursExceed", { max: maxHours }));
-            setActualHours(maxHours);
-        } else {
-            setActualHoursError(null);
-            setActualHours(parsed);
-        }
+        setSaveError(null);
+        setActualHours(parsed);
     };
-
-    // Re-validate hours when dates change
-    React.useEffect(() => {
-        if (estimatedHours != null && maxHours != null && estimatedHours > maxHours) {
-            setEstimatedHoursError(t("estimatedHoursExceed", { max: maxHours }));
-            setEstimatedHours(maxHours);
-        } else {
-            setEstimatedHoursError(null);
-        }
-
-        if (actualHours != null && maxHours != null && actualHours > maxHours) {
-            setActualHoursError(t("actualHoursExceed", { max: maxHours }));
-            setActualHours(maxHours);
-        } else {
-            setActualHoursError(null);
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [maxHours, actualHours, estimatedHours, t]);
 
     const handleSendComment = async () => {
         if (!canComment || isViewOnly || !myUserId) return;
@@ -2563,7 +2640,7 @@ export default function TaskDetailModal(props: {
             try {
                 const canUseSnapshot =
                     !!groupDetailSnapshot
-                    && (!(groupId && groupDetailSnapshot?.groupId ) || String(groupDetailSnapshot.groupId) === groupId);
+                    && (!(groupId && groupDetailSnapshot?.groupId) || String(groupDetailSnapshot.groupId) === groupId);
 
                 if (canUseSnapshot) {
                     const hit = findTaskInGroupDetail(groupDetailSnapshot, taskId);
@@ -2748,15 +2825,16 @@ export default function TaskDetailModal(props: {
         setSeverity(String(normalizeSeverityValue(task?.severityValue)));
         setProgress(String(normalizeProgressValue(task?.progressValue)));
         setStartDate(toDateInputValue(task?.startDateRaw));
-        setDueDate(toDateInputValue(task?.dueDateRaw));
+        setDueDate(toDueDateInputValue(task?.dueDateRaw));
         setEstimatedHours(task?.estimatedHours ?? undefined);
         setActualHours(task?.actualHours ?? undefined);
-        setEstimatedHoursError(null);
-        setActualHoursError(null);
         setDescription((task?.description ?? "").slice(0, TASK_DESCRIPTION_MAX_LENGTH));
         setSaveError(null);
+        setTaskNameError(null);
+        lastEditedDateFieldRef.current = null;
+        clearDateErrors();
         setIsEditing(false);
-    }, [task]);
+    }, [task, clearDateErrors]);
 
     const assigneeOptions = React.useMemo(
         () =>
@@ -2815,6 +2893,16 @@ export default function TaskDetailModal(props: {
         if (progress === "") return 0;
         return normalizeProgressValue(Number(progress));
     }, [progress]);
+    const shouldResetHoursForPastTask = React.useMemo(() => {
+        if (selectedProgressValue >= 100) return false;
+        return isPastDateValue(startDate, todayDateValue) || isPastDateValue(dueDate, todayDateValue);
+    }, [dueDate, selectedProgressValue, startDate, todayDateValue]);
+
+    React.useEffect(() => {
+        if (!(isEditing && shouldResetHoursForPastTask)) return;
+        setEstimatedHours(0);
+        setActualHours(0);
+    }, [isEditing, shouldResetHoursForPastTask]);
 
     const selectedProgressLabel = React.useMemo(
         () => progressLabelByValue(selectedProgressValue),
@@ -2828,22 +2916,41 @@ export default function TaskDetailModal(props: {
     const dueDateDisplayClassName = !isEditing && selectedProgressValue >= 100 ? "text-emerald-700" : undefined;
     const descriptionLength = description.length;
     const commentLength = commentDraft.length;
+    const applyDateRangeValidation = React.useCallback(
+        (changedField: "start" | "due", nextStartDate: string, nextDueDate: string) => {
+            clearDateErrors();
+
+            if (!(nextStartDate && nextDueDate) || nextStartDate <= nextDueDate) {
+                return true;
+            }
+
+            if (changedField === "start") {
+                setStartDateError(t("errors.startDateAfterDueDate"));
+            } else {
+                setDueDateError(t("errors.dueDateBeforeStartDate"));
+            }
+
+            return false;
+        },
+        [clearDateErrors, t]
+    );
 
     const handleSave = async () => {
         if (!canEditTask || isViewOnly) return;
 
         setSaveError(null);
+        setTaskNameError(null);
+        clearDateErrors();
 
         const taskNameTrimmed = taskName.trim().slice(0, TASK_TITLE_MAX_LENGTH);
         const descriptionTrimmed = description.trim().slice(0, TASK_DESCRIPTION_MAX_LENGTH);
 
         if (!taskNameTrimmed) {
-            setSaveError(t("errors.taskNameRequired"));
+            setTaskNameError(t("errors.taskNameRequired"));
             return;
         }
 
-        if (startDate && dueDate && startDate > dueDate) {
-            setSaveError(t("errors.startDateAfterDueDate"));
+        if (!applyDateRangeValidation(lastEditedDateFieldRef.current ?? "start", startDate, dueDate)) {
             return;
         }
 
@@ -2870,13 +2977,12 @@ export default function TaskDetailModal(props: {
             return;
         }
 
-        if (estimatedHoursError || actualHoursError) {
-            setSaveError(estimatedHoursError ?? actualHoursError ?? "");
-            return;
-        }
+        if (estimatedHoursError || actualHoursError) return;
 
         const normalizedProgressValue =
             progress === "" ? 0 : normalizeProgressValue(Number(clampProgressInput(progress)));
+        const estimatedHoursToSave = shouldResetHoursForPastTask ? 0 : (estimatedHours ?? null);
+        const actualHoursToSave = shouldResetHoursForPastTask ? 0 : (actualHours ?? null);
 
         try {
             setSubmitting(true);
@@ -2889,13 +2995,15 @@ export default function TaskDetailModal(props: {
                     taskDescription: descriptionTrimmed || null,
                     assigneeId: assigneeId || null,
                     groupStatusId: statusId || null,
-                    startDate: toApiDateTimeOrNull(startDate),
-                    dueDate: toApiDateTimeOrNull(dueDate),
+                    startDate: startDate ? toApiDateTimeOrNull(startDate) : null,
+                    dueDate: dueDate ? toApiDateTimeOrNull(dueDate, { endExclusiveNextDay: true }) : null,
+                    startDateSelected: true,
+                    dueDateSelected: true,
                     taskPriority: selectedPriorityValue,
                     taskSeverity: selectedSeverityValue,
                     progress: normalizedProgressValue,
-                    estimatedHours: estimatedHours ?? null,
-                    actualHours: actualHours ?? null
+                    estimatedHours: estimatedHoursToSave,
+                    actualHours: actualHoursToSave
                 }
             });
 
@@ -2932,28 +3040,35 @@ export default function TaskDetailModal(props: {
                     progressValue: normalizedProgressValue,
                     progressLabel: progressLabelByValue(normalizedProgressValue),
                     startDateRaw: startDate ? toApiDateTimeOrNull(startDate) : null,
-                    dueDateRaw: dueDate ? toApiDateTimeOrNull(dueDate) : null,
+                    dueDateRaw: dueDate || null,
                     startDateFmt: startDate ? formatDisplayDate(startDate) : "",
                     dueDateFmt: dueDate ? formatDisplayDate(dueDate) : "",
-                    estimatedHours: estimatedHours ?? null,
-                    actualHours: actualHours ?? null,
+                    estimatedHours: estimatedHoursToSave,
+                    actualHours: actualHoursToSave,
                     description: descriptionTrimmed || null
                 };
             });
 
             setDescription(descriptionTrimmed);
             setProgress(String(normalizedProgressValue));
+            setEstimatedHours(estimatedHoursToSave ?? undefined);
+            setActualHours(actualHoursToSave ?? undefined);
             setIsEditing(false);
 
             toast({ variant: "success", description: t("saveSuccess") });
 
             void (async () => {
-                // Avoid immediately re-reading stale task detail right after update.
-                await delay(350);
-                await Promise.allSettled([refreshTaskDetailSilently(), Promise.resolve(onSaved?.())]);
+                await Promise.resolve(onSaved?.());
             })();
         } catch (e: unknown) {
             const errorMessage = getErrorMessage(e, t("errors.updateTaskFailed"));
+            const hoursField = getHoursFieldFromErrorMessage(errorMessage);
+
+            if (hoursField && maxHours != null) {
+                setSaveError(null);
+                return;
+            }
+
             toast({ variant: "destructive", description: errorMessage });
             setSaveError(errorMessage);
         } finally {
@@ -2984,10 +3099,20 @@ export default function TaskDetailModal(props: {
                                 <input
                                     value={taskName}
                                     maxLength={TASK_TITLE_MAX_LENGTH}
-                                    onChange={(e) => setTaskName(e.target.value.slice(0, TASK_TITLE_MAX_LENGTH))}
+                                    onChange={(e) => {
+                                        const nextValue = e.target.value.slice(0, TASK_TITLE_MAX_LENGTH);
+                                        setTaskName(nextValue);
+
+                                        if (taskNameError && nextValue.trim()) {
+                                            setTaskNameError(null);
+                                        }
+                                    }}
                                     placeholder={t("taskName")}
                                     className="w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 font-extrabold text-[24px] text-zinc-900 leading-none outline-none"
                                 />
+                                {taskNameError ? (
+                                    <div className="mt-2 font-medium text-rose-600 text-sm">{taskNameError}</div>
+                                ) : null}
                                 <div className="mt-2 text-right font-medium text-xs text-zinc-500">
                                     {taskName.length}/{TASK_TITLE_MAX_LENGTH}
                                 </div>
@@ -3065,7 +3190,7 @@ export default function TaskDetailModal(props: {
                                                 onClick={() => {
                                                     void handleSave();
                                                 }}
-                                                disabled={submitting}
+                                                disabled={submitting || !!estimatedHoursError || !!actualHoursError}
                                                 className="h-10 rounded-xl bg-[#f54a00] px-5 font-semibold text-sm text-white hover:bg-[#f54a00]/80 disabled:opacity-60">
                                                 {submitting ? t("saving") : t("saveChange")}
                                             </button>
@@ -3104,7 +3229,7 @@ export default function TaskDetailModal(props: {
                                             <SelectItem
                                                 value="unassigned"
                                                 className={selectItemClassName}
-                                                >
+                                            >
                                                 <div className="flex items-center gap-2">
                                                     <AssigneeAvatar size={24} unassigned className="text-[11px]" />
                                                     <span>{t("unassigned")}</span>
@@ -3235,36 +3360,44 @@ export default function TaskDetailModal(props: {
                                 <TrelloDatePicker
                                     label={t("startDate")}
                                     value={startDate}
-                                    onChange={setStartDate}
+                                    onChange={(nextValue) => {
+                                        setSaveError(null);
+                                        lastEditedDateFieldRef.current = "start";
+                                        setStartDate(nextValue);
+                                        applyDateRangeValidation("start", nextValue, dueDate);
+                                    }}
                                     disabled={!isEditing}
                                     locale={locale}
                                     i18n={datePickerI18n}
+                                    error={startDateError}
                                 />
                                 <TrelloDatePicker
                                     label={t("dueDate")}
                                     value={dueDate}
-                                    onChange={setDueDate}
-                                    min={startDate || undefined}
+                                    onChange={(nextValue) => {
+                                        setSaveError(null);
+                                        lastEditedDateFieldRef.current = "due";
+                                        setDueDate(nextValue);
+                                        applyDateRangeValidation("due", startDate, nextValue);
+                                    }}
                                     disabled={!isEditing}
                                     locale={locale}
                                     i18n={datePickerI18n}
                                     displayText={dueDateDisplayText}
                                     displayClassName={dueDateDisplayClassName}
+                                    error={dueDateError}
                                 />
 
                                 <div>
                                     <div className="font-semibold text-sm text-zinc-600">{t("estimatedHours")}</div>
                                     <input
-                                        type="number"
-                                        min="0"
-                                        step="0.5"
+                                        type="text"
+                                        inputMode="numeric"
+                                        pattern="[0-9]*"
                                         value={estimatedHours ?? ""}
                                         onChange={(e) => handleEstimatedHoursChange(e.target.value)}
-                                        onKeyDown={(e) => {
-                                            if (e.key === "-" || e.key === "e" || e.key === "E") {
-                                                e.preventDefault();
-                                            }
-                                        }}
+                                        onBeforeInput={handleHoursBeforeInput}
+                                        onPaste={handleHoursPaste}
                                         disabled={!isEditing}
                                         placeholder="0"
                                         className="mt-2 flex h-10 w-full items-center rounded-xl border border-zinc-200 bg-white px-3 text-sm text-zinc-800 outline-none disabled:cursor-not-allowed disabled:bg-zinc-50 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
@@ -3279,16 +3412,13 @@ export default function TaskDetailModal(props: {
                                 <div>
                                     <div className="font-semibold text-sm text-zinc-600">{t("actualHours")}</div>
                                     <input
-                                        type="number"
-                                        min="0"
-                                        step="0.5"
+                                        type="text"
+                                        inputMode="numeric"
+                                        pattern="[0-9]*"
                                         value={actualHours ?? ""}
                                         onChange={(e) => handleActualHoursChange(e.target.value)}
-                                        onKeyDown={(e) => {
-                                            if (e.key === "-" || e.key === "e" || e.key === "E") {
-                                                e.preventDefault();
-                                            }
-                                        }}
+                                        onBeforeInput={handleHoursBeforeInput}
+                                        onPaste={handleHoursPaste}
                                         disabled={!isEditing}
                                         placeholder="0"
                                         className="mt-2 flex h-10 w-full items-center rounded-xl border border-zinc-200 bg-white px-3 text-sm text-zinc-800 outline-none disabled:cursor-not-allowed disabled:bg-zinc-50 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
@@ -3302,68 +3432,68 @@ export default function TaskDetailModal(props: {
                                     <div className="font-semibold text-sm text-zinc-600">{t("progress")}</div>
 
                                     {canUpdateProgress ? (
-                                    <div className="mt-2 rounded-xl border border-zinc-200 bg-white p-4">
-                                        <div className="mb-3 flex items-center justify-between gap-3 text-sm">
-                                            <span className="font-medium text-zinc-800">{selectedProgressLabel}</span>
+                                        <div className="mt-2 rounded-xl border border-zinc-200 bg-white p-4">
+                                            <div className="mb-3 flex items-center justify-between gap-3 text-sm">
+                                                <span className="font-medium text-zinc-800">{selectedProgressLabel}</span>
 
-                                            <div className="flex items-center gap-2">
-                                                <input
-                                                    type="text"
-                                                    inputMode="numeric"
-                                                    pattern="[0-9]*"
-                                                    value={progress}
-                                                    onChange={(e) => handleProgressInputChange(e.target.value)}
-                                                    onBlur={handleProgressInputBlur}
-                                                    disabled={!isEditing}
-                                                    placeholder="0"
-                                                    className="h-8 w-14 rounded-lg border border-zinc-200 px-0 text-center font-semibold text-sm text-zinc-900 leading-none outline-none disabled:cursor-not-allowed disabled:bg-zinc-50"
+                                                <div className="flex items-center gap-2">
+                                                    <input
+                                                        type="text"
+                                                        inputMode="numeric"
+                                                        pattern="[0-9]*"
+                                                        value={progress}
+                                                        onChange={(e) => handleProgressInputChange(e.target.value)}
+                                                        onBlur={handleProgressInputBlur}
+                                                        disabled={!isEditing}
+                                                        placeholder="0"
+                                                        className="h-8 w-14 rounded-lg border border-zinc-200 px-0 text-center font-semibold text-sm text-zinc-900 leading-none outline-none disabled:cursor-not-allowed disabled:bg-zinc-50"
+                                                    />
+                                                    <span className="font-bold text-zinc-900">%</span>
+                                                </div>
+                                            </div>
+
+                                            <div className="mb-4 h-2.5 w-full overflow-hidden rounded-full bg-zinc-200">
+                                                <div
+                                                    className="h-full rounded-full bg-orange-500 transition-all"
+                                                    style={{ width: `${selectedProgressValue}%` }}
                                                 />
-                                                <span className="font-bold text-zinc-900">%</span>
+                                            </div>
+
+                                            <div className="grid grid-cols-5 gap-2">
+                                                {PROGRESS_OPTIONS.map((value) => {
+                                                    const active = selectedProgressValue === value;
+                                                    return (
+                                                        <button
+                                                            key={value}
+                                                            type="button"
+                                                            disabled={!isEditing}
+                                                            onClick={() => setProgress(String(value))}
+                                                            className={cn(
+                                                                "h-9 rounded-xl border font-semibold text-sm transition",
+                                                                active
+                                                                    ? "border-orange-500 bg-orange-500 text-white"
+                                                                    : "border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50",
+                                                                !isEditing && "cursor-not-allowed opacity-70"
+                                                            )}>
+                                                            {value}%
+                                                        </button>
+                                                    );
+                                                })}
                                             </div>
                                         </div>
-
-                                        <div className="mb-4 h-2.5 w-full overflow-hidden rounded-full bg-zinc-200">
-                                            <div
-                                                className="h-full rounded-full bg-orange-500 transition-all"
-                                                style={{ width: `${selectedProgressValue}%` }}
-                                            />
-                                        </div>
-
-                                        <div className="grid grid-cols-5 gap-2">
-                                            {PROGRESS_OPTIONS.map((value) => {
-                                                const active = selectedProgressValue === value;
-                                                return (
-                                                    <button
-                                                        key={value}
-                                                        type="button"
-                                                        disabled={!isEditing}
-                                                        onClick={() => setProgress(String(value))}
-                                                        className={cn(
-                                                            "h-9 rounded-xl border font-semibold text-sm transition",
-                                                            active
-                                                                ? "border-orange-500 bg-orange-500 text-white"
-                                                                : "border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50",
-                                                            !isEditing && "cursor-not-allowed opacity-70"
-                                                        )}>
-                                                        {value}%
-                                                    </button>
-                                                );
-                                            })}
-                                        </div>
-                                    </div>
                                     ) : (
-                                    <div className="mt-2 rounded-xl border border-zinc-200 bg-zinc-50 p-4">
-                                        <div className="mb-3 flex items-center justify-between gap-3 text-sm">
-                                            <span className="font-medium text-zinc-800">{selectedProgressLabel}</span>
-                                            <span className="font-bold text-zinc-900">{selectedProgressValue}%</span>
+                                        <div className="mt-2 rounded-xl border border-zinc-200 bg-zinc-50 p-4">
+                                            <div className="mb-3 flex items-center justify-between gap-3 text-sm">
+                                                <span className="font-medium text-zinc-800">{selectedProgressLabel}</span>
+                                                <span className="font-bold text-zinc-900">{selectedProgressValue}%</span>
+                                            </div>
+                                            <div className="h-2.5 w-full overflow-hidden rounded-full bg-zinc-200">
+                                                <div
+                                                    className="h-full rounded-full bg-orange-500 transition-all"
+                                                    style={{ width: `${selectedProgressValue}%` }}
+                                                />
+                                            </div>
                                         </div>
-                                        <div className="h-2.5 w-full overflow-hidden rounded-full bg-zinc-200">
-                                            <div
-                                                className="h-full rounded-full bg-orange-500 transition-all"
-                                                style={{ width: `${selectedProgressValue}%` }}
-                                            />
-                                        </div>
-                                    </div>
                                     )}
                                 </div>
                             </div>

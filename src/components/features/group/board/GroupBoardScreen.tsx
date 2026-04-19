@@ -1496,7 +1496,7 @@ function DuePill({
                     />
                 ) : null}
                 {due ? (
-                    <div className="border- flex h-7 items-center gap-1.5 whitespace-nowrap rounded-full border bg-blue-50 px-1.5 py-0.5 font-semibold text-xs">
+                    <div className="flex items-center gap-1.5 whitespace-nowrap font-semibold text-xs">
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
                             viewBox="0 0 640 640"

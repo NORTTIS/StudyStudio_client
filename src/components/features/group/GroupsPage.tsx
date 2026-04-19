@@ -268,7 +268,9 @@ export function GroupsPage() {
     const [loading, setLoading] = useState<boolean>(true);
     const [openCreate, setOpenCreate] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
-    const [groupTypeFilter, setGroupTypeFilter] = useState<"all" | "independent" | "managed" | "joined" | "archived">("all");
+    const [groupTypeFilter, setGroupTypeFilter] = useState<
+        "all" | "independent" | "managed" | "joined" | "pending" | "archived"
+    >("all");
 
     const [expandFav, setExpandFav] = useState(false);
     const [expandAll, setExpandAll] = useState(false);
@@ -350,7 +352,10 @@ export function GroupsPage() {
         if (groupTypeFilter !== "all" && groupTypeFilter !== "joined") return [];
         return filterGroupsBySearch(joined, searchQuery);
     }, [groupTypeFilter, joined, searchQuery]);
-    const filteredPending = useMemo(() => filterGroupsBySearch(pending, searchQuery), [pending, searchQuery]);
+    const filteredPending = useMemo(() => {
+        if (groupTypeFilter !== "all" && groupTypeFilter !== "pending") return [];
+        return filterGroupsBySearch(pending, searchQuery);
+    }, [groupTypeFilter, pending, searchQuery]);
 
     const maxGroups = usage.max > 0 ? usage.max : 5;
     const currentGroupsCount = usage.current > 0 ? usage.current : ownedGroups.length;
@@ -539,6 +544,7 @@ export function GroupsPage() {
                                                 { value: "independent" as const, label: t("independent"), icon: Users },
                                                 { value: "managed" as const, label: t("managed"), icon: Layers },
                                                 { value: "joined" as const, label: t("joined"), icon: Users2 },
+                                                { value: "pending" as const, label: t("pendingApproval"), icon: Users2 },
                                                 { value: "archived" as const, label: t("archivedFilter"), icon: Archive }
                                             ].map((item) => {
                                                 const active = groupTypeFilter === item.value;
@@ -707,7 +713,7 @@ export function GroupsPage() {
                             </SectionReveal>
                         )}
 
-                        {isAllFilter && (loading || filteredPending.length > 0) && (
+                        {(isAllFilter || groupTypeFilter === "pending") && (loading || filteredPending.length > 0) && (
                             <SectionReveal delay={0.18}>
                                 <GroupsSection
                                     icon={Users2}
