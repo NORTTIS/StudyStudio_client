@@ -29,6 +29,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import * as React from "react";
+import { enUS, vi as viLocale } from "date-fns/locale";
 import { DayPicker } from "react-day-picker";
 import { createPortal } from "react-dom";
 import { useLocale, useTranslations } from "next-intl";
@@ -99,21 +100,6 @@ type ColumnId = string;
 const DROP_PREFIX = "drop:";
 const END_PREFIX = "drop-end:";
 
-const monthOptions = [
-    { value: "0", label: "January" },
-    { value: "1", label: "February" },
-    { value: "2", label: "March" },
-    { value: "3", label: "April" },
-    { value: "4", label: "May" },
-    { value: "5", label: "June" },
-    { value: "6", label: "July" },
-    { value: "7", label: "August" },
-    { value: "8", label: "September" },
-    { value: "9", label: "October" },
-    { value: "10", label: "November" },
-    { value: "11", label: "December" }
-] as const;
-
 const selectItemClassName =
     "cursor-pointer rounded-xl px-3 py-2 text-sm text-zinc-900 outline-none data-highlighted:bg-zinc-100 hover:bg-zinc-100 focus:bg-zinc-100";
 
@@ -172,6 +158,10 @@ function startOfDay(date: Date) {
     return new Date(date.getFullYear(), date.getMonth(), date.getDate());
 }
 
+function getTodayDateValue() {
+    return formatDateToInputValue(startOfDay(new Date()));
+}
+
 function formatDateDisplay(value?: string, locale?: string, t?: (key: string) => string) {
     const date = parseDateString(value);
     const selectDateLabel = t ? t("selectDate") : "Select a date";
@@ -192,6 +182,16 @@ function formatDateDisplay(value?: string, locale?: string, t?: (key: string) =>
         day: "numeric",
         year: target.getFullYear() !== today.getFullYear() ? "numeric" : undefined
     }).format(target);
+}
+
+function normalizeIntlLocale(locale?: string) {
+    if (!locale) return "en-US";
+    if (locale.includes("-")) return locale;
+    return locale === "vi" ? "vi-VN" : "en-US";
+}
+
+function formatMonthLabel(date: Date, locale?: string) {
+    return new Intl.DateTimeFormat(normalizeIntlLocale(locale), { month: "long" }).format(date);
 }
 
 function buildApiUrl(path: string) {
@@ -549,56 +549,15 @@ function DuePill({
 }) {
     if (done) return null;
 
-    const overdueFlameId = React.useId();
-    const overdueFlameOuterId = `${overdueFlameId}-overdue-flame-outer`;
-    const overdueFlameInnerId = `${overdueFlameId}-overdue-flame-inner`;
-
     return (
         <div
             className={cn(
                 "inline-flex min-w-0 max-w-full items-center gap-2",
-                done ? "text-emerald-700" : overdue ? "text-rose-700" : "text-zinc-700"
+                overdue ? "text-rose-700" : "text-zinc-700"
             )}>
             <div className="flex min-w-0 items-center gap-2 leading-none">
                 <Clock3 className="h-3.5 w-3.5 shrink-0" />
                 <div className="whitespace-nowrap font-semibold text-xs">{due}</div>
-                {overdue ? (
-                    <span
-                        title={t("overdue") || "Quá hạn"}
-                        className="inline-flex shrink-0 items-center justify-center">
-                        <span className="sr-only">{t("overdue") || "Quá hạn"}</span>
-                        <span className="relative inline-flex h-4 w-4 items-center justify-center">
-                            <span className="absolute inset-[-4px] rounded-full bg-[radial-gradient(circle,rgba(251,113,133,0.22)_0%,rgba(251,146,60,0.12)_38%,rgba(251,113,133,0)_74%)] blur-[2px]" />
-                            <svg
-                                viewBox="0 0 24 24"
-                                className="relative h-4 w-4 animate-[pulse_1.8s_ease-in-out_infinite] drop-shadow-[0_2px_8px_rgba(244,63,94,0.24)]"
-                                fill="none"
-                                xmlns="http://www.w3.org/2000/svg"
-                                aria-hidden="true">
-                                <defs>
-                                    <linearGradient id={overdueFlameOuterId} x1="12" y1="3" x2="12" y2="21" gradientUnits="userSpaceOnUse">
-                                        <stop stopColor="#FB923C" />
-                                        <stop offset="0.55" stopColor="#F97316" />
-                                        <stop offset="1" stopColor="#E11D48" />
-                                    </linearGradient>
-                                    <linearGradient id={overdueFlameInnerId} x1="12" y1="8" x2="12" y2="19" gradientUnits="userSpaceOnUse">
-                                        <stop stopColor="#FFF7ED" />
-                                        <stop offset="0.45" stopColor="#FDBA74" />
-                                        <stop offset="1" stopColor="#FB7185" />
-                                    </linearGradient>
-                                </defs>
-                                <path
-                                    d="M12.4 2.8c.18 2.06-.65 3.72-1.96 5.07-1.31 1.34-2.88 2.81-2.88 5.17 0 3.69 2.72 6.16 6.22 6.16 3.66 0 6.22-2.61 6.22-6.18 0-2.87-1.9-4.79-3.43-6.45-1.18-1.28-2.21-2.43-2.47-4.05-.06-.36-.33-.64-.69-.64-.4 0-.72.35-.7.92Z"
-                                    fill={`url(#${overdueFlameOuterId})`}
-                                />
-                                <path
-                                    d="M13.12 9.1c.1 1.28-.42 2.29-1.23 3.25-.82.96-1.74 1.96-1.74 3.42 0 2.15 1.54 3.6 3.66 3.6 2.22 0 3.77-1.57 3.77-3.63 0-1.69-1.13-2.88-2.08-3.93-.73-.8-1.37-1.53-1.48-2.72-.03-.31-.24-.55-.53-.55-.27 0-.41.23-.37.56Z"
-                                    fill={`url(#${overdueFlameInnerId})`}
-                                />
-                            </svg>
-                        </span>
-                    </span>
-                ) : null}
             </div>
         </div>
     );
@@ -1682,6 +1641,7 @@ function InlineDatePicker({
     onChange,
     min,
     disabled = false,
+    error,
     t
 }: {
     label: string;
@@ -1689,9 +1649,20 @@ function InlineDatePicker({
     onChange: (value: string) => void;
     min?: string;
     disabled?: boolean;
+    error?: string | null;
     t: (key: string) => string;
 }) {
     const locale = useLocale();
+    const pickerLocale = React.useMemo(() => (locale === "vi" ? viLocale : enUS), [locale]);
+    const monthOptions = React.useMemo(
+        () =>
+            Array.from({ length: 12 }, (_, index) => {
+                const value = String(index);
+                const label = formatMonthLabel(new Date(2026, index, 1), locale);
+                return { value, label };
+            }),
+        [locale]
+    );
     const [open, setOpen] = React.useState(false);
     const [mounted, setMounted] = React.useState(false);
     const [popupPosition, setPopupPosition] = React.useState<PopupPosition | null>(null);
@@ -1840,6 +1811,7 @@ function InlineDatePicker({
                     }}
                     className={cn(
                         "mt-2 flex h-11 w-full items-center justify-between rounded-xl border px-3 text-sm transition",
+                        error ? "border-rose-300 bg-white text-zinc-800" : "",
                         disabled
                             ? "cursor-not-allowed border-zinc-200 bg-zinc-50 text-zinc-500 opacity-70"
                             : open
@@ -1869,6 +1841,7 @@ function InlineDatePicker({
                         </span>
                     </div>
                 </button>
+                {error ? <div className="mt-1 font-medium text-rose-600 text-xs">{error}</div> : null}
             </div>
 
             {mounted && open && popupPosition
@@ -1939,6 +1912,7 @@ function InlineDatePicker({
 
                             <DayPicker
                                 mode="single"
+                                locale={pickerLocale}
                                 month={month}
                                 onMonthChange={setMonth}
                                 selected={selectedDate}
@@ -1983,21 +1957,21 @@ function InlineDatePicker({
                                 type="button"
                                 onClick={() => pickDate(new Date())}
                                 className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 font-semibold text-base text-zinc-700 hover:bg-zinc-50">
-                                Today
+                                {t("today")}
                             </button>
 
                             <button
                                 type="button"
                                 onClick={() => pickDate(addDays(new Date(), 1))}
                                 className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 font-semibold text-base text-zinc-700 hover:bg-zinc-50">
-                                Tomorrow
+                                {t("tomorrow")}
                             </button>
 
                             <button
                                 type="button"
                                 onClick={() => pickDate(addDays(new Date(), 7))}
                                 className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 font-semibold text-base text-zinc-700 hover:bg-zinc-50">
-                                Next week
+                                {t("nextWeek")}
                             </button>
 
                             <button
@@ -2007,7 +1981,7 @@ function InlineDatePicker({
                                     setOpen(false);
                                 }}
                                 className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 font-semibold text-base text-rose-500 hover:bg-rose-50">
-                                No date
+                                {t("noDate")}
                             </button>
                         </div>
                     </div>,
@@ -2264,7 +2238,12 @@ function InlineTaskFormModal({
                         </div>
 
                         <div className="sm:col-span-3 grid grid-cols-1 gap-5 sm:grid-cols-2">
-                            <InlineDatePicker label={t("startDate")} value={startDate} onChange={setStartDate} t={t} />
+                            <InlineDatePicker
+                                label={t("startDate")}
+                                value={startDate}
+                                onChange={setStartDate}
+                                t={t}
+                            />
 
                             <InlineDatePicker
                                 label={t("dueDate")}
@@ -2379,6 +2358,10 @@ function PersonalTaskDetailModal({
     const [mounted, setMounted] = React.useState(false);
     const [isEditing, setIsEditing] = React.useState(false);
     const [error, setError] = React.useState<string | null>(null);
+    const [titleError, setTitleError] = React.useState<string | null>(null);
+    const [startDateError, setStartDateError] = React.useState<string | null>(null);
+    const [dueDateError, setDueDateError] = React.useState<string | null>(null);
+    const lastEditedDateFieldRef = React.useRef<"start" | "due" | null>(null);
 
     const [title, setTitle] = React.useState("");
     const [description, setDescription] = React.useState("");
@@ -2390,6 +2373,11 @@ function PersonalTaskDetailModal({
     const [progress, setProgress] = React.useState("0");
     const [estimatedHours, setEstimatedHours] = React.useState("");
     const [actualHours, setActualHours] = React.useState("");
+    const clearDateErrors = React.useCallback(() => {
+        setStartDateError(null);
+        setDueDateError(null);
+    }, []);
+    const originalDueDateValue = React.useMemo(() => toDateInputValue(task?.dueDate ?? null), [task?.dueDate]);
 
     React.useEffect(() => setMounted(true), []);
 
@@ -2397,6 +2385,9 @@ function PersonalTaskDetailModal({
         if (!(open && task)) return;
 
         setError(null);
+        setTitleError(null);
+        clearDateErrors();
+        lastEditedDateFieldRef.current = null;
         setIsEditing(false);
         setTitle((task.taskTitle ?? "").slice(0, 30));
         setDescription((task.taskDescription ?? "").slice(0, 200));
@@ -2408,7 +2399,7 @@ function PersonalTaskDetailModal({
         setProgress(String(normalizeProgressValue(task.progress)));
         setEstimatedHours(task.estimatedHours != null ? String(task.estimatedHours) : "");
         setActualHours(task.actualHours != null ? String(task.actualHours) : "");
-    }, [open, task, statuses]);
+    }, [open, task, statuses, clearDateErrors]);
 
     React.useEffect(() => {
         if (!open) return;
@@ -2423,24 +2414,45 @@ function PersonalTaskDetailModal({
         return statuses.find((s) => s.value === statusId)?.label ?? task?.personalStatus?.statusName ?? statuses[0]?.label ?? "";
     }, [statuses, statusId, task?.personalStatus?.statusName]);
 
+    const applyDateRangeValidation = React.useCallback(
+        (changedField: "start" | "due", nextStartDate: string, nextDueDate: string) => {
+            clearDateErrors();
+
+            if (!(nextStartDate && nextDueDate) || nextStartDate <= nextDueDate) {
+                return true;
+            }
+
+            if (changedField === "start") {
+                setStartDateError(t("startDateAfterDueDate"));
+            } else {
+                setDueDateError(t("dueDateBeforeStartDate"));
+            }
+
+            return false;
+        },
+        [clearDateErrors, t]
+    );
+    const hasValidationErrors = Boolean(titleError || startDateError || dueDateError);
+
     const handleSave = async () => {
         if (!task) return;
+
+        setError(null);
+        setTitleError(null);
+        clearDateErrors();
 
         const nextTitle = title.trim();
 
         if (!nextTitle) {
-            setError(t("pleaseEnterTaskTitle"));
+            setTitleError(t("taskNameRequired"));
             return;
         }
 
-        if (startDate && dueDate && startDate > dueDate) {
-            setError(t("startDateAfterDueDate"));
+        if (!applyDateRangeValidation(lastEditedDateFieldRef.current ?? "start", startDate, dueDate)) {
             return;
         }
 
         try {
-            setError(null);
-
             await onSave({
                 task,
                 values: {
@@ -2482,10 +2494,20 @@ function PersonalTaskDetailModal({
                                 <input
                                     value={title}
                                     maxLength={30}
-                                    onChange={(e) => setTitle(e.target.value.slice(0, 30))}
+                                    onChange={(e) => {
+                                        const nextValue = e.target.value.slice(0, 30);
+                                        setTitle(nextValue);
+
+                                        if (titleError && nextValue.trim()) {
+                                            setTitleError(null);
+                                        }
+                                    }}
                                     placeholder={t("taskName")}
                                     className="mt-0 w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 font-extrabold text-[28px] text-zinc-900 leading-none outline-none"
                                 />
+                                {titleError ? (
+                                    <div className="mt-2 font-medium text-rose-600 text-sm">{titleError}</div>
+                                ) : null}
                                 <div className="mt-1 text-right text-[11px] text-zinc-500">{title.length}/30</div>
                             </div>
                         ) : (
@@ -2621,17 +2643,28 @@ function PersonalTaskDetailModal({
                             <InlineDatePicker
                                 label={t("startDate")}
                                 value={startDate}
-                                onChange={setStartDate}
+                                onChange={(nextValue) => {
+                                    setError(null);
+                                    lastEditedDateFieldRef.current = "start";
+                                    setStartDate(nextValue);
+                                    applyDateRangeValidation("start", nextValue, dueDate);
+                                }}
                                 disabled={!isEditing}
+                                error={startDateError}
                                 t={t}
                             />
 
                             <InlineDatePicker
                                 label={t("dueDate")}
                                 value={dueDate}
-                                onChange={setDueDate}
-                                min={startDate || undefined}
+                                onChange={(nextValue) => {
+                                    setError(null);
+                                    lastEditedDateFieldRef.current = "due";
+                                    setDueDate(nextValue);
+                                    applyDateRangeValidation("due", startDate, nextValue);
+                                }}
                                 disabled={!isEditing}
+                                error={dueDateError}
                                 t={t}
                             />
                         </div>
@@ -2707,8 +2740,8 @@ function PersonalTaskDetailModal({
                             <button
                                 type="button"
                                 onClick={() => void handleSave()}
-                                disabled={saving}
-                                className="h-11 rounded-xl bg-[#f54a00] px-8 font-semibold text-sm text-white hover:bg-[#f54a00]/80 disabled:opacity-60">
+                                disabled={saving || hasValidationErrors}
+                                className="h-11 rounded-xl bg-[#f54a00] px-8 font-semibold text-sm text-white hover:bg-[#f54a00]/80 disabled:cursor-not-allowed disabled:bg-[#f54a00]/40 disabled:text-white/90 disabled:hover:bg-[#f54a00]/40">
                                 {saving ? t("saving") : t("saveChange")}
                             </button>
                         ) : (
@@ -3292,7 +3325,7 @@ export default function HomePersonalTaskScreen() {
                 setIsSubmitting(false);
             }
         },
-        [fetchBoard, handleCloseCreateTask]
+        [fetchBoard, handleCloseCreateTask, t]
     );
 
     const handleRenameTask = React.useCallback(
@@ -3360,6 +3393,8 @@ export default function HomePersonalTaskScreen() {
                 setIsSubmitting(true);
                 const resolvedStatusId = values.statusId ?? resolveTaskStatusId(task, statuses);
                 const nextStatus = statuses.find((s) => String(s.statusId ?? "") === String(resolvedStatusId ?? ""));
+                const originalDueDateValue = toDateInputValue(task.dueDate ?? null);
+
                 const nextStartDate = toApiDateTime(values.startDate) ?? undefined;
                 const nextDueDate = toApiDateTime(values.dueDate) ?? undefined;
                 const nextPriority: 0 | 1 | 2 = values.priority === "high" ? 2 : values.priority === "medium" ? 1 : 0;
@@ -3496,7 +3531,7 @@ export default function HomePersonalTaskScreen() {
                 setIsSubmitting(false);
             }
         },
-                        [fetchBoard, statuses, t, toast]
+        [fetchBoard, statuses, t, toast]
     );
 
     const handleDeleteTask = React.useCallback(async () => {
