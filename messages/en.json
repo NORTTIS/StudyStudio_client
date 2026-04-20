@@ -235,8 +235,10 @@
       "loadCommentsFailed": "Failed to load comments",
       "loadMembersFailed": "Failed to load members",
       "taskNameRequired": "Task name is required",
-      "startDateAfterDueDate": "Start date must be before the due date",
-      "dueDateBeforeStartDate": "Due date must be after the start date",
+      "startDateAfterDueDate": "Start date must be less than the due date",
+      "startDateInPast": "Start date cannot be in the past",
+      "dueDateInPast": "Due date cannot be in the past",
+      "dueDateBeforeStartDate": "Due date must be greater than the start date",
       "restrictedAssignee": "Cannot assign to this role",
       "missingGroupOrTask": "Missing group or task information",
       "updateTaskFailed": "Failed to update task"
@@ -2278,9 +2280,11 @@
     "addTask": "Add task",
     "noStatus": "No status",
     "pleaseEnterTaskTitle": "Please enter task title",
-    "startDateAfterDueDate": "Start date must be before the due date",
+    "startDateAfterDueDate": "Start date must be less than the due date",
+    "startDateInPast": "Start date cannot be in the past",
     "taskNameRequired": "Task name is required",
-    "dueDateBeforeStartDate": "Due date must be after the start date",
+    "dueDateInPast": "Due date cannot be in the past",
+    "dueDateBeforeStartDate": "Due date must be greater than the start date",
     "createTaskFailed": "Failed to create task",
     "updateStatusFailed": "Failed to update status",
     "updateTaskFailed": "Failed to update task",
@@ -2506,7 +2510,9 @@
     },
     "errors": {
       "taskTitleRequired": "Please enter task name",
-      "startDateAfterDueDate": "Start date must be before the due date",
+      "startDateAfterDueDate": "Start date must be less than the due date",
+      "startDateInPast": "Start date cannot be in the past",
+      "dueDateInPast": "Due date cannot be in the past",
       "restrictedAssignee": "Cannot assign to this role",
       "createTaskFailed": "Failed to create task"
     }

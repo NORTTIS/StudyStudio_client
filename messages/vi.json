@@ -235,8 +235,10 @@
       "loadCommentsFailed": "Không thể tải bình luận",
       "loadMembersFailed": "Không thể tải thành viên",
       "taskNameRequired": "Tên công việc là bắt buộc",
-      "startDateAfterDueDate": "Ngày bắt đầu phải trước hạn hoàn thành",
-      "dueDateBeforeStartDate": "Hạn hoàn thành phải sau ngày bắt đầu",
+      "startDateAfterDueDate": "Ngày bắt đầu phải bé hơn hạn hoàn thành",
+      "startDateInPast": "Ngày bắt đầu không được trong quá khứ",
+      "dueDateInPast": "Hạn hoàn thành không được trong quá khứ",
+      "dueDateBeforeStartDate": "Hạn hoàn thành phải lớn hơn ngày bắt đầu",
       "restrictedAssignee": "Không thể giao việc cho vai trò này",
       "missingGroupOrTask": "Thiếu thông tin nhóm hoặc công việc",
       "updateTaskFailed": "Cập nhật công việc thất bại"
@@ -2357,8 +2359,10 @@
     "noStatus": "Không có trạng thái",
     "pleaseEnterTaskTitle": "Vui lòng nhập tiêu đề công việc",
     "taskNameRequired": "Tên công việc là bắt buộc",
-    "startDateAfterDueDate": "Ngày bắt đầu phải trước hạn hoàn thành",
-    "dueDateBeforeStartDate": "Hạn hoàn thành phải sau ngày bắt đầu",
+    "startDateAfterDueDate": "Ngày bắt đầu phải bé hơn hạn hoàn thành",
+    "startDateInPast": "Ngày bắt đầu không được trong quá khứ",
+    "dueDateInPast": "Hạn hoàn thành không được trong quá khứ",
+    "dueDateBeforeStartDate": "Hạn hoàn thành phải lớn hơn ngày bắt đầu",
     "createTaskFailed": "Tạo công việc thất bại",
     "updateTaskFailed": "Cập nhật công việc thất bại",
     "saveSuccess": "Cập nhật công việc thành công",
@@ -2584,7 +2588,9 @@
     },
     "errors": {
       "taskTitleRequired": "Vui lòng nhập tên công việc",
-      "startDateAfterDueDate": "Ngày bắt đầu phải trước hạn hoàn thành",
+      "startDateAfterDueDate": "Ngày bắt đầu phải bé hơn hạn hoàn thành",
+      "startDateInPast": "Ngày bắt đầu không được trong quá khứ",
+      "dueDateInPast": "Hạn hoàn thành không được trong quá khứ",
       "restrictedAssignee": "Không thể giao việc cho vai trò này",
       "createTaskFailed": "Tạo công việc thất bại"
     }

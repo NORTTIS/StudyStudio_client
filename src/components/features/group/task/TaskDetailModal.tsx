@@ -2434,6 +2434,9 @@ export default function TaskDetailModal(props: {
 
     const estimatedHoursDisplayError = estimatedHoursError ?? estimatedHoursServerError;
     const actualHoursDisplayError = actualHoursError ?? actualHoursServerError;
+    const hasValidationErrors = Boolean(
+        taskNameError || startDateError || dueDateError || estimatedHoursDisplayError || actualHoursDisplayError
+    );
 
     const handleHoursBeforeInput = React.useCallback((event: React.FormEvent<HTMLInputElement>) => {
         const nativeEvent = event.nativeEvent as InputEvent;
@@ -2849,17 +2852,6 @@ export default function TaskDetailModal(props: {
         if (progress === "") return 0;
         return normalizeProgressValue(Number(progress));
     }, [progress]);
-    const shouldResetHoursForPastTask = React.useMemo(() => {
-        if (selectedProgressValue >= 100) return false;
-        return isPastDateValue(startDate, todayDateValue) || isPastDateValue(dueDate, todayDateValue);
-    }, [dueDate, selectedProgressValue, startDate, todayDateValue]);
-
-    React.useEffect(() => {
-        if (!(isEditing && shouldResetHoursForPastTask)) return;
-        setEstimatedHours(0);
-        setActualHours(0);
-    }, [isEditing, shouldResetHoursForPastTask]);
-
     const selectedProgressLabel = React.useMemo(
         () => progressLabelByValue(selectedProgressValue),
         [selectedProgressValue, progressLabelByValue]
@@ -2870,6 +2862,7 @@ export default function TaskDetailModal(props: {
             : t("progressDone")
         : undefined;
     const dueDateDisplayClassName = !isEditing && selectedProgressValue >= 100 ? "text-emerald-700" : undefined;
+    const originalDueDateValue = React.useMemo(() => toDueDateInputValue(task?.dueDateRaw), [task?.dueDateRaw]);
     const descriptionLength = description.length;
     const commentLength = commentDraft.length;
     const applyDateRangeValidation = React.useCallback(
@@ -2938,8 +2931,8 @@ export default function TaskDetailModal(props: {
 
         const normalizedProgressValue =
             progress === "" ? 0 : normalizeProgressValue(Number(clampProgressInput(progress)));
-        const estimatedHoursToSave = shouldResetHoursForPastTask ? 0 : (estimatedHours ?? null);
-        const actualHoursToSave = shouldResetHoursForPastTask ? 0 : (actualHours ?? null);
+        const estimatedHoursToSave = estimatedHours ?? null;
+        const actualHoursToSave = actualHours ?? null;
 
         try {
             setSubmitting(true);
@@ -3157,8 +3150,8 @@ export default function TaskDetailModal(props: {
                                                 onClick={() => {
                                                     void handleSave();
                                                 }}
-                                                disabled={submitting || !!estimatedHoursError || !!actualHoursError}
-                                                className="h-10 rounded-xl bg-[#f54a00] px-5 font-semibold text-sm text-white hover:bg-[#f54a00]/80 disabled:opacity-60">
+                                                disabled={submitting || hasValidationErrors}
+                                                className="h-10 rounded-xl bg-[#f54a00] px-5 font-semibold text-sm text-white hover:bg-[#f54a00]/80 disabled:cursor-not-allowed disabled:bg-[#f54a00]/40 disabled:text-white/90 disabled:hover:bg-[#f54a00]/40">
                                                 {submitting ? t("saving") : t("saveChange")}
                                             </button>
                                         )

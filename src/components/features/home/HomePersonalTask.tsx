@@ -158,6 +158,10 @@ function startOfDay(date: Date) {
     return new Date(date.getFullYear(), date.getMonth(), date.getDate());
 }
 
+function getTodayDateValue() {
+    return formatDateToInputValue(startOfDay(new Date()));
+}
+
 function formatDateDisplay(value?: string, locale?: string, t?: (key: string) => string) {
     const date = parseDateString(value);
     const selectDateLabel = t ? t("selectDate") : "Select a date";
@@ -2234,7 +2238,12 @@ function InlineTaskFormModal({
                         </div>
 
                         <div className="sm:col-span-3 grid grid-cols-1 gap-5 sm:grid-cols-2">
-                            <InlineDatePicker label={t("startDate")} value={startDate} onChange={setStartDate} t={t} />
+                            <InlineDatePicker
+                                label={t("startDate")}
+                                value={startDate}
+                                onChange={setStartDate}
+                                t={t}
+                            />
 
                             <InlineDatePicker
                                 label={t("dueDate")}
@@ -2368,6 +2377,7 @@ function PersonalTaskDetailModal({
         setStartDateError(null);
         setDueDateError(null);
     }, []);
+    const originalDueDateValue = React.useMemo(() => toDateInputValue(task?.dueDate ?? null), [task?.dueDate]);
 
     React.useEffect(() => setMounted(true), []);
 
@@ -2422,6 +2432,7 @@ function PersonalTaskDetailModal({
         },
         [clearDateErrors, t]
     );
+    const hasValidationErrors = Boolean(titleError || startDateError || dueDateError);
 
     const handleSave = async () => {
         if (!task) return;
@@ -2729,8 +2740,8 @@ function PersonalTaskDetailModal({
                             <button
                                 type="button"
                                 onClick={() => void handleSave()}
-                                disabled={saving}
-                                className="h-11 rounded-xl bg-[#f54a00] px-8 font-semibold text-sm text-white hover:bg-[#f54a00]/80 disabled:opacity-60">
+                                disabled={saving || hasValidationErrors}
+                                className="h-11 rounded-xl bg-[#f54a00] px-8 font-semibold text-sm text-white hover:bg-[#f54a00]/80 disabled:cursor-not-allowed disabled:bg-[#f54a00]/40 disabled:text-white/90 disabled:hover:bg-[#f54a00]/40">
                                 {saving ? t("saving") : t("saveChange")}
                             </button>
                         ) : (
@@ -3314,7 +3325,7 @@ export default function HomePersonalTaskScreen() {
                 setIsSubmitting(false);
             }
         },
-        [fetchBoard, handleCloseCreateTask]
+        [fetchBoard, handleCloseCreateTask, t]
     );
 
     const handleRenameTask = React.useCallback(
@@ -3382,6 +3393,8 @@ export default function HomePersonalTaskScreen() {
                 setIsSubmitting(true);
                 const resolvedStatusId = values.statusId ?? resolveTaskStatusId(task, statuses);
                 const nextStatus = statuses.find((s) => String(s.statusId ?? "") === String(resolvedStatusId ?? ""));
+                const originalDueDateValue = toDateInputValue(task.dueDate ?? null);
+
                 const nextStartDate = toApiDateTime(values.startDate) ?? undefined;
                 const nextDueDate = toApiDateTime(values.dueDate) ?? undefined;
                 const nextPriority: 0 | 1 | 2 = values.priority === "high" ? 2 : values.priority === "medium" ? 1 : 0;
@@ -3518,7 +3531,7 @@ export default function HomePersonalTaskScreen() {
                 setIsSubmitting(false);
             }
         },
-                        [fetchBoard, statuses, t, toast]
+        [fetchBoard, statuses, t, toast]
     );
 
     const handleDeleteTask = React.useCallback(async () => {
