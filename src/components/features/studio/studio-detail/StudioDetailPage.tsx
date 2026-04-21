@@ -48,12 +48,14 @@ import { AvatarUpload } from "@/components/ui/avatar-upload";
 import { BannerUpload } from "@/components/ui/banner-upload";
 import { Button } from "@/components/ui/button";
 import { ColorPicker } from "@/components/ui/color-picker";
+import { DefaultNameAvatar } from "@/components/ui/default-name-avatar";
 import { Input } from "@/components/ui/input";
 import { AliasInput } from "@/components/ui/alias-input";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import { writeRejectedStudioJoinRequest } from "@/utils/studio-pending";
+import { resolveAvatarUrl } from "@/lib/avatar";
 import { hexToGradient } from "@/lib/utils";
 import { Archive, ArchiveRestore, LogOut, Power, Search } from "lucide-react";
 import AIMaster from "./AIMaster";
@@ -1896,21 +1898,12 @@ export default function StudioDetailPage({
                                                                                     return (
                                                                                         <div
                                                                                             key={`${group.id}-avatar-${i}`}
-                                                                                            className={`flex h-8 w-8 items-center justify-center rounded-full border-2 border-white text-[9px] font-medium text-white shadow-sm ${member?.avatarUrl
-                                                                                                ? ""
-                                                                                                : i % 4 === 0
-                                                                                                    ? "bg-gradient-to-br from-orange-400 to-red-500"
-                                                                                                    : i % 4 === 1
-                                                                                                        ? "bg-gradient-to-br from-blue-400 to-indigo-500"
-                                                                                                        : i % 4 === 2
-                                                                                                            ? "bg-gradient-to-br from-teal-400 to-cyan-500"
-                                                                                                            : "bg-gradient-to-br from-pink-400 to-rose-500"
-                                                                                                }`}>
-                                                                                            {member?.avatarUrl ? (
+                                                                                            className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-white text-[9px] font-medium text-white shadow-sm">
+                                                                                            {resolveAvatarUrl(member) ? (
                                                                                                 <img
-                                                                                                    src={member.avatarUrl}
+                                                                                                    src={resolveAvatarUrl(member) ?? ""}
                                                                                                     alt={
-                                                                                                        member.firstName ||
+                                                                                                        member?.firstName ||
                                                                                                         t(
                                                                                                             "detail.memberAltFallback"
                                                                                                         )
@@ -1918,7 +1911,12 @@ export default function StudioDetailPage({
                                                                                                     className="h-full w-full rounded-full object-cover"
                                                                                                 />
                                                                                             ) : (
-                                                                                                String.fromCharCode(65 + i)
+                                                                                                <DefaultNameAvatar
+                                                                                                    name={`${member?.firstName ?? ""} ${member?.lastName ?? ""}`.trim() || String.fromCharCode(65 + i)}
+                                                                                                    seed={String((member?.id ?? member?.avatarUrl) ?? `${group.id}-${i}`)}
+                                                                                                    className="h-full w-full"
+                                                                                                    fallbackClassName="text-[9px] font-medium"
+                                                                                                />
                                                                                             )}
                                                                                         </div>
                                                                                     );

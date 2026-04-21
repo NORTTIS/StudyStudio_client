@@ -16,8 +16,9 @@ import { InviteMemberModal, type InviteRole } from "@/components/features/group/
 import { ApproveMemberSection } from "@/components/features/group/setting/ApproveMemberSection";
 import { getRoleIcon, getRoleColor } from "@/components/features/group/RoleUtils";
 import { toggleGroupArchive, toggleGroupMemberApproval, updateGroupSettings } from "@/api/groups";
-import { getStudioById } from "@/api/studios";
+import { getStudioById, getStudioGroups } from "@/api/studios";
 import {
+    fetchGroupsPageData,
     pendingJoinEvents,
     PENDING_JOIN_CHANGED_EVENT
 } from "@/components/features/group/group.api";
@@ -36,6 +37,7 @@ import { AvatarUpload } from "@/components/ui/avatar-upload";
 import { BannerUpload } from "@/components/ui/banner-upload";
 import { Button } from "@/components/ui/button";
 import { ColorPicker } from "@/components/ui/color-picker";
+import { DefaultNameAvatar } from "@/components/ui/default-name-avatar";
 import { EmojiPicker } from "@/components/ui/emoji-picker";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -69,6 +71,7 @@ const GROUP_UPDATED_EVENT = "group:updated";
 const GROUP_NAME_MAX_LENGTH = 30;
 const GROUP_DESCRIPTION_MAX_LENGTH = 200;
 const groupArchiveStorageKey = (groupId: string) => `group:${groupId}:is-archived`;
+const normalizeGroupNameForCompare = (value: string) => String(value ?? "").trim().replace(/\s+/g, " ").toLowerCase();
 
 const writeGroupArchiveOverride = (groupId: string, value: boolean) => {
     if (!groupId) return;
@@ -303,6 +306,10 @@ export function GroupSettingView() {
     const [groupName, setGroupName] = useState("");
     const [description, setDescription] = useState("");
     const [masterStudio, setMasterStudio] = useState("");
+    const [isIndependentGroup, setIsIndependentGroup] = useState(false);
+    const [parentStudioId, setParentStudioId] = useState("");
+    const [comparableGroups, setComparableGroups] = useState<Array<{ id: string; name: string }>>([]);
+    const [groupNameApiError, setGroupNameApiError] = useState("");
     const [initialSettings, setInitialSettings] = useState({ groupName: "", description: "" });
 
     const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
@@ -402,6 +409,10 @@ export function GroupSettingView() {
         setGroupName("");
         setDescription("");
         setMasterStudio("");
+        setIsIndependentGroup(false);
+        setParentStudioId("");
+        setComparableGroups([]);
+        setGroupNameApiError("");
         setInitialSettings({ groupName: "", description: "" });
         setMembers([]);
         setAvatarUrl(null);
@@ -425,6 +436,49 @@ export function GroupSettingView() {
         setIsArchived(false);
         setIsParentStudioArchived(false);
     };
+
+    const remapGroupSettingsErrorMessage = (message: string) => {
+        const normalizedMessage = normalizeErrorMessage(message, t("errors.loadGroupFailed"));
+        const lowered = normalizedMessage.toLowerCase();
+        const isDuplicateGroupNameError =
+            (lowered.includes("tên nhóm") && lowered.includes("tồn tại"))
+            || (lowered.includes("group name") && (lowered.includes("already exists") || lowered.includes("exists")));
+
+        if (isDuplicateGroupNameError) {
+            return isIndependentGroup
+                ? (locale === "vi"
+                    ? "Tên nhóm đã tồn tại trong nhóm độc lập của bạn"
+                    : "This group name already exists in your independent groups")
+                : (locale === "vi"
+                    ? "Tên nhóm đã tồn tại trong studio này"
+                    : "This group name already exists in this studio");
+        }
+
+        return normalizedMessage;
+    };
+
+    const duplicateGroupNameMessage = isIndependentGroup
+        ? (locale === "vi"
+            ? "Tên nhóm đã tồn tại trong nhóm độc lập của bạn"
+            : "This group name already exists in your independent groups")
+        : (locale === "vi"
+            ? "Tên nhóm đã tồn tại trong studio này"
+            : "This group name already exists in this studio");
+
+    const duplicateGroupNameError = useMemo(() => {
+        if (!isEditing) return "";
+
+        const normalizedGroupName = normalizeGroupNameForCompare(groupName);
+        if (!normalizedGroupName) return "";
+
+        const isDuplicate = comparableGroups.some(
+            (group) => group.id !== groupId && normalizeGroupNameForCompare(group.name) === normalizedGroupName
+        );
+
+        return isDuplicate ? duplicateGroupNameMessage : "";
+    }, [comparableGroups, duplicateGroupNameMessage, groupId, groupName, isEditing]);
+
+    const groupNameFieldError = duplicateGroupNameError || groupNameApiError;
 
     const getTokenOrFail = () => {
         const token = localStorage.getItem("accessToken") || "";
@@ -550,6 +604,8 @@ export function GroupSettingView() {
         setIsArchived(archivedBool);
 
         const parentStudioId = String(data.studioId ?? "").trim();
+        setParentStudioId(parentStudioId);
+        setIsIndependentGroup(!parentStudioId);
         if (parentStudioId) {
             try {
                 const studioResult = await getStudioById(parentStudioId, locale);
@@ -650,6 +706,51 @@ export function GroupSettingView() {
         setCurrentUserId(getCurrentUserId());
     }, []);
 
+    useEffect(() => {
+        let active = true;
+
+        (async () => {
+            try {
+                if (isIndependentGroup) {
+                    const res = await fetchGroupsPageData();
+                    if (!active) return;
+
+                    setComparableGroups(
+                        (res.independent ?? []).map((group) => ({
+                            id: String((group as { id?: string | null }).id ?? "").trim(),
+                            name: String((group as { groupName?: string | null; name?: string | null }).groupName ?? group.name ?? "").trim()
+                        }))
+                    );
+                    return;
+                }
+
+                if (!parentStudioId) {
+                    if (!active) return;
+                    setComparableGroups([]);
+                    return;
+                }
+
+                const res = await getStudioGroups(parentStudioId, locale);
+                if (!active) return;
+
+                const groups = Array.isArray(res?.data?.studioGroups) ? res.data.studioGroups : [];
+                setComparableGroups(
+                    groups.map((group: { groupId?: string | null; id?: string | null; groupName?: string | null; name?: string | null }) => ({
+                        id: String((group as { groupId?: string | null; id?: string | null }).groupId ?? group.id ?? "").trim(),
+                        name: String((group as { groupName?: string | null; name?: string | null }).groupName ?? group.name ?? "").trim()
+                    }))
+                );
+            } catch {
+                if (!active) return;
+                setComparableGroups([]);
+            }
+        })();
+
+        return () => {
+            active = false;
+        };
+    }, [isIndependentGroup, locale, parentStudioId]);
+
     // Listen for pending member approval changes and reload members
     useEffect(() => {
         const handleMembersChanged = (event: Event) => {
@@ -684,9 +785,15 @@ export function GroupSettingView() {
 
         if (isEditing) {
             setGeneralError("");
+            setGroupNameApiError("");
             const validation = groupSettingSchema.safeParse({ groupName, description });
             if (!validation.success) {
                 setGeneralError(validation.error.issues[0]?.message || "Dữ liệu không hợp lệ");
+                return;
+            }
+
+            if (duplicateGroupNameError) {
+                setGroupNameApiError(duplicateGroupNameError);
                 return;
             }
 
@@ -711,7 +818,12 @@ export function GroupSettingView() {
             );
 
             if (res.status !== "success" || !res.data) {
-                setGeneralError(res.message || t("errors.loadGroupFailed"));
+                const mappedError = remapGroupSettingsErrorMessage(res.message || t("errors.loadGroupFailed"));
+                if (mappedError === duplicateGroupNameMessage) {
+                    setGroupNameApiError(mappedError);
+                } else {
+                    setGeneralError(mappedError);
+                }
                 return;
             }
 
@@ -740,13 +852,18 @@ export function GroupSettingView() {
             setInitialIsTemplate(isTemplate);
             setInitialRequiresMemberApproval(requiresMemberApproval);
             setInitialAllowMemberUpdateProgress(allowMemberUpdateProgress);
+            setComparableGroups((prev) =>
+                prev.map((group) => (group.id === groupId ? { ...group, name: validation.data.groupName } : group))
+            );
 
             await loadGroup(groupId);
 
+            setGroupNameApiError("");
             setIsEditing(false);
             return;
         }
 
+        setGroupNameApiError("");
         setIsEditing(true);
     };
 
@@ -762,6 +879,7 @@ export function GroupSettingView() {
         setIsTemplate(initialIsTemplate);
         setRequiresMemberApproval(initialRequiresMemberApproval);
         setAllowMemberUpdateProgress(initialAllowMemberUpdateProgress);
+        setGroupNameApiError("");
         setGeneralError("");
         setIsEditing(false);
     };
@@ -1336,12 +1454,18 @@ export function GroupSettingView() {
                                         maxLength={GROUP_NAME_MAX_LENGTH}
                                         onChange={(e) => {
                                             setGroupName(e.target.value);
+                                            if (groupNameApiError) setGroupNameApiError("");
                                             if (generalError) setGeneralError("");
                                         }}
                                         className="mt-2 h-10 rounded-xl border-gray-200 focus-visible:border-orange-500 focus-visible:ring-orange-500 disabled:opacity-70"
                                     />
-                                    <div className="mt-1 text-right text-gray-500 text-xs">
-                                        {groupName.length}/{GROUP_NAME_MAX_LENGTH}
+                                    <div className="mt-1 flex items-start justify-between gap-3">
+                                        <div className="min-h-[1rem] text-red-600 text-xs">
+                                            {groupNameFieldError}
+                                        </div>
+                                        <div className="shrink-0 text-gray-500 text-xs">
+                                            {groupName.length}/{GROUP_NAME_MAX_LENGTH}
+                                        </div>
                                     </div>
                                 </div>
 
@@ -1567,9 +1691,12 @@ export function GroupSettingView() {
                                                             className="h-10 w-10 rounded-full object-cover"
                                                         />
                                                     ) : (
-                                                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 font-bold text-gray-700 text-sm">
-                                                            {m.initials}
-                                                        </div>
+                                                        <DefaultNameAvatar
+                                                            name={m.name}
+                                                            seed={m.id || m.email || m.name}
+                                                            className="h-10 w-10"
+                                                            fallbackClassName="text-sm font-bold"
+                                                        />
                                                     )}
                                                     <div className="min-w-0">
                                                         <div className="truncate font-semibold text-gray-900 text-sm">

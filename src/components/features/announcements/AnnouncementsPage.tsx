@@ -3,6 +3,7 @@
 import {
     BellOutlined,
     CheckCircleOutlined,
+    LeftOutlined,
     ClockCircleOutlined,
     CloseOutlined,
     DeleteOutlined,
@@ -51,6 +52,7 @@ type PublicAnnouncementItem = Announcement & {
 };
 
 const DELETED_SYSTEM_ANNOUNCEMENTS_KEY = "study_studio_deleted_system_announcements";
+const ANNOUNCEMENTS_PER_PAGE = 10;
 
 function getDeletedSystemAnnouncementsStorageKey(): string {
     if (typeof window === "undefined") return DELETED_SYSTEM_ANNOUNCEMENTS_KEY;
@@ -98,6 +100,7 @@ export function AnnouncementsPage() {
     const [activeTab, setActiveTab] = useState<"public" | "personal">("public");
     const [searchQuery, setSearchQuery] = useState("");
     const [sortBy, setSortBy] = useState("newest");
+    const [page, setPage] = useState(1);
 
     const [selectedId, setSelectedId] = useState<string | null>(null);
     const [selectedDetail, setSelectedDetail] = useState<(PublicAnnouncementItem | UserAnnouncement) | null>(null);
@@ -451,6 +454,36 @@ export function AnnouncementsPage() {
         return activeTab === "public" ? filterAndSort(publicAnnouncements) : filterAndSort(userAnnouncements);
     }, [activeTab, publicAnnouncements, userAnnouncements, searchQuery, sortBy]);
 
+    const totalPages = Math.max(1, Math.ceil(currentItems.length / ANNOUNCEMENTS_PER_PAGE));
+    const paginatedItems = useMemo(() => {
+        const start = (page - 1) * ANNOUNCEMENTS_PER_PAGE;
+        return currentItems.slice(start, start + ANNOUNCEMENTS_PER_PAGE);
+    }, [currentItems, page]);
+
+    const paginationLabels = useMemo(
+        () =>
+            locale === "vi"
+                ? {
+                      previous: "Trước",
+                      next: "Tiếp",
+                      pageInfo: `Trang ${page}/${totalPages} • ${currentItems.length} mục`
+                  }
+                : {
+                      previous: "Previous",
+                      next: "Next",
+                      pageInfo: `Page ${page}/${totalPages} • ${currentItems.length} items`
+                  },
+        [currentItems.length, locale, page, totalPages]
+    );
+
+    useEffect(() => {
+        setPage(1);
+    }, [activeTab, searchQuery, sortBy]);
+
+    useEffect(() => {
+        setPage((prev) => Math.min(prev, totalPages));
+    }, [totalPages]);
+
     if (isLoading) {
         return (
             <div className="flex min-h-[70vh] items-center justify-center bg-white">
@@ -688,7 +721,7 @@ export function AnnouncementsPage() {
                                 />
                             ) : (
                                 <div className="grid gap-4">
-                                    {currentItems.map((ann) => (
+                                    {paginatedItems.map((ann) => (
                                         <AnnouncementCard
                                             key={
                                                 activeTab === "public"
@@ -721,6 +754,32 @@ export function AnnouncementsPage() {
                             )}
                         </motion.div>
                     </AnimatePresence>
+
+                    {currentItems.length > 0 ? (
+                        <div className="mt-6 flex items-center justify-center gap-3">
+                            <button
+                                type="button"
+                                onClick={() => setPage((prev) => Math.max(1, prev - 1))}
+                                disabled={page <= 1}
+                                className="inline-flex h-11 items-center gap-2 rounded-2xl border border-zinc-200 bg-white px-4 font-medium text-sm text-zinc-700 shadow-sm transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-45">
+                                <LeftOutlined />
+                                {paginationLabels.previous}
+                            </button>
+
+                            <div className="rounded-2xl border border-zinc-200 bg-white px-4 py-2.5 text-center font-medium text-sm text-zinc-700 shadow-sm">
+                                {paginationLabels.pageInfo}
+                            </div>
+
+                            <button
+                                type="button"
+                                onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))}
+                                disabled={page >= totalPages}
+                                className="inline-flex h-11 items-center gap-2 rounded-2xl border border-zinc-200 bg-white px-4 font-medium text-sm text-zinc-700 shadow-sm transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-45">
+                                {paginationLabels.next}
+                                <RightOutlined />
+                            </button>
+                        </div>
+                    ) : null}
                 </div>
             </div>
 

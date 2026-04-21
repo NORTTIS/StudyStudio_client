@@ -10,6 +10,7 @@ import { env } from "@/env";
 import type { components } from "@/api/types";
 import AssigneeAvatar from "@/components/features/group/task/AssigneeAvatar";
 import TaskDetailModal from "@/components/features/group/task/TaskDetailModal";
+import { resolveAvatarUrl } from "@/lib/avatar";
 
 // ==================== Types ====================
 
@@ -253,7 +254,7 @@ function buildAssignee(
     const assigneeName = fullName || unassignedLabel;
     return {
         name: assigneeName,
-        avatarUrl: String(user.avatarUrl ?? "").trim() || null,
+        avatarUrl: resolveAvatarUrl(user),
         initials: buildInitials(assigneeName)
     };
 }
@@ -740,6 +741,7 @@ export default function TaskStatusPopup({
                                                                     avatarUrl={row.assigneeAvatarUrl}
                                                                     name={row.assigneeName}
                                                                     initials={row.assigneeInitials}
+                                                                    seed={row.assigneeId}
                                                                     size={32}
                                                                     className="text-[11px]"
                                                                 />

@@ -20,11 +20,33 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
+import { DefaultNameAvatar } from "@/components/ui/default-name-avatar";
 import { cancelPendingJoinRequest } from "@/api/invites";
 import { hexToGradient } from "@/lib/utils";
 import { mapRole } from "./group.api";
 import { RolePill } from "./RolePill";
 import type { GroupCardDto } from "./types";
+
+function safeAvatarUrl(input?: string | null) {
+    const raw = String(input ?? "").trim();
+    if (!raw) return null;
+    return raw.replace("localhost", "127.0.0.1");
+}
+
+function getEntityAvatarUrl(entity?: Record<string, unknown> | null) {
+    const nestedUser = (entity?.user as Record<string, unknown> | undefined) ?? {};
+
+    return (
+        safeAvatarUrl(String(entity?.avatarUrl ?? "").trim()) ??
+        safeAvatarUrl(String(entity?.avatar ?? "").trim()) ??
+        safeAvatarUrl(String(entity?.profilePictureUrl ?? "").trim()) ??
+        safeAvatarUrl(String(entity?.profileImageUrl ?? "").trim()) ??
+        safeAvatarUrl(String(nestedUser.avatarUrl ?? "").trim()) ??
+        safeAvatarUrl(String(nestedUser.avatar ?? "").trim()) ??
+        safeAvatarUrl(String(nestedUser.profilePictureUrl ?? "").trim()) ??
+        safeAvatarUrl(String(nestedUser.profileImageUrl ?? "").trim())
+    );
+}
 
 function toBooleanLike(value: unknown): boolean | null {
     if (typeof value === "boolean") return value;
@@ -148,21 +170,26 @@ export function GroupCard({
     })();
 
     const displayTitle = title.length > 30 ? `${title.slice(0, 30)}...` : title;
+    const createdByAvatarUrl = getEntityAvatarUrl(group.createdBy as Record<string, unknown> | null);
+    const createdBySeed = String(group.createdBy?.id ?? group.createdBy?.firstName ?? group.createdBy?.lastName ?? "").trim();
 
     const membersPreview = group.membersPreview || [];
-    const memberInitialsToShow = membersPreview
-        .map((u) => {
-            const f = (u.firstName || "").trim();
-            const l = (u.lastName || "").trim();
-            return `${f ? f[0].toUpperCase() : ""}${l ? l[0].toUpperCase() : ""}`;
-        })
-        .filter((item) => item !== "" && item !== createdByInitials)
-        .filter((item, index, arr) => arr.indexOf(item) === index);
+    const previewMembersToShow = membersPreview.slice(0, 3).map((member, index) => {
+        const firstName = String(member.firstName ?? "").trim();
+        const lastName = String(member.lastName ?? "").trim();
+        const initials = `${firstName ? firstName[0].toUpperCase() : ""}${lastName ? lastName[0].toUpperCase() : ""}` || `M${index + 1}`;
+        const avatarUrl = getEntityAvatarUrl(member as Record<string, unknown>);
 
-    const memberAvatarsToShow = membersPreview
-        .map((u) => u.avatarUrl)
-        .filter((url): url is string => !!url)
-        .slice(0, 5);
+        return {
+            key: String(member.id ?? avatarUrl ?? `member-${index}`),
+            seed: String(member.id ?? firstName ?? lastName ?? `member-${index}`),
+            name: `${firstName} ${lastName}`.trim() || initials,
+            avatarUrl,
+            initials
+        };
+    });
+    const totalMembersForPreview = Math.max(Number(group.memberCount ?? 0), membersPreview.length);
+    const remainingMembersCount = Math.max(0, totalMembersForPreview - previewMembersToShow.length);
 
     return (
         <div
@@ -350,10 +377,10 @@ export function GroupCard({
                     <div className="flex items-center justify-between text-sm">
                         <div className="flex items-center gap-2 text-[#6F6B99]">
                             <span className="text-xs">{t("createdBy")}</span>
-                            {group.createdBy?.avatarUrl ? (
+                            {createdByAvatarUrl ? (
                                 <div className="relative h-6 w-6 overflow-hidden rounded-full ring-1 ring-[#E5E5E5]">
                                     <Image
-                                        src={group.createdBy.avatarUrl}
+                                        src={createdByAvatarUrl}
                                         alt={createdByInitials}
                                         fill
                                         className="object-cover"
@@ -361,9 +388,12 @@ export function GroupCard({
                                     />
                                 </div>
                             ) : (
-                                <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-[#F4F5FA] text-xs font-semibold text-[#261E33]">
-                                    {createdByInitials}
-                                </span>
+                                <DefaultNameAvatar
+                                    name={`${group.createdBy?.firstName ?? ""} ${group.createdBy?.lastName ?? ""}`.trim() || createdByInitials}
+                                    seed={createdBySeed || createdByInitials}
+                                    className="h-6 w-6"
+                                    fallbackClassName="text-xs"
+                                />
                             )}
                         </div>
 
@@ -384,25 +414,34 @@ export function GroupCard({
                         </div>
                     </div>
 
-                    {memberAvatarsToShow.length > 0 ? (
+                    {previewMembersToShow.length > 0 ? (
                         <div className="mt-2 flex items-center">
-                            {memberAvatarsToShow.map((avatarUrl, idx) => (
+                            {previewMembersToShow.map((member, idx) => (
                                 <div
-                                    key={avatarUrl || `avatar-${idx}`}
+                                    key={member.key}
                                     className={`relative h-7 w-7 overflow-hidden rounded-full ring-2 ring-white ${idx === 0 ? "" : "-ml-1"}`}>
-                                    <Image
-                                        src={avatarUrl}
-                                        alt={`Member ${idx + 1}`}
-                                        fill
-                                        className="object-cover"
-                                        sizes="28px"
-                                    />
+                                    {member.avatarUrl ? (
+                                        <Image
+                                            src={member.avatarUrl}
+                                            alt={`Member ${idx + 1}`}
+                                            fill
+                                            className="object-cover"
+                                            sizes="28px"
+                                        />
+                                    ) : (
+                                        <DefaultNameAvatar
+                                            name={member.name}
+                                            seed={member.seed}
+                                            className="h-full w-full"
+                                            fallbackClassName="text-[10px]"
+                                        />
+                                    )}
                                 </div>
                             ))}
 
-                            {memberAvatarsToShow.length < memberInitialsToShow.length ? (
+                            {remainingMembersCount > 0 ? (
                                 <span className="-ml-1 inline-flex h-7 min-w-7 items-center justify-center rounded-full bg-[#F4F5FA] px-2 text-xs font-semibold text-[#261E33] ring-2 ring-white">
-                                    +{memberInitialsToShow.length - memberAvatarsToShow.length}
+                                    +{remainingMembersCount}
                                 </span>
                             ) : null}
                         </div>

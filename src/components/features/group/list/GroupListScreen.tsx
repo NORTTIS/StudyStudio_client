@@ -23,6 +23,7 @@ import TaskDetailModal from "@/components/features/group/task/TaskDetailModal";
 import AssigneeAvatar from "@/components/features/group/task/AssigneeAvatar";
 import { getGroupMembers } from "@/api/groups";
 import type { GroupMemberDto } from "@/api/groups";
+import { resolveAvatarUrl } from "@/lib/avatar";
 
 type ApiResponse<T> = { status?: string; code?: string; message?: string; data?: T };
 
@@ -218,7 +219,7 @@ function buildAssignee(user: UserDto | null | undefined, unassignedText: string)
 
     return {
         name: assigneeName,
-        avatarUrl: String(user?.avatarUrl ?? "").trim() || null,
+        avatarUrl: resolveAvatarUrl(user),
         initials: buildInitials(assigneeName)
     };
 }
@@ -581,6 +582,7 @@ function FancyDropdown({
                         <AssigneeAvatar
                             name={activeOption.label}
                             initials={activeOption.initials}
+                            seed={activeOption.value}
                             size={28}
                             unassigned={activeOption.unassigned}
                             className={cn(
@@ -649,6 +651,7 @@ function FancyDropdown({
                                                 <AssigneeAvatar
                                                     name={option.label}
                                                     initials={option.initials}
+                                                    seed={option.value}
                                                     size={28}
                                                     unassigned={option.unassigned}
                                                     className="text-[10px]"
@@ -849,7 +852,7 @@ export function GroupListScreen() {
                 return {
                     value: String(m.userId ?? "").trim() || "__unknown__",
                     label: fullName,
-                    avatarUrl: String(m.avatarUrl ?? "").trim() || null,
+                    avatarUrl: resolveAvatarUrl(m),
                     initials: buildInitials(fullName),
                     unassigned: false
                 };
@@ -1275,6 +1278,7 @@ export function GroupListScreen() {
                                                             avatarUrl={row.assigneeAvatarUrl}
                                                             name={row.assigneeName}
                                                             initials={row.assigneeInitials}
+                                                            seed={row.assigneeId}
                                                             size={32}
                                                             className="text-[11px]"
                                                         />

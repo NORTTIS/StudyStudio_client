@@ -10,9 +10,11 @@ import { createPortal } from "react-dom";
 import { twMerge } from "tailwind-merge";
 import { apiFetch } from "@/api/api-client";
 import { getAccessToken, getUserData } from "@/api/auth";
+import { getGroupMembers } from "@/api/groups";
 import { getUserProfile } from "@/api/user-profile";
 import type { components } from "@/api/types";
 import { Container } from "@/components/common";
+import { DefaultNameAvatar } from "@/components/ui/default-name-avatar";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -32,6 +34,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { toast } from "@/components/ui/use-toast";
 import { getRoleIcon, roleDisplayText, getRoleColor } from "@/components/features/group/RoleUtils";
+import { resolveAvatarUrl } from "@/lib/avatar";
 
 type UserLite = {
     id: string;
@@ -130,6 +133,12 @@ function safeAvatarUrl(input?: string | null) {
     return raw.replace("localhost", "127.0.0.1");
 }
 
+function isRestrictedMemberRole(memberRole?: string | null | number): boolean {
+    if (!memberRole) return false;
+    const roleStr = String(memberRole).trim().toLowerCase();
+    return roleStr === "3" || roleStr === "4" || roleStr === "commenter" || roleStr === "viewer";
+}
+
 function normalizeUserId(value?: string | null) {
     return String(value ?? "")
         .trim()
@@ -138,75 +147,6 @@ function normalizeUserId(value?: string | null) {
 
 function escapeRegExp(value: string) {
     return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
-
-/**
- * Nếu nội dung thực tế đang mention toàn bộ thành viên trong nhóm
- * (trừ chính tác giả), hàm này sẽ rút gọn chuỗi hiển thị về dạng `@__all__`.
- *
- * Mục tiêu là giúp UI render gọn hơn khi backend đang lưu mention dưới dạng
- * nhiều `@userId` liên tiếp trong cùng một nội dung.
- */
-function compressAllMentionsForDisplay(text: string, membersById: Record<string, string>, authorId?: string) {
-    const allMemberIds = Object.keys(membersById)
-        .map((id) => String(id).trim())
-        .filter(Boolean);
-
-    if (allMemberIds.length === 0) return text;
-
-    const normalizedAuthorId = normalizeUserId(authorId);
-    const expectedAllIds = allMemberIds.filter((id) => normalizeUserId(id) !== normalizedAuthorId);
-    if (expectedAllIds.length < 2) return text;
-
-    // Quét toàn bộ mention theo định dạng UUID để biết người dùng đã mention những ai.
-    const mentionRegex = /@([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})/g;
-    const mentionedIds = new Set<string>();
-
-    for (const match of text.matchAll(mentionRegex)) {
-        mentionedIds.add(normalizeUserId(match[1]));
-    }
-
-    const expectedNormalizedIds = new Set(expectedAllIds.map((id) => normalizeUserId(id)));
-
-    const isAllMentioned =
-        expectedNormalizedIds.size > 1 &&
-        expectedNormalizedIds.size === mentionedIds.size &&
-        Array.from(expectedNormalizedIds).every((id) => mentionedIds.has(id));
-
-    if (!isAllMentioned) return text;
-
-    const escaped = expectedAllIds.map((id) => `@${escapeRegExp(id)}`);
-    const patterns: string[] = [];
-
-    const permutations = (arr: string[]): string[][] => {
-        if (arr.length <= 1) return [arr];
-        const result: string[][] = [];
-        for (let i = 0; i < arr.length; i++) {
-            const current = arr[i];
-            const rest = arr.slice(0, i).concat(arr.slice(i + 1));
-            for (const tail of permutations(rest)) {
-                result.push([current, ...tail]);
-            }
-        }
-        return result;
-    };
-
-    if (escaped.length <= 6) {
-        for (const perm of permutations(escaped)) {
-            patterns.push(perm.join("\\s+"));
-        }
-    } else {
-        patterns.push(escaped.join("\\s+"));
-    }
-
-    let output = text;
-
-    for (const pattern of patterns) {
-        const re = new RegExp(`(^|\\s)(${pattern})(?=\\s|$)`, "g");
-        output = output.replace(re, (_match, prefix) => `${prefix}@__all__`);
-    }
-
-    return output;
 }
 
 /**
@@ -265,7 +205,7 @@ function dtoToUserLite(t: DiscussTranslate, userId?: string, user?: HubUserDto |
         id: user?.id || userId || "unknown-user",
         name,
         initials: initialsOf(name),
-        avatarUrl: safeAvatarUrl(user?.avatarUrl ?? "")
+        avatarUrl: resolveAvatarUrl(user)
     };
 }
 
@@ -342,7 +282,7 @@ function buildPostsFromMessages(messages: GroupMessageDto[] | null | undefined, 
     return [...postMap.values()];
 }
 
-function Avatar({ initials, avatarUrl }: { initials: string; avatarUrl?: string | null }) {
+function Avatar({ name, initials, avatarUrl }: { name?: string; initials: string; avatarUrl?: string | null }) {
     if (avatarUrl) {
         return (
             <Image
@@ -357,9 +297,12 @@ function Avatar({ initials, avatarUrl }: { initials: string; avatarUrl?: string 
     }
 
     return (
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#F3F4F6] font-semibold text-[#261E33] text-xs ring-1 ring-black/5">
-            {initials}
-        </div>
+        <DefaultNameAvatar
+            name={name || initials}
+            seed={name || initials}
+            className="h-9 w-9 shrink-0 ring-1 ring-black/5"
+            fallbackClassName="text-xs"
+        />
     );
 }
 
@@ -390,10 +333,7 @@ function RichTextWithMentions({
     const locale = useLocale();
     const unknownMentionLabel = locale.startsWith("vi") ? "người lạ" : "unknown user";
     const mentionAllShort = t("mentionAllShort");
-    const displayText = React.useMemo(
-        () => compressAllMentionsForDisplay(text, membersById, authorId),
-        [text, membersById, authorId]
-    );
+    const displayText = text;
 
     const normalizedDisplayText = React.useMemo(() => {
         const aliases = ["all", "mọi người", mentionAllShort]
@@ -911,9 +851,12 @@ const MentionTextarea = React.forwardRef<
                                                     className="h-10 w-10 rounded-full object-cover"
                                                 />
                                             ) : (
-                                                <div className="grid h-10 w-10 place-items-center rounded-full bg-zinc-200 text-sm font-semibold text-zinc-700">
-                                                    {safeInitialsFromName(displayName)}
-                                                </div>
+                                                <DefaultNameAvatar
+                                                    name={displayName}
+                                                    seed={u.id || displayName}
+                                                    className="h-10 w-10"
+                                                    fallbackClassName="text-sm font-semibold"
+                                                />
                                             )}
                                         </div>
 
@@ -1046,7 +989,7 @@ function ReplyItemView({
     const t = useTranslations("GroupDiscussPage");
     return (
         <div className="flex gap-3">
-            <Avatar initials={r.author.initials} avatarUrl={r.author.avatarUrl} />
+            <Avatar name={r.author.name} initials={r.author.initials} avatarUrl={r.author.avatarUrl} />
             <div className="min-w-0 flex-1">
                 <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
@@ -1143,7 +1086,7 @@ function PostCard({
     return (
         <div className="rounded-2xl border border-[#EDEDED] bg-white p-5 shadow-sm">
             <div className="flex items-start gap-3">
-                <Avatar initials={post.author.initials} avatarUrl={post.author.avatarUrl} />
+                <Avatar name={post.author.name} initials={post.author.initials} avatarUrl={post.author.avatarUrl} />
 
                 <div className="min-w-0 flex-1">
                     <div className="flex items-start justify-between gap-3">
@@ -1306,7 +1249,7 @@ export default function GroupDiscussPage() {
             id: user?.id || "me",
             name: fullName,
             initials: safeInitials(fullName, t("me")),
-            avatarUrl: safeAvatarUrl(user?.avatarUrl ?? "")
+        avatarUrl: resolveAvatarUrl(user)
         });
 
         // Lấy thêm hồ sơ đầy đủ để ưu tiên avatar mới nhất của người dùng hiện tại,
@@ -1317,7 +1260,7 @@ export default function GroupDiscussPage() {
                 if (result.status === "success" && result.data) {
                     setMe((prev) => ({
                         ...prev,
-                        avatarUrl: safeAvatarUrl(result.data?.avatarUrl)
+                        avatarUrl: resolveAvatarUrl(result.data)
                     }));
                 }
             } catch { }
@@ -1345,15 +1288,37 @@ export default function GroupDiscussPage() {
     const canComment = userRole !== "viewer";
     const isComposerDisabled = !(isConnected && canComment) || composerText.trim().length === 0;
 
+    const avatarByUserId = React.useMemo(() => {
+        const map: Record<string, string> = {};
+
+        const put = (id?: string | null, avatarUrl?: string | null) => {
+            const key = String(id ?? "").trim();
+            const value = String(avatarUrl ?? "").trim();
+            if (!(key && value)) return;
+            map[key] = value;
+        };
+
+        put(me.id, me.avatarUrl);
+
+        for (const post of posts) {
+            put(post.author.id, post.author.avatarUrl);
+            for (const reply of post.replies) {
+                put(reply.author.id, reply.author.avatarUrl);
+            }
+        }
+
+        return map;
+    }, [me.avatarUrl, me.id, posts]);
+
     const mentionUsers = React.useMemo<MentionUser[]>(
         () =>
             members.map((m) => ({
                 id: m.userId,
                 name: m.name,
                 subtitle: m.email ?? "",
-                avatarUrl: safeAvatarUrl(m.avatarUrl)
+                avatarUrl: m.avatarUrl || avatarByUserId[m.userId] || null
             })),
-        [members]
+        [avatarByUserId, members]
     );
 
     const isOwnerId = React.useCallback(
@@ -1505,18 +1470,23 @@ export default function GroupDiscussPage() {
         // Tải danh sách thành viên để phục vụ hiển thị mention, map tên người dùng
         // và suy luận một số quy tắc quyền theo từng thành viên.
         const loadMembers = async () => {
-            if (!rawBase) return;
-
             try {
-                const res = await apiFetch<any>(`${rawBase}/group/${groupId}/members`, {
-                    method: "GET",
-                    locale
-                });
-
-                const list: any[] = res?.data?.data?.members || res?.data?.members || res?.data || [];
+                const res = await getGroupMembers(groupId, locale);
+                const list = (res?.data?.members ?? [])
+                    .filter((m) => !!String(m?.userId ?? "").trim())
+                    .filter((m) => !isRestrictedMemberRole(m?.role));
 
                 const nameMap: Record<string, string> = {};
                 const roleMap: Record<string, GroupRole> = {};
+                const nextMembersById = new Map<
+                    string,
+                    {
+                        userId: string;
+                        name: string;
+                        email?: string | null;
+                        avatarUrl?: string | null;
+                    }
+                >();
                 const nextMembers: Array<{
                     userId: string;
                     name: string;
@@ -1525,31 +1495,33 @@ export default function GroupDiscussPage() {
                 }> = [];
 
                 for (const m of list) {
-                    const id = String(m?.id || m?.userId || "").trim();
+                    const id = String(m?.userId ?? "").trim();
                     if (!id) continue;
 
                     const name =
-                        [m?.firstName, m?.lastName].filter(Boolean).join(" ").trim() ||
-                        String(m?.userName || m?.username || "").trim() ||
-                        (m?.email ? String(m.email).split("@")[0] : "") ||
+                        `${m.firstName ?? ""} ${m.lastName ?? ""}`.trim() ||
+                        (m.email ? String(m.email).split("@")[0] : "") ||
                         t("userFallback");
 
-                    const email = m?.email ?? m?.user?.email ?? null;
-                    const avatarUrl = safeAvatarUrl(m?.avatarUrl ?? m?.user?.avatarUrl ?? "");
+                    const email = m.email ?? null;
+                    const avatarUrl = resolveAvatarUrl(m);
+                    const existingMember = nextMembersById.get(id);
 
                     nameMap[id] = name;
-                    nextMembers.push({
+                    nextMembersById.set(id, {
                         userId: id,
-                        name,
-                        email,
-                        avatarUrl: avatarUrl || null
+                        name: existingMember?.name || name,
+                        email: existingMember?.email || email,
+                        avatarUrl:
+                            avatarUrl ||
+                            existingMember?.avatarUrl ||
+                            null
                     });
 
-                    const rawRole =
-                        m?.role ?? m?.groupRole ?? m?.userRole ?? m?.memberRole ?? m?.groupMemberRole ?? m?.roles?.[0];
-
-                    roleMap[id] = toRole(rawRole);
+                    roleMap[id] = toRole(m.role);
                 }
+
+                nextMembers.push(...nextMembersById.values());
 
                 if (!isDisposed) {
                     setMembers(nextMembers);
@@ -1785,7 +1757,7 @@ export default function GroupDiscussPage() {
                 <div className="rounded-2xl border border-[#EDEDED] bg-white p-5 shadow-sm">
                     {canComment ? (
                         <div className="flex gap-3">
-                            <Avatar initials={me.initials} avatarUrl={me.avatarUrl} />
+                            <Avatar name={me.name} initials={me.initials} avatarUrl={me.avatarUrl} />
                             <div className="min-w-0 flex-1">
                                 <MentionTextarea
                                     ref={composerMentionRef}

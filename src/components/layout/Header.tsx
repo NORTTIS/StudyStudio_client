@@ -8,6 +8,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { logout } from "@/api/auth";
 import { getUserProfile, type UserProfile } from "@/api/user-profile";
 import { NotificationDropdown } from "@/components/common/NotificationDropdown";
+import { DefaultNameAvatar } from "@/components/ui/default-name-avatar";
 
 const SettingsIcon = () => (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -115,16 +116,18 @@ export function Header({ userProfile: userProfileProp }: HeaderProps = {}) {
     const userData = useMemo(() => {
         if (userProfile) {
             return {
+                id: userProfile.userId,
                 name: `${userProfile.firstName} ${userProfile.lastName}`.trim(),
                 email: userProfile.email,
-                avatar: userProfile.avatarUrl || "/images/image-removebg-preview.png"
+                avatar: userProfile.avatarUrl || ""
             };
         }
 
         return {
+            id: "",
             name: "username",
             email: "email@gmail.com",
-            avatar: "/images/image-removebg-preview.png"
+            avatar: ""
         };
     }, [userProfile]);
 
@@ -191,8 +194,19 @@ export function Header({ userProfile: userProfileProp }: HeaderProps = {}) {
                             type="button"
                             onClick={() => setIsUserMenuOpen((prev) => !prev)}
                             className="group flex items-center gap-2 rounded-xl px-2.5 py-2 transition-all duration-300 ease-out hover:bg-[#F4F5FA] hover:shadow-sm">
-                            <div className="relative h-9 w-9 overflow-hidden rounded-full bg-gray-200 ring-2 ring-transparent transition-all duration-300 ease-out group-hover:ring-[#FFE1CC]">
-                                <Image src={userData.avatar} alt={userData.name} fill className="object-cover" />
+                            <div className="relative ring-2 ring-transparent transition-all duration-300 ease-out group-hover:ring-[#FFE1CC]">
+                                {userData.avatar ? (
+                                    <div className="relative h-9 w-9 overflow-hidden rounded-full bg-gray-200">
+                                        <Image src={userData.avatar} alt={userData.name} fill className="object-cover" />
+                                    </div>
+                                ) : (
+                                    <DefaultNameAvatar
+                                        name={userProfile?.firstName || userData.name}
+                                        seed={userData.id || userData.email || userData.name}
+                                        className="h-9 w-9"
+                                        fallbackClassName="text-sm"
+                                    />
+                                )}
                             </div>
 
                             <div className="hidden max-w-[220px] text-left md:block">

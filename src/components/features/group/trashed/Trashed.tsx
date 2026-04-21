@@ -12,6 +12,7 @@ import {
     Users,
     X
 } from "lucide-react";
+import { useLocale } from "next-intl";
 import { useTranslations } from "next-intl";
 import { useParams } from "next/navigation";
 import * as React from "react";
@@ -304,6 +305,15 @@ function normalizeText(input?: string | null) {
     return String(input ?? "")
         .toLocaleLowerCase("vi-VN")
         .trim();
+}
+
+function normalizeMemberRole(raw?: string | null) {
+    return String(raw ?? "")
+        .trim()
+        .replace(/^ROLE_/i, "")
+        .replace(/^GROUP_/i, "")
+        .replace(/^STUDIO_/i, "")
+        .toLowerCase();
 }
 
 function matchDeletedDate(raw?: string | null, filter?: DeletedDateFilter | null) {
@@ -880,9 +890,34 @@ function DeletedByPicker({
     onSelect: (value: string | null) => void;
 }) {
     const t = useTranslations("TrashedPage");
+    const locale = useLocale();
+    const [query, setQuery] = React.useState("");
+
+    const filteredOptions = React.useMemo(() => {
+        const normalizedQuery = normalizeText(query);
+        if (!normalizedQuery) return options;
+        return options.filter((option) => normalizeText(option.name).includes(normalizedQuery));
+    }, [options, query]);
+
+    React.useEffect(() => {
+        setQuery("");
+    }, [options]);
 
     return (
-        <div className="max-h-[320px] overflow-y-auto p-2">
+        <div className="p-2">
+            <div className="sticky top-0 z-10 bg-white pb-2">
+                <div className="relative">
+                    <Search className="-translate-y-1/2 pointer-events-none absolute top-1/2 left-3 h-4 w-4 text-zinc-400" />
+                    <input
+                        type="text"
+                        value={query}
+                        onChange={(e) => setQuery(e.target.value)}
+                        placeholder={locale === "vi" ? "Tìm người xóa..." : "Search deleted by..."}
+                        className="h-10 w-full rounded-xl border border-zinc-200 bg-white pr-3 pl-9 text-sm text-zinc-800 outline-none transition focus:border-orange-300 focus:ring-2 focus:ring-orange-100"
+                    />
+                </div>
+            </div>
+
             <button
                 type="button"
                 onClick={() => onSelect(null)}
@@ -895,20 +930,28 @@ function DeletedByPicker({
                 {t("filters.deletedBy.all")}
             </button>
 
-            {options.map((option) => (
-                <button
-                    key={option.id}
-                    type="button"
-                    onClick={() => onSelect(option.id)}
-                    className={cn(
-                        "mb-1 flex w-full items-center rounded-xl px-3 py-2.5 text-left text-sm transition",
-                        selectedId === option.id
-                            ? "bg-orange-50 font-semibold text-orange-600"
-                            : "font-medium text-zinc-700 hover:bg-zinc-50"
-                    )}>
-                    <span className="truncate">{option.name}</span>
-                </button>
-            ))}
+            <div className="max-h-[154px] overflow-y-auto pr-1">
+                {filteredOptions.length === 0 ? (
+                    <div className="px-3 py-2 text-sm text-zinc-500">
+                        {locale === "vi" ? "Không tìm thấy người phù hợp" : "No matching people found"}
+                    </div>
+                ) : (
+                    filteredOptions.map((option) => (
+                        <button
+                            key={option.id}
+                            type="button"
+                            onClick={() => onSelect(option.id)}
+                            className={cn(
+                                "mb-1 flex w-full items-center rounded-xl px-3 py-2.5 text-left text-sm transition",
+                                selectedId === option.id
+                                    ? "bg-orange-50 font-semibold text-orange-600"
+                                    : "font-medium text-zinc-700 hover:bg-zinc-50"
+                            )}>
+                            <span className="truncate">{option.name}</span>
+                        </button>
+                    ))
+                )}
+            </div>
         </div>
     );
 }
@@ -1101,8 +1144,8 @@ export default function Trashed() {
                 const userId = String(member?.userId ?? "").trim();
                 if (!userId) continue;
 
-                const role = String(member?.role ?? "").trim().toLowerCase();
-                if (!role || !["owner", "moderator"].includes(role)) continue;
+                const role = normalizeMemberRole(member?.role);
+                if (!role || !["owner", "moderator", "member"].includes(role)) continue;
 
                 const fullName = buildFullName(member?.firstName, member?.lastName, member?.email);
                 nextMemberNameMap[userId] = fullName || member?.email || t("fallbacks.unknown");

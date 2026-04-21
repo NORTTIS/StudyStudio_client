@@ -12,6 +12,7 @@ import {
     savePendingJoinGroup
 } from "@/components/features/group/group.api";
 import { cancelPendingJoinRequest } from "@/api/invites";
+import { sanitizeErrorMessage } from "@/utils/error-message";
 
 type AnyObj = Record<string, any>;
 type Status = "idle" | "submitting" | "accepted" | "pending" | "already" | "need_login" | "error";
@@ -155,6 +156,23 @@ function isPendingStatusValue(value: unknown) {
         "waiting_approval",
         "requested"
     ].includes(normalized);
+}
+
+function normalizeInviteErrorMessage(message: string, locale: string) {
+    const cleaned = sanitizeErrorMessage(message, locale === "vi" ? "Đã xảy ra lỗi" : "An error occurred");
+    const lowered = cleaned.toLowerCase();
+
+    const isArchivedGroupError =
+        lowered.includes("lưu trữ")
+        || lowered.includes("luu tru")
+        || lowered.includes("archived")
+        || lowered.includes("inactive");
+
+    if (isArchivedGroupError) {
+        return locale === "vi" ? "Nhóm này đã được lưu trữ" : "This group has been archived";
+    }
+
+    return cleaned;
 }
 
 async function requestWithAutoMethod(url: string, payload?: AnyObj) {
@@ -395,7 +413,7 @@ export function InviteAcceptPage() {
                         }
 
                         setStatus("error");
-                        setError(msg);
+                        setError(normalizeInviteErrorMessage(msg, locale));
                         return;
                     }
 
@@ -406,7 +424,7 @@ export function InviteAcceptPage() {
                     }
 
                     setStatus("error");
-                    setError(`${msg} (at ${url})`);
+                    setError(normalizeInviteErrorMessage(msg, locale));
                     return;
                 }
 
@@ -478,7 +496,10 @@ export function InviteAcceptPage() {
 
             setStatus("error");
             setError(
-                `Accept invitation failed. Endpoint not found (last 404: ${last404 || "(none)"}), or request body fields mismatch.`
+                normalizeInviteErrorMessage(
+                    `Accept invitation failed. Endpoint not found (last 404: ${last404 || "(none)"}), or request body fields mismatch.`,
+                    locale
+                )
             );
         } catch (e: any) {
             // Kiem tra localStorage truoc - neu dang cho phe duyet thi hien thi trang thai pending
@@ -493,7 +514,7 @@ export function InviteAcceptPage() {
                 return;
             }
             setStatus("error");
-            setError(e?.message || t("serverError"));
+            setError(normalizeInviteErrorMessage(e?.message || t("serverError"), locale));
         }
     }, [base, groupIdFromToken, locale, pathname, pendingApprovalHintFromLink, router, t, token]);
 
