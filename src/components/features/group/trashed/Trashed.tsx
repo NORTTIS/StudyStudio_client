@@ -12,14 +12,19 @@ import {
     Users,
     X
 } from "lucide-react";
+import { useLocale } from "next-intl";
 import { useTranslations } from "next-intl";
 import { useParams } from "next/navigation";
 import * as React from "react";
 import { DayPicker } from "react-day-picker";
 import { createPortal } from "react-dom";
 import "react-day-picker/dist/style.css";
+import { getUserById } from "@/api/admin-users";
 import { Container } from "@/components/common";
+import { DefaultNameAvatar } from "@/components/ui/default-name-avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { resolveAvatarUrl } from "@/lib/avatar";
+import { getCachedUserSnapshots, upsertUserSnapshots } from "@/lib/user-snapshot-cache";
 
 function cn(...classes: Array<string | false | null | undefined>) {
     return classes.filter(Boolean).join(" ");
@@ -84,13 +89,25 @@ type TaskDeleteResponse = {
 };
 
 type GroupMemberDto = {
+    id?: string;
     userId?: string;
     firstName?: string | null;
     lastName?: string | null;
     email?: string | null;
     avatarUrl?: string | null;
+    avatar?: string | null;
+    profilePictureUrl?: string | null;
+    profileImageUrl?: string | null;
     role?: string | null;
     joinedAt?: string;
+    user?: {
+        id?: string;
+        userId?: string;
+        avatarUrl?: string | null;
+        avatar?: string | null;
+        profilePictureUrl?: string | null;
+        profileImageUrl?: string | null;
+    } | null;
 };
 
 type GroupMemberListResponse = {
@@ -292,18 +309,30 @@ function buildFullName(firstName?: string | null, lastName?: string | null, fall
     return String(fallback ?? "").trim();
 }
 
-function getInitials(input?: string | null) {
-    const raw = String(input ?? "").trim();
-    if (!raw) return "?";
-    const parts = raw.split(/\s+/).filter(Boolean);
-    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-    return `${parts[0][0] ?? ""}${parts[1][0] ?? ""}`.toUpperCase();
-}
-
 function normalizeText(input?: string | null) {
     return String(input ?? "")
         .toLocaleLowerCase("vi-VN")
         .trim();
+}
+
+function normalizeMemberRole(raw?: string | null) {
+    return String(raw ?? "")
+        .trim()
+        .replace(/^ROLE_/i, "")
+        .replace(/^GROUP_/i, "")
+        .replace(/^STUDIO_/i, "")
+        .toLowerCase();
+}
+
+function getMemberLookupKeys(member?: GroupMemberDto | null) {
+    const keys = [
+        String(member?.userId ?? "").trim(),
+        String(member?.id ?? "").trim(),
+        String(member?.user?.userId ?? "").trim(),
+        String(member?.user?.id ?? "").trim()
+    ].filter(Boolean);
+
+    return Array.from(new Set(keys));
 }
 
 function matchDeletedDate(raw?: string | null, filter?: DeletedDateFilter | null) {
@@ -346,14 +375,6 @@ function dedupeTrashItems(items: TrashItem[]) {
         const bTime = new Date(b.deletedOnRaw || 0).getTime();
         return bTime - aTime;
     });
-}
-
-const avatarTones = ["bg-blue-500", "bg-violet-500", "bg-amber-500", "bg-emerald-500", "bg-rose-500", "bg-cyan-500"];
-
-function pickAvatarTone(seed: string) {
-    let hash = 0;
-    for (let i = 0; i < seed.length; i += 1) hash = (hash * 31 + seed.charCodeAt(i)) | 0;
-    return avatarTones[Math.abs(hash) % avatarTones.length];
 }
 
 const monthOptions = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11"] as const;
@@ -880,9 +901,34 @@ function DeletedByPicker({
     onSelect: (value: string | null) => void;
 }) {
     const t = useTranslations("TrashedPage");
+    const locale = useLocale();
+    const [query, setQuery] = React.useState("");
+
+    const filteredOptions = React.useMemo(() => {
+        const normalizedQuery = normalizeText(query);
+        if (!normalizedQuery) return options;
+        return options.filter((option) => normalizeText(option.name).includes(normalizedQuery));
+    }, [options, query]);
+
+    React.useEffect(() => {
+        setQuery("");
+    }, [options]);
 
     return (
-        <div className="max-h-[320px] overflow-y-auto p-2">
+        <div className="p-2">
+            <div className="sticky top-0 z-10 bg-white pb-2">
+                <div className="relative">
+                    <Search className="-translate-y-1/2 pointer-events-none absolute top-1/2 left-3 h-4 w-4 text-zinc-400" />
+                    <input
+                        type="text"
+                        value={query}
+                        onChange={(e) => setQuery(e.target.value)}
+                        placeholder={locale === "vi" ? "Tìm người xóa..." : "Search deleted by..."}
+                        className="h-10 w-full rounded-xl border border-zinc-200 bg-white pr-3 pl-9 text-sm text-zinc-800 outline-none transition focus:border-orange-300 focus:ring-2 focus:ring-orange-100"
+                    />
+                </div>
+            </div>
+
             <button
                 type="button"
                 onClick={() => onSelect(null)}
@@ -895,20 +941,28 @@ function DeletedByPicker({
                 {t("filters.deletedBy.all")}
             </button>
 
-            {options.map((option) => (
-                <button
-                    key={option.id}
-                    type="button"
-                    onClick={() => onSelect(option.id)}
-                    className={cn(
-                        "mb-1 flex w-full items-center rounded-xl px-3 py-2.5 text-left text-sm transition",
-                        selectedId === option.id
-                            ? "bg-orange-50 font-semibold text-orange-600"
-                            : "font-medium text-zinc-700 hover:bg-zinc-50"
-                    )}>
-                    <span className="truncate">{option.name}</span>
-                </button>
-            ))}
+            <div className="max-h-[154px] overflow-y-auto pr-1">
+                {filteredOptions.length === 0 ? (
+                    <div className="px-3 py-2 text-sm text-zinc-500">
+                        {locale === "vi" ? "Không tìm thấy người phù hợp" : "No matching people found"}
+                    </div>
+                ) : (
+                    filteredOptions.map((option) => (
+                        <button
+                            key={option.id}
+                            type="button"
+                            onClick={() => onSelect(option.id)}
+                            className={cn(
+                                "mb-1 flex w-full items-center rounded-xl px-3 py-2.5 text-left text-sm transition",
+                                selectedId === option.id
+                                    ? "bg-orange-50 font-semibold text-orange-600"
+                                    : "font-medium text-zinc-700 hover:bg-zinc-50"
+                            )}>
+                            <span className="truncate">{option.name}</span>
+                        </button>
+                    ))
+                )}
+            </div>
         </div>
     );
 }
@@ -1023,6 +1077,7 @@ const ITEMS_PER_PAGE = 10;
 
 export default function Trashed() {
     const t = useTranslations("TrashedPage");
+    const locale = useLocale();
     const mapErrorMessage = React.useCallback(
         (message?: string | null) => {
             const code = String(message ?? "").trim();
@@ -1094,34 +1149,67 @@ export default function Trashed() {
             ]);
 
             const members = membersRes?.data?.members ?? [];
+            const list = trashRes?.data ?? [];
+            const cachedSnapshots = getCachedUserSnapshots(groupId);
             const nextMemberNameMap: Record<string, string> = {};
             const nextMemberAvatarMap: Record<string, string | null> = {};
+            const relevantUserIds = new Set<string>();
 
             for (const member of members) {
-                const userId = String(member?.userId ?? "").trim();
-                if (!userId) continue;
+                const lookupKeys = getMemberLookupKeys(member);
+                if (lookupKeys.length === 0) continue;
 
-                const role = String(member?.role ?? "").trim().toLowerCase();
-                if (!role || !["owner", "moderator"].includes(role)) continue;
+                const role = normalizeMemberRole(member?.role);
+                if (!role || !["owner", "moderator", "member"].includes(role)) continue;
 
                 const fullName = buildFullName(member?.firstName, member?.lastName, member?.email);
-                nextMemberNameMap[userId] = fullName || member?.email || t("fallbacks.unknown");
-                nextMemberAvatarMap[userId] = member?.avatarUrl ?? null;
+                const displayName = fullName || member?.email || t("fallbacks.deletedUser");
+                const avatarUrl = resolveAvatarUrl(member);
+
+                for (const key of lookupKeys) {
+                    relevantUserIds.add(key);
+                    nextMemberNameMap[key] = displayName;
+                    nextMemberAvatarMap[key] = avatarUrl;
+                }
             }
 
-            setMemberNameMap(nextMemberNameMap);
-            setMemberAvatarMap(nextMemberAvatarMap);
-            setGroupMembers(
-                Object.entries(nextMemberNameMap)
-                    .map(([id, name]) => ({
-                        id,
-                        name,
-                        avatarUrl: nextMemberAvatarMap[id] ?? null
-                    }))
-                    .sort((a, b) => a.name.localeCompare(b.name, "vi"))
-            );
+            for (const item of list ?? []) {
+                const deletedById = String(item?.deletedBy ?? "").trim();
+                if (deletedById) relevantUserIds.add(deletedById);
+            }
 
-            const list = trashRes?.data ?? [];
+            for (const [key, snapshot] of Object.entries(cachedSnapshots)) {
+                if (!relevantUserIds.has(key)) continue;
+
+                const cachedName = String(snapshot?.name ?? "").trim();
+                const cachedAvatarUrl = String(snapshot?.avatarUrl ?? "").trim() || null;
+
+                if (!(key in nextMemberNameMap) && cachedName) {
+                    nextMemberNameMap[key] = cachedName;
+                }
+
+                if (!(key in nextMemberAvatarMap)) {
+                    nextMemberAvatarMap[key] = cachedAvatarUrl;
+                }
+            }
+
+            upsertUserSnapshots(
+                members.flatMap((member) => {
+                    const lookupKeys = getMemberLookupKeys(member);
+                    if (lookupKeys.length === 0) return [];
+
+                    const fullName = buildFullName(member?.firstName, member?.lastName, member?.email);
+                    const displayName = fullName || member?.email || null;
+                    const avatarUrl = resolveAvatarUrl(member);
+
+                    return lookupKeys.map((key) => ({
+                        id: key,
+                        name: displayName,
+                        avatarUrl
+                    }));
+                }),
+                groupId
+            );
 
             const mapped: TrashItem[] = (list ?? []).map((x, index) => {
                 const id = String(x.deleteTaskId ?? "").trim();
@@ -1129,7 +1217,7 @@ export default function Trashed() {
                 const deletedBy = x.deletedBy ?? null;
                 const name = String(x.taskName ?? "").trim() || t("fallbacks.untitledTask");
                 const deletedByName = deletedBy
-                    ? (nextMemberNameMap[String(deletedBy)] ?? `${t("fallbacks.unknown")} (${String(deletedBy).slice(0, 8)})`)
+                    ? (nextMemberNameMap[String(deletedBy)] ?? t("fallbacks.deletedUser"))
                     : null;
 
                 return {
@@ -1144,6 +1232,59 @@ export default function Trashed() {
                 };
             });
 
+            const unknownDeletedByIds = Array.from(
+                new Set(
+                    mapped
+                        .map((item) => String(item.deletedBy ?? "").trim())
+                        .filter((id) => id && !nextMemberNameMap[id])
+                )
+            );
+
+            if (unknownDeletedByIds.length > 0) {
+                const userDetails = await Promise.all(
+                    unknownDeletedByIds.map(async (userId) => {
+                        try {
+                            const response = await getUserById(userId, locale);
+                            if (!(response.status === "success" && response.data)) return null;
+
+                            const fullName = String(response.data.fullName ?? "").trim();
+                            const avatarUrl = resolveAvatarUrl(response.data);
+
+                            return {
+                                id: userId,
+                                name: fullName || null,
+                                avatarUrl
+                            };
+                        } catch {
+                            return null;
+                        }
+                    })
+                );
+
+                const resolvedUsers = userDetails.filter((entry): entry is NonNullable<typeof entry> => Boolean(entry));
+
+                if (resolvedUsers.length > 0) {
+                    upsertUserSnapshots(resolvedUsers, groupId);
+
+                    for (const user of resolvedUsers) {
+                        if (user.name) nextMemberNameMap[user.id] = user.name;
+                        nextMemberAvatarMap[user.id] = user.avatarUrl ?? null;
+                    }
+                }
+            }
+
+            setMemberNameMap(nextMemberNameMap);
+            setMemberAvatarMap(nextMemberAvatarMap);
+            setGroupMembers(
+                Object.entries(nextMemberNameMap)
+                    .map(([id, name]) => ({
+                        id,
+                        name,
+                        avatarUrl: nextMemberAvatarMap[id] ?? null
+                    }))
+                    .sort((a, b) => a.name.localeCompare(b.name, "vi"))
+            );
+
             setItems(dedupeTrashItems(mapped.filter((x) => x.id)));
         } catch (e: any) {
             setError(mapErrorMessage(e?.message) || t("errors.cannotLoadTrash"));
@@ -1151,7 +1292,7 @@ export default function Trashed() {
         } finally {
             setLoading(false);
         }
-    }, [groupId, t, mapErrorMessage]);
+    }, [groupId, locale, t, mapErrorMessage]);
 
     React.useEffect(() => {
         void refresh();
@@ -1203,7 +1344,7 @@ export default function Trashed() {
 
     const selectedDeletedByName =
         deletedByOptions.find((x) => x.id === deletedByFilter)?.name ||
-        (deletedByFilter ? memberNameMap[deletedByFilter] || t("fallbacks.unknown") : "");
+        (deletedByFilter ? memberNameMap[deletedByFilter] || t("fallbacks.deletedUser") : "");
 
     const deletedDateLabel = [
         deletedDateFilter.startDate &&
@@ -1469,10 +1610,8 @@ export default function Trashed() {
                                             const displayDeletedBy =
                                                 item.deletedByName ||
                                                 memberNameMap[String(item.deletedBy ?? "")] ||
-                                                t("fallbacks.unknown");
+                                                t("fallbacks.deletedUser");
 
-                                            const initials = getInitials(displayDeletedBy);
-                                            const tone = pickAvatarTone(displayDeletedBy || item.rowKey);
                                             const avatarUrl = item.deletedBy
                                                 ? memberAvatarMap[String(item.deletedBy)]
                                                 : null;
@@ -1506,14 +1645,12 @@ export default function Trashed() {
                                                                     className="h-12 w-12 shrink-0 rounded-full object-cover"
                                                                 />
                                                             ) : (
-                                                                <div
-                                                                    className={cn(
-                                                                        "grid h-12 w-12 shrink-0 place-items-center rounded-full font-bold text-base text-white",
-                                                                        tone
-                                                                    )}
-                                                                    title={displayDeletedBy}>
-                                                                    {initials}
-                                                                </div>
+                                                                <DefaultNameAvatar
+                                                                    name={displayDeletedBy}
+                                                                    seed={item.deletedBy || displayDeletedBy || item.rowKey}
+                                                                    className="h-12 w-12 shrink-0"
+                                                                    fallbackClassName="text-base font-semibold"
+                                                                />
                                                             )}
                                                             <div className="max-w-[220px] truncate font-medium text-base text-zinc-800">
                                                                 {displayDeletedBy}

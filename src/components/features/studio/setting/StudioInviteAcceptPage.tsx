@@ -6,6 +6,7 @@ import { useCallback, useEffect, useState } from "react";
 import { acceptStudioInvite } from "@/api/studio-invites";
 import { getStudios, leaveStudio } from "@/api/studios";
 import { Button } from "@/components/ui/button";
+import { sanitizeErrorMessage } from "@/utils/error-message";
 import { getPendingStudioJoinRequests, removePendingStudioJoinRequest } from "@/utils/studio-pending";
 
 type Status = "idle" | "submitting" | "accepted" | "already" | "pending" | "rejected" | "need_login" | "error";
@@ -130,6 +131,23 @@ function isRejectedMessage(code: string, message: string) {
         || normalizedMessage.includes("join request rejected")
         || normalizedMessage.includes("membership rejected")
     );
+}
+
+function normalizeStudioInviteErrorMessage(message: string, locale: string) {
+    const cleaned = sanitizeErrorMessage(message, locale === "vi" ? "Đã xảy ra lỗi" : "An error occurred");
+    const lowered = cleaned.toLowerCase();
+
+    const isArchivedStudioError =
+        lowered.includes("lưu trữ")
+        || lowered.includes("luu tru")
+        || lowered.includes("archived")
+        || lowered.includes("inactive");
+
+    if (isArchivedStudioError) {
+        return locale === "vi" ? "Studio này đã được lưu trữ" : "This studio has been archived";
+    }
+
+    return cleaned;
 }
 
 export function StudioInviteAcceptPage() {
@@ -326,7 +344,7 @@ export function StudioInviteAcceptPage() {
                 }
 
                 setStatus("error");
-                setError(normalizedMessage || t("errorAcceptFailed"));
+                setError(normalizeStudioInviteErrorMessage(normalizedMessage || t("errorAcceptFailed"), locale));
                 return;
             }
 
@@ -370,7 +388,7 @@ export function StudioInviteAcceptPage() {
             }
 
             setStatus("error");
-            setError(errorMessage);
+            setError(normalizeStudioInviteErrorMessage(errorMessage, locale));
         }
     }, [locale, router, studioIdFromToken, syncMembershipStatus, t, token]);
 

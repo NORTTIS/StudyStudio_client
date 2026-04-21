@@ -144,6 +144,15 @@ type GroupMemberDto = {
     lastName?: string | null;
     email?: string | null;
     avatarUrl?: string | null;
+    avatar?: string | null;
+    profilePictureUrl?: string | null;
+    profileImageUrl?: string | null;
+    user?: {
+        avatarUrl?: string | null;
+        avatar?: string | null;
+        profilePictureUrl?: string | null;
+        profileImageUrl?: string | null;
+    } | null;
     role?: string | null;
 };
 
@@ -679,6 +688,22 @@ function buildInitials(firstName?: string | null, lastName?: string | null, fall
         .slice(0, 2)
         .map((part) => part.charAt(0).toUpperCase())
         .join("");
+}
+
+function getGroupMemberAvatarUrl(member?: GroupMemberDto | null) {
+    const nestedUser = member?.user ?? null;
+    const raw =
+        String(member?.avatarUrl ?? "").trim() ||
+        String(member?.avatar ?? "").trim() ||
+        String(member?.profilePictureUrl ?? "").trim() ||
+        String(member?.profileImageUrl ?? "").trim() ||
+        String(nestedUser?.avatarUrl ?? "").trim() ||
+        String(nestedUser?.avatar ?? "").trim() ||
+        String(nestedUser?.profilePictureUrl ?? "").trim() ||
+        String(nestedUser?.profileImageUrl ?? "").trim();
+
+    if (!raw) return null;
+    return raw.replace("localhost", "127.0.0.1");
 }
 
 function startOfDay(date: Date) {
@@ -1466,6 +1491,8 @@ function DuePill({
     due,
     overdue,
     done,
+    assigneeId,
+    assigneeName,
     assigneeAvatarUrl,
     assigneeInitials,
     showAssigneeAvatar
@@ -1473,6 +1500,8 @@ function DuePill({
     due?: string | null;
     overdue: boolean;
     done?: boolean;
+    assigneeId?: string | null;
+    assigneeName?: string | null;
     assigneeAvatarUrl?: string | null;
     assigneeInitials?: string | null;
     showAssigneeAvatar?: boolean;
@@ -1490,7 +1519,9 @@ function DuePill({
                 {showAssigneeAvatar ? (
                     <AssigneeAvatar
                         avatarUrl={assigneeAvatarUrl}
+                        name={assigneeName}
                         initials={assigneeInitials}
+                        seed={assigneeId || assigneeName}
                         size={24}
                         className="text-[10px]"
                     />
@@ -2014,6 +2045,8 @@ function TaskCard({
                                     due={task.due}
                                     overdue={overdue}
                                     done={done}
+                                    assigneeId={task.assigneeId}
+                                    assigneeName={task.assigneeName}
                                     assigneeAvatarUrl={task.assigneeAvatarUrl}
                                     assigneeInitials={task.assigneeInitials}
                                     showAssigneeAvatar={!isTaskUnassigned(task)}
@@ -3606,7 +3639,7 @@ export function GroupBoardScreen({
                 return {
                     value: String(m.userId),
                     label: name || m.email || t("unnamed"),
-                    avatarUrl: m.avatarUrl ?? null,
+                    avatarUrl: getGroupMemberAvatarUrl(m),
                     role: m.role ?? null // Giữ lại role để modal có thể kiểm tra quyền hợp lệ khi cần.
                 };
             })

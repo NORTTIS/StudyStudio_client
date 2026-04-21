@@ -16,6 +16,8 @@ import {
     rejectStudioPendingMember,
     type StudioPendingMemberDto
 } from "@/api/studios";
+import { DefaultNameAvatar } from "@/components/ui/default-name-avatar";
+import { resolveAvatarUrl } from "@/lib/avatar";
 import { hexToGradient } from "@/lib/utils";
 
 export interface StudioMemberApprovalItem {
@@ -315,22 +317,19 @@ export default function StudioMemberApprovalPage({
                                             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                                                 <div className="flex min-w-0 items-center gap-4">
                                                     <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl text-lg font-semibold text-white">
-                                                        {item.avatarUrl ? (
+                                                        {resolveAvatarUrl(item) ? (
                                                             <img
-                                                                src={item.avatarUrl}
+                                                                src={resolveAvatarUrl(item) ?? ""}
                                                                 alt={item.fullName}
                                                                 className="h-full w-full object-cover"
                                                             />
                                                         ) : (
-                                                            <div
-                                                                className="flex h-full w-full items-center justify-center"
-                                                                style={{
-                                                                    background: hexToGradient(
-                                                                        item.colorHex ?? "#FF5F3D"
-                                                                    )
-                                                                }}>
-                                                                {item.fullName.charAt(0).toUpperCase()}
-                                                            </div>
+                                                            <DefaultNameAvatar
+                                                                name={item.fullName}
+                                                                seed={item.id || item.email || item.fullName}
+                                                                className="h-full w-full"
+                                                                fallbackClassName="text-lg font-semibold"
+                                                            />
                                                         )}
                                                     </div>
 

@@ -62,6 +62,9 @@
     "emptyStateDescription": "Bạn sẽ nhận được thông báo về những cập nhật quan trọng ở đây",
     "noResultTitle": "Không tìm thấy kết quả",
     "noResultDescription": "Hãy thử tìm kiếm với từ khóa khác",
+    "paginationPrevious": "Trước",
+    "paginationNext": "Tiếp",
+    "paginationPageInfo": "Trang {page}/{totalPages} • {count} mục",
     "loadFailed": "Không thể tải thông báo",
     "deleteFailed": "Xóa thông báo thất bại",
     "deleting": "Đang xóa..."
@@ -225,7 +228,7 @@
     "confirmDeleteDescription": "Bạn có chắc muốn xóa bình luận này không?",
     "writeReply": "Viết phản hồi...",
     "writeComment": "Viết bình luận...",
-    "unknownMentionUser": "Người dùng không xác định",
+    "unknownMentionUser": "người lạ",
     "noMembersToMention": "Không có thành viên để mention.",
     "errors": {
       "sendCommentFailed": "Gửi bình luận thất bại",
@@ -2953,6 +2956,7 @@
     },
     "fallbacks": {
       "unknown": "Không rõ",
+      "deletedUser": "Người dùng đã bị xóa",
       "untitledTask": "Công việc không tên"
     }
   },

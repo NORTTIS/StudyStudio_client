@@ -35,8 +35,10 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
+import { DefaultNameAvatar } from "@/components/ui/default-name-avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { resolveAvatarUrl } from "@/lib/avatar";
 import { toApiDateTimeOrNull, toDueDateInputValue } from "@/utils/task-date";
 import AssigneeAvatar from "./AssigneeAvatar";
 
@@ -47,6 +49,15 @@ type UserDto = {
     firstName?: string | null;
     lastName?: string | null;
     avatarUrl?: string | null;
+    avatar?: string | null;
+    profilePictureUrl?: string | null;
+    profileImageUrl?: string | null;
+    user?: {
+        avatarUrl?: string | null;
+        avatar?: string | null;
+        profilePictureUrl?: string | null;
+        profileImageUrl?: string | null;
+    } | null;
 };
 
 type TaskItemResponse = {
@@ -109,6 +120,15 @@ type GroupMemberDto = {
     lastName?: string | null;
     email?: string | null;
     avatarUrl?: string | null;
+    avatar?: string | null;
+    profilePictureUrl?: string | null;
+    profileImageUrl?: string | null;
+    user?: {
+        avatarUrl?: string | null;
+        avatar?: string | null;
+        profilePictureUrl?: string | null;
+        profileImageUrl?: string | null;
+    } | null;
     role?: string | null;
 };
 
@@ -236,53 +256,6 @@ function escapeRegExp(value: string) {
     return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-function compressAllMentionsForDisplay(text: string, membersById: Record<string, string>, authorId?: string) {
-    const allMemberIds = Object.keys(membersById)
-        .map((id) => String(id).trim())
-        .filter(Boolean);
-
-    if (allMemberIds.length === 0) return text;
-
-    const normalizedAuthorId = normalizeUserId(authorId);
-    const expectedAllIds = allMemberIds.filter((id) => normalizeUserId(id) !== normalizedAuthorId);
-
-    if (expectedAllIds.length < 2) return text;
-
-    const escaped = expectedAllIds.map((id) => `@${escapeRegExp(id)}`);
-
-    const patterns: string[] = [];
-
-    const permutations = (arr: string[]): string[][] => {
-        if (arr.length <= 1) return [arr];
-        const result: string[][] = [];
-        for (let i = 0; i < arr.length; i++) {
-            const current = arr[i];
-            const rest = arr.slice(0, i).concat(arr.slice(i + 1));
-            for (const tail of permutations(rest)) {
-                result.push([current, ...tail]);
-            }
-        }
-        return result;
-    };
-
-    if (escaped.length <= 6) {
-        for (const perm of permutations(escaped)) {
-            patterns.push(perm.join("\\s+"));
-        }
-    } else {
-        patterns.push(escaped.join("\\s+"));
-    }
-
-    let output = text;
-
-    for (const pattern of patterns) {
-        const re = new RegExp(`(^|\\s)(${pattern})(?=\\s|$)`, "g");
-        output = output.replace(re, (_match, prefix) => `${prefix}@__all__`);
-    }
-
-    return output;
-}
-
 function normalizeUserId(value?: string | null) {
     return String(value ?? "")
         .trim()
@@ -377,10 +350,7 @@ function RichTextWithMentions({
 }) {
     const t = useTranslations("TaskDetailModal");
     const unknownMentionLabel = t("unknownMentionUser");
-    const displayText = React.useMemo(
-        () => compressAllMentionsForDisplay(text, membersById, authorId),
-        [text, membersById, authorId]
-    );
+    const displayText = text;
 
     const normalizedDisplayText = React.useMemo(() => {
         const aliases = ["all", "mọi người", mentionAllLabel].map((alias) => alias.trim()).filter(Boolean);
@@ -859,9 +829,12 @@ const MentionTextarea = React.forwardRef<
                                                     className="h-10 w-10 rounded-full object-cover"
                                                 />
                                             ) : (
-                                                <div className="grid h-10 w-10 place-items-center rounded-full bg-zinc-200 font-semibold text-sm text-zinc-700">
-                                                    {safeInitialsFromName(displayName)}
-                                                </div>
+                                                <DefaultNameAvatar
+                                                    name={displayName}
+                                                    seed={u.id || displayName}
+                                                    className="h-10 w-10"
+                                                    fallbackClassName="text-sm font-semibold"
+                                                />
                                             )}
                                         </div>
 
@@ -1155,6 +1128,14 @@ function safeAvatarUrl(input?: string | null) {
     const raw = String(input ?? "").trim();
     if (!raw) return "";
     return raw.replace("localhost", "127.0.0.1");
+}
+
+function getGroupMemberAvatarUrl(member?: GroupMemberDto | null) {
+    return safeAvatarUrl(resolveAvatarUrl(member) ?? "");
+}
+
+function getUserAvatarUrl(user?: UserDto | null) {
+    return safeAvatarUrl(resolveAvatarUrl(user) ?? "");
 }
 
 function buildInitials(name?: string | null) {
@@ -1643,7 +1624,7 @@ function mapTaskDetailFromTaskItem(
         description: description != null ? String(description) : null,
         assigneeId: task?.assignee?.id ?? null,
         assigneeName,
-        assigneeAvatarUrl: task?.assignee?.avatarUrl ?? null,
+        assigneeAvatarUrl: getUserAvatarUrl(task?.assignee) || null,
         statusId,
         statusName,
         priorityValue,
@@ -2384,17 +2365,28 @@ export default function TaskDetailModal(props: {
 
     const mentionUsers = React.useMemo<MentionUser[]>(
         () =>
-            members.map((m) => {
-                const id = String(m.userId ?? "").trim();
-                const name = `${m.firstName ?? ""} ${m.lastName ?? ""}`.trim() || m.email || t("user");
+            Array.from(
+                new Map(
+                    members
+                        .map((m) => {
+                            const id = String(m.userId ?? "").trim();
+                            if (!id) return null;
 
-                return {
-                    id,
-                    name,
-                    subtitle: m.email ?? "",
-                    avatarUrl: safeAvatarUrl(m.avatarUrl)
-                };
-            }),
+                            const name = `${m.firstName ?? ""} ${m.lastName ?? ""}`.trim() || m.email || t("user");
+
+                            return [
+                                id,
+                                {
+                                    id,
+                                    name,
+                                    subtitle: m.email ?? "",
+                                    avatarUrl: getGroupMemberAvatarUrl(m)
+                                }
+                            ] as const;
+                        })
+                        .filter(Boolean) as ReadonlyArray<readonly [string, MentionUser]>
+                ).values()
+            ),
         [members, t]
     );
 
@@ -2802,7 +2794,7 @@ export default function TaskDetailModal(props: {
                 return {
                     userId: String(m.userId ?? ""),
                     label: name || m.email || t("unnamed"),
-                    avatarUrl: safeAvatarUrl(m.avatarUrl)
+                    avatarUrl: getGroupMemberAvatarUrl(m)
                 };
             }),
         [members, t]
@@ -3171,6 +3163,7 @@ export default function TaskDetailModal(props: {
                                                 <AssigneeAvatar
                                                     avatarUrl={selectedAssigneeDisplay.avatarUrl}
                                                     name={selectedAssigneeDisplay.label}
+                                                    seed={selectedAssigneeDisplay.userId}
                                                     size={24}
                                                     unassigned={!assigneeId}
                                                     className="text-[11px]"
@@ -3205,6 +3198,7 @@ export default function TaskDetailModal(props: {
                                                         <AssigneeAvatar
                                                             avatarUrl={m.avatarUrl}
                                                             name={m.label}
+                                                            seed={m.userId}
                                                             size={24}
                                                             className="text-[11px]"
                                                         />
@@ -3549,9 +3543,9 @@ export default function TaskDetailModal(props: {
                                                 key={c.commentId ?? `${c.userId ?? "u"}-${c.createdAt ?? "t"}`}
                                                 className="w-full max-w-full space-y-3 overflow-x-hidden rounded-2xl border border-zinc-100 bg-zinc-50/50 p-4">
                                                 <div className="flex items-start gap-3">
-                                                    {safeAvatarUrl(u?.avatarUrl) ? (
+                                                    {getUserAvatarUrl(u) ? (
                                                         <Image
-                                                            src={safeAvatarUrl(u?.avatarUrl)}
+                                                            src={getUserAvatarUrl(u) ?? ""}
                                                             alt={name}
                                                             width={36}
                                                             height={36}
@@ -3559,9 +3553,12 @@ export default function TaskDetailModal(props: {
                                                             className="h-9 w-9 rounded-full object-cover"
                                                         />
                                                     ) : (
-                                                        <div className="grid h-9 w-9 place-items-center rounded-full bg-indigo-500 font-extrabold text-white text-xs">
-                                                            {initials(u)}
-                                                        </div>
+                                                        <DefaultNameAvatar
+                                                            name={name}
+                                                            seed={String(u?.id ?? c.userId ?? name)}
+                                                            className="h-9 w-9"
+                                                            fallbackClassName="text-xs font-extrabold"
+                                                        />
                                                     )}
 
                                                     <div className="min-w-0 flex-1">
@@ -3620,9 +3617,9 @@ export default function TaskDetailModal(props: {
                                                                         `${r.userId ?? "u"}-${r.createdAt ?? "t"}`
                                                                     }
                                                                     className="flex gap-3">
-                                                                    {safeAvatarUrl(ru?.avatarUrl) ? (
+                                                                    {getUserAvatarUrl(ru) ? (
                                                                         <Image
-                                                                            src={safeAvatarUrl(ru?.avatarUrl)}
+                                                                            src={getUserAvatarUrl(ru) ?? ""}
                                                                             alt={rname}
                                                                             width={32}
                                                                             height={32}
@@ -3630,9 +3627,12 @@ export default function TaskDetailModal(props: {
                                                                             className="h-8 w-8 rounded-full object-cover"
                                                                         />
                                                                     ) : (
-                                                                        <div className="grid h-8 w-8 place-items-center rounded-full bg-indigo-500 font-extrabold text-[11px] text-white">
-                                                                            {initials(ru)}
-                                                                        </div>
+                                                                        <DefaultNameAvatar
+                                                                            name={rname}
+                                                                            seed={String(ru?.id ?? r.userId ?? rname)}
+                                                                            className="h-8 w-8"
+                                                                            fallbackClassName="text-[11px] font-extrabold"
+                                                                        />
                                                                     )}
 
                                                                     <div className="min-w-0 flex-1">

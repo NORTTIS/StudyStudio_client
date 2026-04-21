@@ -4,6 +4,7 @@ import * as React from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useLocale } from "next-intl";
 import { useTranslations } from "next-intl";
+import { getAccessToken, isTokenExpired, refreshAccessToken } from "@/api/auth";
 import { toPublicUrl } from "@/api/banner-logo";
 import ErrorDisplay from "@/components/common/ErrorDisplay";
 import { GroupBannerBackground } from "@/components/features/group/GroupBannerBackground";
@@ -74,22 +75,38 @@ function extractBannerSettings(raw: unknown) {
     };
 }
 
-async function fetchGroupBanner(groupId: string): Promise<GroupBannerResult> {
+async function fetchGroupBanner(groupId: string, locale: string): Promise<GroupBannerResult> {
     const base = getApiBase();
     const apiBase = base.endsWith("/api") ? base : `${base}/api`;
     const url = `${apiBase}/group/${encodeURIComponent(groupId)}/detail`;
     // Lấy token ở client để hỗ trợ cả cơ chế Bearer token lẫn cookie.
-    const token = typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
+    const makeRequest = async (token: string | null) =>
+        fetch(url, {
+            method: "GET",
+            credentials: "include",
+            headers: {
+                Accept: "text/plain, application/json",
+                "Accept-Language": locale,
+                ...(token ? { Authorization: `Bearer ${token}` } : {})
+            },
+            cache: "no-store"
+        });
 
-    const res = await fetch(url, {
-        method: "GET",
-        credentials: "include",
-        headers: {
-            Accept: "text/plain, application/json",
-            ...(token ? { Authorization: `Bearer ${token}` } : {})
-        },
-        cache: "no-store"
-    });
+    let token = getAccessToken();
+    if (token && isTokenExpired()) {
+        const refreshed = await refreshAccessToken(locale);
+        token = refreshed?.accessToken ?? null;
+    }
+
+    let res = await makeRequest(token);
+
+    if (res.status === 401) {
+        const refreshed = await refreshAccessToken(locale);
+        const retryToken = refreshed?.accessToken ?? null;
+        if (retryToken) {
+            res = await makeRequest(retryToken);
+        }
+    }
 
     if (!res.ok) {
         await res.text().catch(() => "");
@@ -128,6 +145,10 @@ function isAbortLikeError(error: unknown) {
 
 function isUuidLike(value: string) {
     return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value ?? "").trim());
+}
+
+function isExpectedGroupAccessStatus(status?: number) {
+    return status === 400 || status === 401 || status === 403 || status === 404;
 }
 
 export function GroupShell({
@@ -170,11 +191,11 @@ export function GroupShell({
                     setRedirectTarget(null);
                 }
 
-                const result = await fetchGroupBanner(groupId);
+                const result = await fetchGroupBanner(groupId, locale);
                 if (result.error) {
-                    if (typeof result.error.status === "number") {
+                    if (typeof result.error.status === "number" && !isExpectedGroupAccessStatus(result.error.status)) {
                         console.error(`[GroupShell] Failed to load data. Status: ${result.error.status}`);
-                    } else {
+                    } else if (typeof result.error.status !== "number") {
                         console.error("[GroupShell] Failed to load data.");
                     }
                     if (!cancelled) {

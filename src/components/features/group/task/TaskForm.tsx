@@ -807,6 +807,7 @@ export default function TaskFormModal({
                                             <AssigneeAvatar
                                                 avatarUrl={selectedAssigneeDisplay.avatarUrl}
                                                 name={selectedAssigneeDisplay.label}
+                                                seed={selectedAssigneeDisplay.value}
                                                 size={24}
                                                 unassigned={!selectedAssignee}
                                                 className="text-[11px]"
@@ -835,6 +836,7 @@ export default function TaskFormModal({
                                                 <AssigneeAvatar
                                                     avatarUrl={m.avatarUrl}
                                                     name={m.label}
+                                                    seed={m.value}
                                                     size={24}
                                                     className="text-[11px]"
                                                 />

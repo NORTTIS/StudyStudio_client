@@ -4,6 +4,8 @@ import { useTranslations } from "next-intl";
 import type { StudioMemberResponse } from "@/api/studios";
 import { GroupRoleBadge } from "@/components/features/group/GroupRoleBadge";
 import type { GroupRole } from "@/components/features/group/types";
+import { DefaultNameAvatar } from "@/components/ui/default-name-avatar";
+import { resolveAvatarUrl } from "@/lib/avatar";
 
 interface GroupBasic {
     id: string;
@@ -129,33 +131,28 @@ export function MemberList({
                                 if (disabled) return;
                                 onMemberClick?.(member);
                             }}
-                            className={`flex items-center justify-between rounded-xl px-2 py-2.5 transition-all duration-200 ${disabled ? "cursor-not-allowed opacity-70" : "cursor-pointer hover:bg-gray-50"}`}>
-                            <div className="flex items-center gap-3">
-                                {member.avatarUrl ? (
+                            className={`flex items-center justify-between gap-3 rounded-xl px-2 py-2.5 transition-all duration-200 ${disabled ? "cursor-not-allowed opacity-70" : "cursor-pointer hover:bg-gray-50"}`}>
+                            <div className="flex min-w-0 flex-1 items-center gap-3">
+                                {resolveAvatarUrl(member) ? (
                                     <img
-                                        src={member.avatarUrl}
+                                        src={resolveAvatarUrl(member) ?? ""}
                                         alt={member.userName || t("avatarFallback")}
                                         className="h-9 w-9 shrink-0 rounded-full object-cover"
                                     />
                                 ) : (
-                                    <div
-                                        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full font-semibold text-white text-xs ${index % 4 === 0
-                                            ? "bg-gradient-to-br from-orange-400 to-red-500"
-                                            : index % 4 === 1
-                                                ? "bg-gradient-to-br from-pink-400 to-rose-500"
-                                                : index % 4 === 2
-                                                    ? "bg-gradient-to-br from-blue-400 to-indigo-500"
-                                                    : "bg-gradient-to-br from-teal-400 to-cyan-500"
-                                            }`}>
-                                        {getInitials(member.userName)}
-                                    </div>
+                                    <DefaultNameAvatar
+                                        name={member.userName || getInitials(member.userName)}
+                                        seed={member.userId || member.email || member.userName}
+                                        className="h-9 w-9 shrink-0"
+                                        fallbackClassName="text-xs font-semibold"
+                                    />
                                 )}
-                                <div>
-                                    <p className="font-medium text-slate-800 text-sm">{member.userName}</p>
-                                    <p className="text-slate-400 text-xs">{member.email}</p>
+                                <div className="min-w-0 flex-1">
+                                    <p className="truncate font-medium text-slate-800 text-sm">{member.userName}</p>
+                                    <p className="truncate text-slate-400 text-xs">{member.email}</p>
                                 </div>
                             </div>
-                            <div className="flex items-center gap-2">
+                            <div className="flex shrink-0 items-center gap-2">
                                 {canManageMembers && member.userId !== studioOwnerId && onRemoveMember && (
                                     <button
                                         type="button"

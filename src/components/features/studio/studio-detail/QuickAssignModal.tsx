@@ -8,9 +8,12 @@ import { createPortal } from "react-dom";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { type RandomAssignResponseApiResponse, randomAssignMembers, type StudioMemberResponse } from "@/api/studios";
+import { DefaultNameAvatar } from "@/components/ui/default-name-avatar";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SURFACE_LAYERS } from "@/lib/layers";
+import { resolveAvatarUrl } from "@/lib/avatar";
 import { cn } from "@/lib/utils";
 
 export interface QuickAssignGroup {
@@ -34,7 +37,7 @@ type GroupRole = 0 | 1 | 2 | 3 | 4;
 
 const formSchema = z.object({
     scope: z.union([z.literal(0), z.literal(1)]),
-    defaultRole: z.enum(["1", "2", "3", "4"]),
+    defaultRole: z.enum(["2", "3", "4"]),
     targetGroupIds: z.array(z.string()),
     excludeUserIds: z.array(z.string())
 });
@@ -96,7 +99,6 @@ export function QuickAssignModal({
 
     const roleOptions = useMemo(
         () => [
-            { value: "1", label: t("roles.moderator") },
             { value: "2", label: t("roles.member") },
             { value: "3", label: t("roles.commenter") },
             { value: "4", label: t("roles.viewer") }
@@ -211,7 +213,7 @@ export function QuickAssignModal({
     if (!(open && mounted)) return null;
 
     return createPortal(
-        <div className="fixed inset-0 z-[2147483647]">
+        <div className={cn("fixed inset-0", SURFACE_LAYERS.modalOverlay)}>
             <div className="fixed inset-0 bg-black/40" onClick={onClose} aria-hidden="true" />
 
             <div className="fixed inset-0 flex items-center justify-center p-4">
@@ -307,7 +309,7 @@ export function QuickAssignModal({
                                     <SelectTrigger className="h-11 w-full rounded-xl px-4">
                                         <SelectValue placeholder={t("defaultRole.title")} />
                                     </SelectTrigger>
-                                    <SelectContent>
+                                    <SelectContent position="popper" sideOffset={6}>
                                         {roleOptions.map(({ value, label }) => (
                                             <SelectItem key={value} value={value}>
                                                 {label}
@@ -388,21 +390,19 @@ export function QuickAssignModal({
                                                         className="h-4 w-4 rounded border-gray-300 data-[state=checked]:border-orange-500 data-[state=checked]:bg-orange-500"
                                                     />
                                                     <div className="flex min-w-0 flex-1 items-center gap-2">
-                                                        {member.avatarUrl ? (
+                                                        {resolveAvatarUrl(member) ? (
                                                             <img
-                                                                src={member.avatarUrl}
+                                                                src={resolveAvatarUrl(member) ?? ""}
                                                                 alt={member.userName || ""}
                                                                 className="h-6 w-6 shrink-0 rounded-full object-cover"
                                                             />
                                                         ) : (
-                                                            <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 font-semibold text-[10px] text-white">
-                                                                {(member.userName || "?")
-                                                                    .split(" ")
-                                                                    .map((n) => n[0])
-                                                                    .join("")
-                                                                    .toUpperCase()
-                                                                    .slice(0, 2)}
-                                                            </div>
+                                                            <DefaultNameAvatar
+                                                                name={member.userName || "?"}
+                                                                seed={member.userId || member.email || member.userName}
+                                                                className="h-6 w-6 shrink-0"
+                                                                fallbackClassName="text-[10px] font-semibold"
+                                                            />
                                                         )}
                                                         <div className="min-w-0 flex-1">
                                                             <span className="block truncate font-medium text-[#111827] text-sm">

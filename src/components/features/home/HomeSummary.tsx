@@ -781,12 +781,6 @@ function DetailLayer({
                                             <SkeletonCard key={index} />
                                         ))}
                                     </section>
-
-                                    <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-                                        {Array.from({ length: 3 }).map((_, index) => (
-                                            <SkeletonCard key={index} large />
-                                        ))}
-                                    </section>
                                 </div>
                             ) : error ? (
                                 <motion.div
@@ -844,53 +838,6 @@ function DetailLayer({
                                             tone="violet"
                                             index={3}
                                             onClick={onGroupsClick}
-                                        />
-                                    </section>
-
-                                    <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-                                        <OverviewCard
-                                            title={t("overview.completedTitle")}
-                                            value={completedTaskCount}
-                                            total={totalTasks}
-                                            description={t("overview.completedDescription", {
-                                                count: completedTaskCount,
-                                                total: totalTasks
-                                            })}
-                                            tone="success"
-                                            index={0}
-                                            subtitleLabel={t("currentOverview")}
-                                            quantityLabel={t("quantity")}
-                                            onClick={() => onTaskCardClick("completed")}
-                                        />
-
-                                        <OverviewCard
-                                            title={t("overview.remainingTitle")}
-                                            value={remainingTaskCount}
-                                            total={totalTasks}
-                                            description={t("overview.remainingDescription", {
-                                                count: remainingTaskCount,
-                                                total: totalTasks
-                                            })}
-                                            tone="neutral"
-                                            index={1}
-                                            subtitleLabel={t("currentOverview")}
-                                            quantityLabel={t("quantity")}
-                                            onClick={() => onTaskCardClick("remaining")}
-                                        />
-
-                                        <OverviewCard
-                                            title={t("overview.overdueTitle")}
-                                            value={overdueTaskCount}
-                                            total={totalTasks}
-                                            description={t("overview.overdueDescription", {
-                                                count: overdueTaskCount,
-                                                total: totalTasks
-                                            })}
-                                            tone="danger"
-                                            index={2}
-                                            subtitleLabel={t("currentOverview")}
-                                            quantityLabel={t("quantity")}
-                                            onClick={() => onTaskCardClick("overdue")}
                                         />
                                     </section>
                                 </div>
@@ -1677,7 +1624,7 @@ export default function HomeSummary() {
                                     </motion.div>
                                 ) : (
                                     <div className="space-y-5">
-                                        <section className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
+                                        <section className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
                                             <StatCard
                                                 label={t("remainingTasksLabel")}
                                                 value={remainingTaskCount}
@@ -1707,15 +1654,17 @@ export default function HomeSummary() {
                                                 index={2}
                                                 onClick={() => handleOpenTaskPopup("completed")}
                                             />
-                                        </section>
 
-                                        <div className="flex justify-end">
-                                            <Button
-                                                onClick={() => setOpenDetail(true)}
-                                                className="h-11 rounded-2xl bg-gradient-to-r from-orange-500 to-red-500 px-5 text-white shadow-[0_14px_28px_rgba(15,23,42,0.12)] transition hover:from-orange-600 hover:to-red-600 focus:outline-none focus:ring-4">
-                                                {t("viewDetails")}
-                                            </Button>
-                                        </div>
+                                            <StatCard
+                                                label={t("joinedGroupsLabel")}
+                                                value={totalJoinedGroupCount}
+                                                icon={<Layers3 className="h-5 w-5" />}
+                                                tone="violet"
+                                                note={t("joinedGroupsNote")}
+                                                index={3}
+                                                onClick={handleOpenGroupPopup}
+                                            />
+                                        </section>
                                     </div>
                                 )}
                             </section>

@@ -37,6 +37,7 @@ import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import type { components } from "@/api/types";
 import type { UpdateProfileRequest } from "@/app/[locale]/(authenticated)/(user)/settings/user";
+import { DefaultNameAvatar } from "@/components/ui/default-name-avatar";
 import { deleteUserProfile, updateUserProfile } from "@/app/[locale]/(authenticated)/(user)/settings/user";
 import { useToast } from "@/components/ui/use-toast";
 
@@ -132,7 +133,7 @@ export default function SettingsClient({ initialData }: SettingsClientProps) {
     const [errors, setErrors] = useState<{ firstName?: string; lastName?: string; phoneNumber?: string; bio?: string }>(
         {}
     );
-    const [avatarPreview, setAvatarPreview] = useState(initialData.avatarUrl || "/images/image-removebg-preview.png");
+    const [avatarPreview, setAvatarPreview] = useState(initialData.avatarUrl || "");
     const [avatarFile, setAvatarFile] = useState<File | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -190,7 +191,7 @@ export default function SettingsClient({ initialData }: SettingsClientProps) {
     const handleCancel = () => {
         setIsEditing(false);
         setFormData(normalize(initialData, pathname.split("/")[1] || "vi"));
-        setAvatarPreview(initialData.avatarUrl || "/images/image-removebg-preview.png");
+        setAvatarPreview(initialData.avatarUrl || "");
         setAvatarFile(null);
         setErrors({});
     };
@@ -383,18 +384,29 @@ export default function SettingsClient({ initialData }: SettingsClientProps) {
                                     marginBottom: 20
                                 }}>
                                 <div style={{ position: "relative", marginTop: -44 }}>
-                                    <Avatar
-                                        size={88}
-                                        src={avatarPreview}
-                                        style={{
-                                            border: "4px solid #fff",
-                                            background: PRIMARY,
-                                            fontSize: 32,
-                                            fontWeight: 700,
-                                            boxShadow: "0 4px 16px rgba(0,0,0,0.15)"
-                                        }}>
-                                        {initials}
-                                    </Avatar>
+                                    {avatarPreview ? (
+                                        <Avatar
+                                            size={88}
+                                            src={avatarPreview}
+                                            style={{
+                                                border: "4px solid #fff",
+                                                background: PRIMARY,
+                                                fontSize: 32,
+                                                fontWeight: 700,
+                                                boxShadow: "0 4px 16px rgba(0,0,0,0.15)"
+                                            }}>
+                                            {initials}
+                                        </Avatar>
+                                    ) : (
+                                        <div style={{ border: "4px solid #fff", borderRadius: "9999px", boxShadow: "0 4px 16px rgba(0,0,0,0.15)" }}>
+                                            <DefaultNameAvatar
+                                                name={formData.firstName}
+                                                seed={formData.userId || formData.email || `${formData.firstName}-${formData.lastName}`}
+                                                className="size-[88px]"
+                                                fallbackClassName="text-[32px] font-bold"
+                                            />
+                                        </div>
+                                    )}
                                     <span
                                         style={{
                                             position: "absolute",
