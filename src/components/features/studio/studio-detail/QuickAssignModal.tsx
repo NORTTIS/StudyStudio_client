@@ -12,6 +12,7 @@ import { DefaultNameAvatar } from "@/components/ui/default-name-avatar";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SURFACE_LAYERS } from "@/lib/layers";
 import { resolveAvatarUrl } from "@/lib/avatar";
 import { cn } from "@/lib/utils";
 
@@ -212,7 +213,7 @@ export function QuickAssignModal({
     if (!(open && mounted)) return null;
 
     return createPortal(
-        <div className="fixed inset-0 z-[2147483647]">
+        <div className={cn("fixed inset-0", SURFACE_LAYERS.modalOverlay)}>
             <div className="fixed inset-0 bg-black/40" onClick={onClose} aria-hidden="true" />
 
             <div className="fixed inset-0 flex items-center justify-center p-4">
