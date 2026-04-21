@@ -1149,9 +1149,11 @@ export default function Trashed() {
             ]);
 
             const members = membersRes?.data?.members ?? [];
-            const cachedSnapshots = getCachedUserSnapshots();
+            const list = trashRes?.data ?? [];
+            const cachedSnapshots = getCachedUserSnapshots(groupId);
             const nextMemberNameMap: Record<string, string> = {};
             const nextMemberAvatarMap: Record<string, string | null> = {};
+            const relevantUserIds = new Set<string>();
 
             for (const member of members) {
                 const lookupKeys = getMemberLookupKeys(member);
@@ -1165,12 +1167,20 @@ export default function Trashed() {
                 const avatarUrl = resolveAvatarUrl(member);
 
                 for (const key of lookupKeys) {
+                    relevantUserIds.add(key);
                     nextMemberNameMap[key] = displayName;
                     nextMemberAvatarMap[key] = avatarUrl;
                 }
             }
 
+            for (const item of list ?? []) {
+                const deletedById = String(item?.deletedBy ?? "").trim();
+                if (deletedById) relevantUserIds.add(deletedById);
+            }
+
             for (const [key, snapshot] of Object.entries(cachedSnapshots)) {
+                if (!relevantUserIds.has(key)) continue;
+
                 const cachedName = String(snapshot?.name ?? "").trim();
                 const cachedAvatarUrl = String(snapshot?.avatarUrl ?? "").trim() || null;
 
@@ -1197,10 +1207,9 @@ export default function Trashed() {
                         name: displayName,
                         avatarUrl
                     }));
-                })
+                }),
+                groupId
             );
-
-            const list = trashRes?.data ?? [];
 
             const mapped: TrashItem[] = (list ?? []).map((x, index) => {
                 const id = String(x.deleteTaskId ?? "").trim();
@@ -1255,7 +1264,7 @@ export default function Trashed() {
                 const resolvedUsers = userDetails.filter((entry): entry is NonNullable<typeof entry> => Boolean(entry));
 
                 if (resolvedUsers.length > 0) {
-                    upsertUserSnapshots(resolvedUsers);
+                    upsertUserSnapshots(resolvedUsers, groupId);
 
                     for (const user of resolvedUsers) {
                         if (user.name) nextMemberNameMap[user.id] = user.name;

@@ -17,6 +17,7 @@ export type AuthTokens = {
 };
 
 import { clearUserProfileCache } from "@/api/user-profile";
+import { clearAllUserSnapshotCaches } from "@/lib/user-snapshot-cache";
 
 type RefreshResponse = {
     status: "success" | "error";
@@ -129,6 +130,7 @@ export function clearAuthTokens(): void {
     if (!isBrowser) return;
 
     clearUserProfileCache();
+    clearAllUserSnapshotCaches();
 
     // Clear localStorage
     localStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN);
