@@ -147,6 +147,10 @@ function isUuidLike(value: string) {
     return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value ?? "").trim());
 }
 
+function isExpectedGroupAccessStatus(status?: number) {
+    return status === 400 || status === 401 || status === 403 || status === 404;
+}
+
 export function GroupShell({
     groupId,
     children
@@ -189,9 +193,9 @@ export function GroupShell({
 
                 const result = await fetchGroupBanner(groupId, locale);
                 if (result.error) {
-                    if (typeof result.error.status === "number") {
+                    if (typeof result.error.status === "number" && !isExpectedGroupAccessStatus(result.error.status)) {
                         console.error(`[GroupShell] Failed to load data. Status: ${result.error.status}`);
-                    } else {
+                    } else if (typeof result.error.status !== "number") {
                         console.error("[GroupShell] Failed to load data.");
                     }
                     if (!cancelled) {

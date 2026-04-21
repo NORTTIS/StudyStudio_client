@@ -2956,6 +2956,7 @@
     },
     "fallbacks": {
       "unknown": "Không rõ",
+      "deletedUser": "Người dùng đã bị xóa",
       "untitledTask": "Công việc không tên"
     }
   },
