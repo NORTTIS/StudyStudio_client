@@ -62,6 +62,9 @@
     "emptyStateDescription": "You will receive notifications about important updates here",
     "noResultTitle": "No results found",
     "noResultDescription": "Try searching with different keywords",
+    "paginationPrevious": "Previous",
+    "paginationNext": "Next",
+    "paginationPageInfo": "Page {page}/{totalPages} • {count} items",
     "loadFailed": "Failed to load announcements",
     "deleteFailed": "Failed to delete announcement",
     "deleting": "Deleting..."

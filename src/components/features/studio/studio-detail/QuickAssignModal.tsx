@@ -308,7 +308,7 @@ export function QuickAssignModal({
                                     <SelectTrigger className="h-11 w-full rounded-xl px-4">
                                         <SelectValue placeholder={t("defaultRole.title")} />
                                     </SelectTrigger>
-                                    <SelectContent className="z-[2147483648]" position="popper" sideOffset={6}>
+                                    <SelectContent position="popper" sideOffset={6}>
                                         {roleOptions.map(({ value, label }) => (
                                             <SelectItem key={value} value={value}>
                                                 {label}

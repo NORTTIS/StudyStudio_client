@@ -461,19 +461,16 @@ export function AnnouncementsPage() {
     }, [currentItems, page]);
 
     const paginationLabels = useMemo(
-        () =>
-            locale === "vi"
-                ? {
-                      previous: "Trước",
-                      next: "Tiếp",
-                      pageInfo: `Trang ${page}/${totalPages} • ${currentItems.length} mục`
-                  }
-                : {
-                      previous: "Previous",
-                      next: "Next",
-                      pageInfo: `Page ${page}/${totalPages} • ${currentItems.length} items`
-                  },
-        [currentItems.length, locale, page, totalPages]
+        () => ({
+            previous: t("paginationPrevious"),
+            next: t("paginationNext"),
+            pageInfo: t("paginationPageInfo", {
+                page,
+                totalPages,
+                count: currentItems.length
+            })
+        }),
+        [currentItems.length, page, t, totalPages]
     );
 
     useEffect(() => {

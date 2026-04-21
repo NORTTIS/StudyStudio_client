@@ -1292,7 +1292,7 @@ export default function GroupDiscussPage() {
         const map: Record<string, string> = {};
 
         const put = (id?: string | null, avatarUrl?: string | null) => {
-            const key = String(id ?? "").trim();
+            const key = normalizeUserId(id);
             const value = String(avatarUrl ?? "").trim();
             if (!(key && value)) return;
             map[key] = value;
@@ -1316,7 +1316,7 @@ export default function GroupDiscussPage() {
                 id: m.userId,
                 name: m.name,
                 subtitle: m.email ?? "",
-                avatarUrl: m.avatarUrl || avatarByUserId[m.userId] || null
+                avatarUrl: m.avatarUrl || avatarByUserId[normalizeUserId(m.userId)] || null
             })),
         [avatarByUserId, members]
     );
