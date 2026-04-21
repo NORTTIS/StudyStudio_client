@@ -1,6 +1,21 @@
 import { type ApiResponse, apiDelete, apiGet, apiPut } from "./api-client";
 import { localizeNotificationText } from "@/utils/notification-localization";
 
+function isSystemAnnouncementType(type: string): boolean {
+    const normalized = String(type).toLowerCase();
+    return (
+        normalized === "0" ||
+        normalized === "1" ||
+        normalized === "2" ||
+        normalized === "3" ||
+        normalized === "info" ||
+        normalized === "warning" ||
+        normalized === "maintenance" ||
+        normalized === "promotion" ||
+        normalized === "critical"
+    );
+}
+
 // Types for user announcements
 export interface UserAnnouncement {
     userAnnouncementId: string;
@@ -23,6 +38,10 @@ export interface Announcement {
     isActive: boolean;
     createdAt: string;
     publishedAt: string;
+    isRead?: boolean;
+    taskId?: string | null;
+    groupId?: string | null;
+    sourceType?: string | null;
 }
 
 // Get all public announcements
@@ -63,30 +82,39 @@ export async function getAnnouncementById(id: string, locale = "vi"): Promise<Ap
 
 // Get user's announcements (personalized)
 export async function getUserAnnouncements(locale = "vi"): Promise<ApiResponse<UserAnnouncement[]>> {
-    const response = await apiGet<UserAnnouncement[]>('/announcements/user', locale);
+    const response = await getAllAnnouncements(locale);
 
     if (response.status === "success" && response.data) {
         return {
             ...response,
-            data: response.data.map((announcement) => ({
-                ...announcement,
-                title: localizeNotificationText(announcement.title, locale),
-                content: localizeNotificationText(announcement.content, locale)
-            }))
+            data: response.data
+                .filter((announcement) => !isSystemAnnouncementType(announcement.type))
+                .map((announcement) => ({
+                    announcementId: announcement.announcementId,
+                    userAnnouncementId: announcement.announcementId,
+                    title: announcement.title,
+                    content: announcement.content,
+                    type: announcement.type,
+                    isRead: !!announcement.isRead,
+                    createdAt: announcement.createdAt,
+                    publishedAt: announcement.publishedAt,
+                    mentionedId: "",
+                    createdBy: ""
+                }))
         };
     }
 
-    return response;
+    return response as unknown as ApiResponse<UserAnnouncement[]>;
 }
 
 // Mark announcement as read
-export async function markAnnouncementAsRead(userAnnouncementId: string, locale = "vi"): Promise<ApiResponse<string>> {
-    return apiPut<string>(`/announcements/user/${userAnnouncementId}/read`, {}, locale);
+export async function markAnnouncementAsRead(announcementId: string, locale = "vi"): Promise<ApiResponse<string>> {
+    return apiPut<string>(`/announcements/${announcementId}/read`, {}, locale);
 }
 
 // Delete user announcement
-export async function deleteUserAnnouncement(userAnnouncementId: string, locale = "vi"): Promise<ApiResponse<string>> {
-    return apiDelete<string>(`/announcements/user/${userAnnouncementId}`, locale);
+export async function deleteUserAnnouncement(announcementId: string, locale = "vi"): Promise<ApiResponse<string>> {
+    return apiDelete<string>(`/announcements/${announcementId}`, locale);
 }
 
 // Helper function to get announcement type color

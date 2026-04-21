@@ -22,7 +22,6 @@ import {
     deleteUserAnnouncement,
     getAllAnnouncements,
     getAnnouncementById,
-    getUserAnnouncements,
     markAnnouncementAsRead,
     type Announcement,
     type UserAnnouncement
@@ -89,7 +88,19 @@ export function AnnouncementsPage() {
     const t = useTranslations("Announcements");
     const { toast } = useToast();
 
-    const isMentionType = (type: string) => type === "Mention" || type === "mention" || type === "4";
+    const isSystemAnnouncementType = (type: string) => {
+        const normalized = String(type).toLowerCase();
+        return (
+            normalized === "0" ||
+            normalized === "1" ||
+            normalized === "2" ||
+            normalized === "3" ||
+            normalized === "info" ||
+            normalized === "warning" ||
+            normalized === "maintenance" ||
+            normalized === "promotion"
+        );
+    };
 
     const [publicAnnouncements, setPublicAnnouncements] = useState<PublicAnnouncementItem[]>([]);
     const [userAnnouncements, setUserAnnouncements] = useState<UserAnnouncement[]>([]);
@@ -114,54 +125,32 @@ export function AnnouncementsPage() {
         setIsLoading(true);
         try {
             const deletedSystemIds = new Set(readDeletedSystemAnnouncementIds());
-            const [publicResult, userResult] = await Promise.allSettled([
-                getAllAnnouncements(locale),
-                getUserAnnouncements(locale)
-            ]);
+            const result = await getAllAnnouncements(locale);
 
-            let systemAnnouncements: PublicAnnouncementItem[] = [];
+            if (result.status === "success") {
+                const all = result.data || [];
 
-            // Lấy thông báo chưa đọc từ /api/announcements (lọc type != Mention)
-            if (publicResult.status === "fulfilled" && publicResult.value.status === "success") {
-                const all = publicResult.value.data || [];
-                systemAnnouncements = all
-                    .filter((ann) => !isMentionType(ann.type))
+                const systemAnnouncements = all
+                    .filter((ann) => isSystemAnnouncementType(ann.type))
                     .filter((ann) => !deletedSystemIds.has(String(ann.announcementId)));
-            }
 
-            // Lấy thông báo đã đọc từ /api/announcements/user (type != Mention)
-            if (userResult.status === "fulfilled" && userResult.value.status === "success") {
-                const all = userResult.value.data || [];
-                const readAnnouncements = all.filter((ann) => !isMentionType(ann.type));
+                const personalAnnouncements: UserAnnouncement[] = all
+                    .filter((ann) => !isSystemAnnouncementType(ann.type))
+                    .map((ann) => ({
+                        announcementId: ann.announcementId,
+                        userAnnouncementId: ann.announcementId,
+                        title: ann.title,
+                        content: ann.content,
+                        type: ann.type,
+                        isRead: !!ann.isRead,
+                        createdAt: ann.createdAt,
+                        publishedAt: ann.publishedAt,
+                        mentionedId: "",
+                        createdBy: ""
+                    }));
 
-                // Map UserAnnouncement to Announcement for type compatibility
-                const normalizedRead: PublicAnnouncementItem[] = readAnnouncements.map((a) => ({
-                    announcementId: a.announcementId,
-                    title: a.title,
-                    content: a.content,
-                    type: a.type,
-                    isActive: true,
-                    createdAt: a.createdAt,
-                    publishedAt: a.publishedAt,
-                    userAnnouncementId: a.userAnnouncementId,
-                    isRead: a.isRead
-                }));
-
-                // Merge: thêm các thông báo đã đọc không có trong danh sách chưa đọc
-                const readIds = new Set(normalizedRead.map((a) => a.announcementId));
-                const newAnnouncements = systemAnnouncements.filter((a) => !readIds.has(a.announcementId));
-                const combined = [...newAnnouncements, ...normalizedRead].filter(
-                    (ann) => !deletedSystemIds.has(String(ann.announcementId))
-                );
-                setPublicAnnouncements(combined);
-            } else {
                 setPublicAnnouncements(systemAnnouncements);
-            }
-
-            // Tab "Thông báo cá nhân" - chỉ hiển thị type = Mention
-            if (userResult.status === "fulfilled" && userResult.value.status === "success") {
-                const all = userResult.value.data || [];
-                setUserAnnouncements(all.filter((ann) => isMentionType(ann.type)));
+                setUserAnnouncements(personalAnnouncements);
             }
         } catch (error) {
             console.error("Failed to load announcements:", error);
@@ -271,13 +260,13 @@ export function AnnouncementsPage() {
         }
     };
 
-    const handleMarkAsRead = async (userAnnouncementId: string, showMsg = true) => {
+    const handleMarkAsRead = async (announcementId: string, showMsg = true) => {
         try {
-            const result = await markAnnouncementAsRead(userAnnouncementId, locale);
+            const result = await markAnnouncementAsRead(announcementId, locale);
             if (result.status === "success") {
                 // Cập nhật trạng thái đã đọc cho userAnnouncements
                 setUserAnnouncements((prev) =>
-                    prev.map((ann) => (ann.userAnnouncementId === userAnnouncementId ? { ...ann, isRead: true } : ann))
+                    prev.map((ann) => (ann.announcementId === announcementId ? { ...ann, isRead: true } : ann))
                 );
 
                 if (showMsg) {
@@ -337,10 +326,10 @@ export function AnnouncementsPage() {
         const targetAnnouncementId = deleteTarget.item.announcementId;
         setIsDeleting(true);
         try {
-            const result = await deleteUserAnnouncement(targetId, locale);
+            const result = await deleteUserAnnouncement(targetAnnouncementId, locale);
             if (result.status === "success") {
-                setUserAnnouncements((prev) => prev.filter((ann) => ann.userAnnouncementId !== targetId));
-                setPublicAnnouncements((prev) => prev.filter((ann) => ann.userAnnouncementId !== targetId));
+                setUserAnnouncements((prev) => prev.filter((ann) => ann.announcementId !== targetAnnouncementId));
+                setPublicAnnouncements((prev) => prev.filter((ann) => ann.announcementId !== targetAnnouncementId));
                 if (selectedDetail && "userAnnouncementId" in selectedDetail && selectedDetail.userAnnouncementId === targetId) {
                     setSelectedId(null);
                     setSelectedDetail(null);

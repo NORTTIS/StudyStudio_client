@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
-import { Noto_Sans, Inter } from "next/font/google";
+import { Inter } from "next/font/google";
 import { Toaster } from "@/components/ui/toaster";
 import "./globals.css";
 
-const appSans = Noto_Sans({
+const appSans = Inter({
     variable: "--font-app-sans",
     subsets: ["latin", "vietnamese"],
     display: "swap"

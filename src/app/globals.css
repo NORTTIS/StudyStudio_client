@@ -40,8 +40,8 @@
 }
 
 @theme inline {
-    --font-sans: var(--font-app-sans), "Noto Sans", system-ui, -apple-system, "Segoe UI", "Roboto",
-        "Helvetica Neue", "Arial", "Noto Sans", "Liberation Sans", sans-serif;
+    --font-sans: var(--font-app-sans), "Inter", system-ui, -apple-system, "Segoe UI", "Roboto",
+        "Helvetica Neue", "Arial", "Inter", "Liberation Sans", sans-serif;
     --color-background: var(--background);
     --color-foreground: var(--foreground);
     --color-primary: var(--primary);
