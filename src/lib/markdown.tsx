@@ -6,6 +6,8 @@ import type { Components } from "react-markdown";
 export interface MarkdownOptions {
   /** Enable markdown table rendering */
   withTables?: boolean;
+  /** Primary accent color used across markdown UI */
+  primaryColor?: string;
   /** Custom className for list items */
   listClassName?: string;
   /** Custom className for paragraph text */
@@ -25,6 +27,7 @@ export function renderMarkdown(
 ): React.ReactNode {
   const {
     withTables = true,
+    primaryColor = "#d97706",
     listClassName = "list-disc space-y-1 pl-5",
     textClassName = "text-[15px] leading-7 text-[#3D3128]",
     containerClassName = "space-y-2",
@@ -33,10 +36,10 @@ export function renderMarkdown(
   const components: Components = {
     // Headings
     h1: ({ children }) => (
-      <h2 className="text-[18px] font-bold text-[#2B2118] mt-4 mb-1">{children}</h2>
+      <h2 className="text-[18px] font-bold mt-4 mb-1" style={{ color: primaryColor }}>{children}</h2>
     ),
     h2: ({ children }) => (
-      <h3 className="text-[15px] font-semibold text-[#2B2118] mt-3 mb-1">{children}</h3>
+      <h3 className="text-[15px] font-semibold mt-3 mb-1" style={{ color: primaryColor }}>{children}</h3>
     ),
     h3: ({ children }) => (
       <h4 className="text-sm font-semibold text-[#2B2118] mt-2 mb-1">{children}</h4>
@@ -84,7 +87,8 @@ export function renderMarkdown(
             type="checkbox"
             checked={checked}
             readOnly
-            className="mt-1 h-4 w-4 shrink-0 accent-[#F97316]"
+            className="mt-1 h-4 w-4 shrink-0"
+            style={{ accentColor: primaryColor }}
             {...props}
           />
         );
@@ -94,7 +98,7 @@ export function renderMarkdown(
 
     // Blockquote
     blockquote: ({ children }) => (
-      <blockquote className="border-l-4 border-[#D97706] pl-3 italic text-[#7A6858] my-2">
+      <blockquote className="border-l-4 pl-3 italic text-[#7A6858] my-2" style={{ borderLeftColor: primaryColor }}>
         {children}
       </blockquote>
     ),
@@ -112,7 +116,7 @@ export function renderMarkdown(
         );
       }
       return (
-        <code className="rounded bg-[#F5EDE6] px-1 py-0.5 text-[13px] font-mono text-[#C2410C]" {...props}>
+        <code className="rounded bg-[#F5EDE6] px-1 py-0.5 text-[13px] font-mono" style={{ color: primaryColor }} {...props}>
           {children}
         </code>
       );
@@ -127,7 +131,8 @@ export function renderMarkdown(
         href={href}
         target="_blank"
         rel="noopener noreferrer"
-        className="text-[#D97706] underline underline-offset-2 hover:text-[#B45309] focus-visible:outline-2 focus-visible:outline-[#D97706] focus-visible:outline-offset-2 active:text-[#9A3412]">
+        className="underline underline-offset-2 focus-visible:outline-2 focus-visible:outline-offset-2"
+        style={{ color: primaryColor, outlineColor: primaryColor }}>
         {children}
       </a>
     ),
@@ -146,7 +151,7 @@ export function renderMarkdown(
     );
     components.thead = ({ children }) => <thead className="bg-[#FAF7F4]">{children}</thead>;
     components.th = ({ children }) => (
-      <th className="border border-[#E8E0D8] px-3 py-2 font-semibold text-[#2B2118]">{children}</th>
+      <th className="border border-[#E8E0D8] px-3 py-2 font-semibold" style={{ color: primaryColor }}>{children}</th>
     );
     components.td = ({ children }) => (
       <td className="border border-[#E8E0D8] px-3 py-2 align-top text-[#3D3128]">{children}</td>
