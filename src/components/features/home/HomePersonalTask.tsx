@@ -846,14 +846,26 @@ function AddColumnInline({
             <div className="mt-3 flex items-center gap-2">
                 <button
                     type="button"
-                    onClick={close}
+                    onClick={() => void submit()}
                     disabled={isSubmitting}
                     className={cn(
                         "rounded-[18px] px-3.5 py-2 font-semibold text-sm text-white",
                         "bg-[linear-gradient(135deg,#F97316_0%,#F54A00_100%)] transition hover:brightness-105",
                         isSubmitting && "pointer-events-none opacity-60"
                     )}>
-                    {labels.cancel}
+                    {labels.confirm}
+                </button>
+                <button
+                    type="button"
+                    onClick={close}
+                    disabled={isSubmitting}
+                    aria-label={labels.cancel}
+                    className={cn(
+                        "grid h-9 w-9 place-items-center rounded-xl border border-zinc-200 bg-white text-zinc-700",
+                        "transition hover:bg-zinc-50",
+                        isSubmitting && "pointer-events-none opacity-60"
+                    )}>
+                    <X className="h-4 w-4" />
                 </button>
             </div>
         </div>
@@ -2109,15 +2121,19 @@ function InlineTaskFormModal({
                 onPointerDown={(e) => e.stopPropagation()}>
                 <div className="flex items-start justify-between border-zinc-200 border-b px-7 py-5">
                     <div className="min-w-0 flex-1">
-                        <input
-                            value={title}
-                            maxLength={30}
-                            onChange={(e) => setTitle(e.target.value.slice(0, 30))}
-                            placeholder={t("taskName")}
-                            className="w-full max-w-[520px] rounded-xl border border-zinc-200 bg-white px-3 py-2 font-extrabold text-[28px] text-zinc-900 leading-none outline-none"
-                        />
+                        <div className="relative max-w-[520px]">
+                            <input
+                                value={title}
+                                maxLength={30}
+                                onChange={(e) => setTitle(e.target.value.slice(0, 30))}
+                                placeholder={t("enterTaskName")}
+                                className="w-full rounded-xl border border-zinc-200 bg-white px-3 pb-7 pt-2 font-extrabold text-[28px] text-zinc-900 leading-none outline-none"
+                            />
 
-                        <div className="mt-1 max-w-[520px] text-right text-[11px] text-zinc-500">{title.length}/30</div>
+                            <div className="pointer-events-none absolute right-3 bottom-2 text-[11px] text-zinc-500">
+                                {title.length}/30
+                            </div>
+                        </div>
                     </div>
 
                     <button
@@ -2285,15 +2301,19 @@ function InlineTaskFormModal({
 
                     <div className="mt-6">
                         <div className="font-semibold text-sm text-zinc-600">{t("description")}</div>
-                        <textarea
-                            value={description}
-                            maxLength={200}
-                            onChange={(e) => setDescription(e.target.value.slice(0, 200))}
-                            placeholder={t("enterTaskDescription")}
-                            className="mt-2 min-h-30 w-full rounded-xl border border-zinc-200 bg-white p-4 text-sm text-zinc-800 outline-none"
-                        />
+                        <div className="relative mt-2">
+                            <textarea
+                                value={description}
+                                maxLength={200}
+                                onChange={(e) => setDescription(e.target.value.slice(0, 200))}
+                                placeholder={t("enterTaskDescription")}
+                                className="min-h-30 w-full rounded-xl border border-zinc-200 bg-white p-4 pb-8 text-sm text-zinc-800 outline-none"
+                            />
 
-                        <div className="mt-1 text-right text-[11px] text-zinc-500">{description.length}/200</div>
+                            <div className="pointer-events-none absolute right-4 bottom-3 text-[11px] text-zinc-500">
+                                {description.length}/200
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -2491,27 +2511,31 @@ function PersonalTaskDetailModal({
                     <div className="min-w-0 flex-1">
                         {isEditing ? (
                             <div className="max-w-[520px]">
-                                <input
-                                    value={title}
-                                    maxLength={30}
-                                    onChange={(e) => {
-                                        const nextValue = e.target.value.slice(0, 30);
-                                        setTitle(nextValue);
+                                <div className="relative">
+                                    <input
+                                        value={title}
+                                        maxLength={30}
+                                        onChange={(e) => {
+                                            const nextValue = e.target.value.slice(0, 30);
+                                            setTitle(nextValue);
 
-                                        if (titleError && nextValue.trim()) {
-                                            setTitleError(null);
-                                        }
-                                    }}
-                                    placeholder={t("taskName")}
-                                    className="mt-0 w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 font-extrabold text-[28px] text-zinc-900 leading-none outline-none"
-                                />
+                                            if (titleError && nextValue.trim()) {
+                                                setTitleError(null);
+                                            }
+                                        }}
+                                        placeholder={t("taskName")}
+                                        className="mt-0 w-full rounded-xl border border-zinc-200 bg-white px-3 pb-7 pt-2 font-extrabold text-[28px] text-zinc-900 leading-none outline-none"
+                                    />
+                                    <div className="pointer-events-none absolute right-3 bottom-2 text-[11px] text-zinc-500">
+                                        {title.length}/30
+                                    </div>
+                                </div>
                                 {titleError ? (
                                     <div className="mt-2 font-medium text-rose-600 text-sm">{titleError}</div>
                                 ) : null}
-                                <div className="mt-1 text-right text-[11px] text-zinc-500">{title.length}/30</div>
                             </div>
                         ) : (
-                            <h2 className="mt-0 min-w-0 break-words font-extrabold text-[30px] text-zinc-900 leading-none">
+                            <h2 className="mt-0 min-w-0 truncate whitespace-nowrap font-extrabold text-[30px] text-zinc-900 leading-none">
                                 {title || t("untitledTask")}
                             </h2>
                         )}
@@ -2704,18 +2728,22 @@ function PersonalTaskDetailModal({
 
                     <div className="mt-6">
                         <div className="font-semibold text-sm text-zinc-600">{t("description")}</div>
-                        <textarea
-                            value={description}
-                            maxLength={200}
-                            onChange={(e) => setDescription(e.target.value.slice(0, 200))}
-                            disabled={!isEditing}
-                            placeholder={t("noDescription")}
-                            className="mt-2 min-h-[120px] w-full rounded-xl border border-zinc-200 bg-white p-4 text-sm text-zinc-800 outline-none disabled:cursor-not-allowed disabled:bg-zinc-50 disabled:text-zinc-600"
-                        />
+                        <div className="relative mt-2">
+                            <textarea
+                                value={description}
+                                maxLength={200}
+                                onChange={(e) => setDescription(e.target.value.slice(0, 200))}
+                                disabled={!isEditing}
+                                placeholder={t("noDescription")}
+                                className="min-h-[120px] w-full rounded-xl border border-zinc-200 bg-white p-4 pb-8 text-sm text-zinc-800 outline-none disabled:cursor-not-allowed disabled:bg-zinc-50 disabled:text-zinc-600"
+                            />
 
-                        {isEditing ? (
-                            <div className="mt-1 text-right text-[11px] text-zinc-500">{description.length}/200</div>
-                        ) : null}
+                            {isEditing ? (
+                                <div className="pointer-events-none absolute right-4 bottom-3 text-[11px] text-zinc-500">
+                                    {description.length}/200
+                                </div>
+                            ) : null}
+                        </div>
                     </div>
                 </div>
 
@@ -3847,7 +3875,7 @@ export default function HomePersonalTaskScreen() {
                                         failedMessage: t("createStatusFailed"),
                                         createStatus: t("createStatus"),
                                         enterStatusName: t("enterStatusName"),
-                                        confirm: t("cancel"),
+                                        confirm: t("createStatus"),
                                         cancel: t("cancel")
                                     }}
                                 />
@@ -3914,7 +3942,7 @@ export default function HomePersonalTaskScreen() {
                                                 failedMessage: t("createStatusFailed"),
                                                 createStatus: t("createStatus"),
                                                 enterStatusName: t("enterStatusName"),
-                                                confirm: t("cancel"),
+                                                confirm: t("createStatus"),
                                                 cancel: t("cancel")
                                             }}
                                         />
