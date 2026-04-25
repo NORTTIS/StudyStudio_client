@@ -1446,19 +1446,19 @@
     "quickActions": {
       "summary": {
         "label": "Tổng hợp Studio",
-        "prompt": "Hãy tổng hợp và phân tích tình hình tổng thể của Studio dựa trên các nhóm và task hiện tại.\n\nCung cấp:\n1. Tổng quan số lượng nhóm, thành viên, task\n2. Tỷ lệ hoàn thành chung\n3. Các nhóm hoạt động tốt nhất và kém nhất\n4. Số lượng task quá hạn\n5. Nhận định và gợi ý cải thiện cho toàn Studio"
+        "prompt": "Hãy tổng hợp tình hình Studio bằng các tool studio-level trước: get_studio_health"
       },
       "risk": {
         "label": "Phân tích rủi ro",
-        "prompt": "Hãy xác định và phân tích các nhóm có nguy cơ trong Studio.\n\nVới mỗi nhóm có nguy cơ, cung cấp:\n1. Tên nhóm và mức độ rủi ro (HIGH/MEDIUM/LOW)\n2. Các yếu tố rủi ro cụ thể (tỷ lệ hoàn thành thấp, nhiều task quá hạn, không hoạt động gần đây)\n3. Đề xuất hành động khắc phục cụ thể"
+        "prompt": "Hãy xác định và phân tích các nhóm có nguy cơ trong Studio bằng tool studio-level: get_risk_groups"
       },
       "report": {
         "label": "Báo cáo tiến độ",
-        "prompt": "Hãy tạo báo cáo chi tiết về tiến độ các nhóm trong Studio.\n\nBao gồm:\n1. Bảng so sánh các nhóm theo tỷ lệ hoàn thành\n2. Số lượng task đã hoàn thành / đang thực hiện / chưa bắt đầu / quá hạn\n3. Nhóm hoàn thành tốt nhất và lý do\n4. Nhóm cần cải thiện và các vấn đề cụ thể\n5. Đề xuất điều phối công việc"
+        "prompt": "Hãy tạo báo cáo tiến độ cấp Studio dựa trên tool studio-level:  get_studio_analytics"
       },
       "deadline": {
-        "label": "Deadline sắp tới",
-        "prompt": "Hãy tổng hợp tình hình deadline trong Studio.\n\nCung cấp:\n1. Tổng số task quá hạn và task sắp đến hạn\n2. Nhóm nào có nhiều task quá hạn nhất\n3. Các nhóm hoàn thành tốt và giữ đúng tiến độ\n4. Đề xuất phân bổ công việc hợp lý"
+        "label": "So sánh tiến độ nhóm",
+        "prompt": "Hãy So sánh tiến độ nhóm toàn Studio bằng tool studio-level trước: compare_groups"
       }
     }
   },
@@ -1479,19 +1479,19 @@
     "quickActions": {
       "summary": {
         "label": "Tóm tắt tiến độ dự án",
-        "prompt": "Hãy tóm tắt tiến độ hiện tại của dự án dựa trên các task, hoạt động và tài liệu trong nhóm.\n\nPhân tích:\n- tổng số task\n- số task đã hoàn thành\n- task đang thực hiện\n- task chưa bắt đầu\n\nSau đó cung cấp:\n1. Tổng quan tiến độ dự án\n2. Các milestone đã đạt được\n3. Công việc đang thực hiện\n4. Công việc còn lại\n5. Insight của AI về tình trạng dự án"
+        "prompt": "Hãy tóm tắt tiến độ hiện tại của dự án trong nhóm bằng các tool group-level: get_tasks, get_group_stats, get_group_performance, get_members, get_group_documents/search_documents (khi cần bằng chứng từ tài liệu).\n\nCung cấp:\n1. Tổng quan tiến độ dự án\n2. Milestone đã đạt được\n3. Công việc đang thực hiện\n4. Công việc còn lại\n5. Insight của AI dựa trên dữ liệu tool"
       },
       "risk": {
         "label": "Phân tích rủi ro",
-        "prompt": "Hãy phân tích các rủi ro tiềm ẩn của dự án dựa trên task, deadline và tiến độ hiện tại.\n\nXác định:\n- task có nguy cơ trễ deadline\n- task chưa có tiến triển\n- thành viên bị quá tải\n- các vấn đề có thể ảnh hưởng tiến độ\n\nTrả về kết quả gồm:\n1. Tổng quan mức độ rủi ro dự án\n2. Các rủi ro nghiêm trọng\n3. Các rủi ro cần theo dõi\n4. Các task có nguy cơ trễ deadline\n5. Đề xuất giải pháp giảm rủi ro"
+        "prompt": "Hãy phân tích rủi ro dự án của nhóm bằng get_group_risk, get_deadlines, get_tasks, get_group_stats và get_members.\n\nTrả về:\n1. Tổng quan mức độ rủi ro dự án\n2. Các rủi ro nghiêm trọng\n3. Các rủi ro cần theo dõi\n4. Các task có nguy cơ trễ deadline\n5. Đề xuất giải pháp giảm rủi ro"
       },
       "report": {
         "label": "Báo cáo tiến độ",
-        "prompt": "Tạo báo cáo tiến độ dự án dựa trên dữ liệu task và hoạt động của nhóm.\n\nBáo cáo cần gồm:\n\n1. Executive summary\n2. Trạng thái hiện tại của dự án\n3. Các milestone đã hoàn thành\n4. Công việc đang thực hiện\n5. Đóng góp của các thành viên\n6. Các công việc tiếp theo\n7. Nhận xét tổng quan của AI"
+        "prompt": "Tạo báo cáo tiến độ dự án trong nhóm bằng get_tasks, get_group_stats, get_group_performance, get_members và get_group_documents nếu cần.\n\nBáo cáo cần gồm:\n1. Executive summary\n2. Trạng thái hiện tại của dự án\n3. Các milestone đã hoàn thành\n4. Công việc đang thực hiện\n5. Đóng góp của các thành viên\n6. Các công việc tiếp theo\n7. Nhận xét tổng quan của AI"
       },
       "deadline": {
         "label": "Review deadline sắp tới",
-        "prompt": "Hãy review các deadline sắp tới của dự án.\n\nPhân tích:\n- task có deadline trong thời gian gần\n- task chưa hoàn thành nhưng gần deadline\n- task có nguy cơ trễ\n\nTrả về:\n1. Danh sách deadline sắp tới\n2. Các task cần ưu tiên\n3. Các task có nguy cơ trễ deadline\n4. Đề xuất hành động cho nhóm"
+        "prompt": "Hãy review các deadline sắp tới của dự án trong nhóm bằng get_deadlines và get_tasks.\n\nTrả về:\n1. Danh sách deadline sắp tới\n2. Các task cần ưu tiên\n3. Các task có nguy cơ trễ deadline\n4. Đề xuất hành động cho nhóm"
       }
     }
   },

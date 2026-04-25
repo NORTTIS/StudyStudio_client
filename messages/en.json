@@ -1463,19 +1463,19 @@
     "quickActions": {
       "summary": {
         "label": "Project progress summary",
-        "prompt": "Please summarize the current project progress based on tasks, activities, and documents in the group.\n\nAnalyze:\n- total number of tasks\n- completed tasks\n- tasks in progress\n- tasks not started\n\nThen provide:\n1. Overall project progress\n2. Achieved milestones\n3. Ongoing work\n4. Remaining work\n5. AI insights about the project status"
+        "prompt": "Summarize current project progress in this group using group tools: get_tasks, get_group_stats, get_group_performance, get_members, get_group_documents/search_documents (when document evidence is needed).\n\nProvide:\n1. Overall progress snapshot\n2. Completed milestones\n3. Ongoing work\n4. Remaining work\n5. AI insights grounded in tool data"
       },
       "risk": {
         "label": "Risk analysis",
-        "prompt": "Please analyze potential project risks based on tasks, deadlines, and current progress.\n\nIdentify:\n- tasks at risk of missing deadlines\n- tasks with no progress\n- overloaded members\n- issues that may impact progress\n\nReturn:\n1. Overall project risk level\n2. Critical risks\n3. Risks to monitor\n4. Tasks likely to miss deadlines\n5. Suggested mitigation actions"
+        "prompt": "Analyze project risks for this group using get_group_risk, get_deadlines, get_tasks, get_group_stats, and get_members.\n\nReturn:\n1. Overall risk level\n2. Critical risks\n3. Risks to monitor\n4. Tasks likely to miss deadlines\n5. Specific mitigation actions"
       },
       "report": {
         "label": "Progress report",
-        "prompt": "Generate a project progress report based on task data and team activity.\n\nThe report should include:\n\n1. Executive summary\n2. Current project status\n3. Completed milestones\n4. Ongoing work\n5. Team member contributions\n6. Next tasks\n7. AI overall assessment"
+        "prompt": "Generate a detailed project report for this group using get_tasks, get_group_stats, get_group_performance, get_members, and get_group_documents if needed.\n\nThe report should include:\n1. Executive summary\n2. Current project status\n3. Completed milestones\n4. Ongoing work\n5. Team member contributions\n6. Next tasks\n7. AI overall assessment"
       },
       "deadline": {
         "label": "Review upcoming deadlines",
-        "prompt": "Please review upcoming project deadlines.\n\nAnalyze:\n- tasks with near-term deadlines\n- unfinished tasks near deadline\n- tasks at risk of delay\n\nReturn:\n1. List of upcoming deadlines\n2. Priority tasks\n3. Tasks at risk of missing deadlines\n4. Recommended actions for the team"
+        "prompt": "Review upcoming deadlines for this group using get_deadlines and get_tasks.\n\nReturn:\n1. List of upcoming deadlines\n2. Priority tasks\n3. Tasks at risk of delay\n4. Recommended actions for the team"
       }
     }
   },
@@ -3127,21 +3127,21 @@
     "emptyAiAnswer": "AI has not returned an answer yet.",
     "aiResponseError": "Unable to receive response from AI",
     "quickActions": {
-      "summary": {
-        "label": "Studio Overview",
-        "prompt": "Please summarize and analyze the overall status of the Studio based on current groups and tasks.\n\nProvide:\n1. Overview of number of groups, members, tasks\n2. Overall completion rate\n3. Best and worst performing groups\n4. Number of overdue tasks\n5. Assessment and suggestions for Studio improvement"
+     "summary": {
+        "label": "Studio Compilation",
+        "prompt": "Let's summarize the Studio situation using the previous studio-level tools: get_studio_analytics, get_group_comparison/compare_groups, get_studio_health, get_risk_groups."
       },
       "risk": {
-        "label": "Risk Analysis",
-        "prompt": "Please identify and analyze at-risk groups in the Studio.\n\nFor each at-risk group, provide:\n1. Group name and risk level (HIGH/MEDIUM/LOW)\n2. Specific risk factors (low completion rate, many overdue tasks, no recent activity)\n3. Specific corrective action recommendations"
+        "label": "Risk analysis",
+        "prompt": "Identify and analyze risk groups in Studio using the tool studio-level: get_risk_groups"
       },
       "report": {
-        "label": "Progress Report",
-        "prompt": "Please generate a detailed report on group progress in the Studio.\n\nInclude:\n1. Comparison table of groups by completion rate\n2. Number of tasks: completed / in progress / not started / overdue\n3. Best performing groups and reasons\n4. Groups needing improvement and specific issues\n5. Work coordination recommendations"
+        "label": "Progress report",
+        "prompt": "Let's generate a Studio-level progress report based on the studio-level tool: get_studio_analytics"
       },
       "deadline": {
-        "label": "Upcoming Deadlines",
-        "prompt": "Please summarize deadline status in the Studio.\n\nProvide:\n1. Total number of overdue and upcoming tasks\n2. Which groups have the most overdue tasks\n3. Groups that are on track and on schedule\n4. Recommendations for reasonable work allocation"
+        "label": "Compare group progress",
+        "prompt": "Let's compare Studio-wide group progress using the previous studio-level tool: get_group_comparison"
       }
     }
   },
