@@ -1090,39 +1090,49 @@ function MyTaskStatusCard({
     total: number;
     completedLabel: string;
 }) {
+    const [activeIndex, setActiveIndex] = React.useState<number | null>(null);
+
     return (
-        <div className="grid grid-cols-1 items-center gap-4 lg:grid-cols-[220px_minmax(0,1fr)]">
+        <div className="grid grid-cols-1 items-center gap-4 lg:grid-cols-[260px_minmax(0,1fr)]">
             {/* Donut */}
-            <div className="relative mx-auto w-full max-w-[220px]">
-                <ResponsiveContainer width="100%" height={220}>
+            <div className="relative mx-auto w-full max-w-[260px]">
+                <ResponsiveContainer width="100%" height={260}>
                     <PieChart>
                         <Pie
                             data={data}
                             cx="50%"
                             cy="50%"
-                            innerRadius={65}
-                            outerRadius={95}
-                            paddingAngle={2}
+                            innerRadius={66}
+                            outerRadius={96}
+                            paddingAngle={1}
+                            cornerRadius={12}
+                            stroke="#fff"
+                            strokeWidth={3}
                             dataKey="value"
                             startAngle={90}
                             endAngle={-270}
-                            labelLine={false}
-                            label={({ cx, cy }) => (
-                                <DonutCenterLabel
-                                    cx={cx}
-                                    cy={cy}
-                                    onTimeRate={completionRate}
-                                    total={total}
-                                    label={completedLabel}
-                                />
-                            )}>
+                            onMouseEnter={(_, index) => setActiveIndex(index)}
+                            onMouseLeave={() => setActiveIndex(null)}
+                            label={false}
+                            labelLine={false}>
                             {data.map((entry, index) => (
                                 <Cell key={`cell-${index}`} fill={entry.color} />
                             ))}
                         </Pie>
-                        <Tooltip content={<DonutTooltip />} />
+                        <Tooltip content={() => null} />
                     </PieChart>
                 </ResponsiveContainer>
+                <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+                    <div className="text-center">
+                        <div className="font-black text-[34px] leading-none text-slate-900">
+                            {activeIndex != null ? data[activeIndex]?.value ?? 0 : completionRate}
+                            {activeIndex == null ? "%" : ""}
+                        </div>
+                        <div className="mt-1 font-medium text-[11px] text-slate-400">
+                            {activeIndex != null ? data[activeIndex]?.name ?? completedLabel : completedLabel}
+                        </div>
+                    </div>
+                </div>
             </div>
 
             {/* Legend grid */}

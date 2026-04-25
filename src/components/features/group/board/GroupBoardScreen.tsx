@@ -4,12 +4,10 @@ import {
     type CollisionDetection,
     closestCenter,
     closestCorners,
-    DndContext,
     type DragCancelEvent,
     type DragEndEvent,
     type DragMoveEvent,
     type DragOverEvent,
-    DragOverlay,
     type DragStartEvent,
     type DroppableContainer,
     getFirstCollision,
@@ -22,7 +20,6 @@ import {
 } from "@dnd-kit/core";
 import {
     arrayMove,
-    horizontalListSortingStrategy,
     SortableContext,
     sortableKeyboardCoordinates,
     useSortable,
@@ -36,6 +33,7 @@ import * as React from "react";
 import { createPortal } from "react-dom";
 import { getUserData } from "@/api/auth";
 import type { components } from "@/api/types";
+import GroupBoardDnd from "@/components/features/group/board/GroupBoardDnd";
 import { useGroupHeaderActionSlot } from "@/components/features/group/GroupShell";
 import { getCurrentUserId, mapRole } from "@/components/features/group/group.api";
 import AssigneeAvatar from "@/components/features/group/task/AssigneeAvatar";
@@ -1928,6 +1926,8 @@ function TaskCard({
         onCommitEdit();
     }, [draftTitle, onCommitEdit, onCancelEdit]);
 
+    const normalizeSingleLineTitle = React.useCallback((value: string) => value.replace(/[\r\n]+/g, " "), []);
+
     const overdue = task.dueRaw ? isOverdue(task.dueRaw) : false;
 
     const handleOpenDetail = React.useCallback(() => {
@@ -2087,9 +2087,17 @@ function TaskCard({
                         <textarea
                             ref={taRef}
                             value={draftTitle}
-                            onChange={(e) => onDraftChange(e.target.value)}
+                            onChange={(e) => onDraftChange(normalizeSingleLineTitle(e.target.value))}
+                            onPaste={(e) => {
+                                const pasted = e.clipboardData.getData("text");
+                                if (/[\r\n]/.test(pasted)) {
+                                    e.preventDefault();
+                                    onDraftChange(normalizeSingleLineTitle(pasted));
+                                }
+                            }}
+                            wrap="off"
                             onKeyDown={(e) => {
-                                if (e.key === "Enter" && !e.shiftKey) {
+                                if (e.key === "Enter") {
                                     e.preventDefault();
                                     safeCommit();
                                 }
@@ -2109,11 +2117,13 @@ function TaskCard({
                             }}
                             rows={1}
                             className={cn(
-                                "w-full resize-none rounded-lg border border-zinc-200 bg-white px-3 py-2",
+                                "w-full resize-none overflow-x-auto overflow-y-hidden whitespace-nowrap rounded-lg border border-zinc-200 bg-white px-3 py-2",
                                 "select-text font-semibold text-sm text-zinc-900 outline-none",
                                 "focus:border-indigo-300 focus:ring-2 focus:ring-indigo-200"
                             )}
                         />
+
+                        <div className="-mt-1 pr-1 text-right text-[11px] text-zinc-500">{draftTitle.length}/30</div>
 
                         <div className="flex items-center gap-2">
                             <button
@@ -2243,22 +2253,24 @@ function AddColumnInline({
 
     return (
         <div className="rounded-xl border border-zinc-200/60 bg-white p-3 backdrop-blur-sm">
-            <input
-                ref={inputRef}
-                value={title}
-                maxLength={30}
-                onChange={(e) => setTitle(e.target.value.slice(0, 30))}
-                onKeyDown={onKeyDown}
-                disabled={isSubmitting}
-                placeholder={t("statusNamePlaceholder")}
-                className={cn(
-                    "w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 outline-none",
-                    "focus:border-indigo-300 focus:ring-2 focus:ring-indigo-200",
-                    "select-text"
-                )}
-            />
+            <div>
+                <input
+                    ref={inputRef}
+                    value={title}
+                    maxLength={30}
+                    onChange={(e) => setTitle(e.target.value.slice(0, 30))}
+                    onKeyDown={onKeyDown}
+                    disabled={isSubmitting}
+                    placeholder={t("statusNamePlaceholder")}
+                    className={cn(
+                        "w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 outline-none",
+                        "focus:border-indigo-300 focus:ring-2 focus:ring-indigo-200",
+                        "select-text"
+                    )}
+                />
+            </div>
 
-            <div className="mt-1 text-right text-[11px] text-zinc-500">{title.length}/30</div>
+            <div className="mt-1 flex justify-end text-[11px] text-zinc-500">{title.length}/30</div>
 
             {error ? <div className="mt-2 font-medium text-rose-600 text-xs">{error}</div> : null}
 
@@ -2507,41 +2519,41 @@ function ColumnView({
                                 <p className="truncate font-bold text-sm text-zinc-900">{col.title}</p>
                             ) : (
                                 <div className="space-y-1">
-                                    <input
-                                        ref={colInputRef}
-                                        value={columnDraft}
-                                        maxLength={30}
-                                        onChange={(e) => {
-                                            const value = e.target.value.slice(0, 30);
-                                            onColumnDraftChange(value);
-                                        }}
-                                        onPointerDownCapture={(e) => e.stopPropagation()}
-                                        onKeyDown={(e) => {
-                                            if (e.key === "Enter") {
-                                                e.preventDefault();
-                                                onColumnCommit();
-                                            }
+                                    <div style={{ maxWidth: 220 }}>
+                                        <input
+                                            ref={colInputRef}
+                                            value={columnDraft}
+                                            maxLength={30}
+                                            onChange={(e) => {
+                                                const value = e.target.value.slice(0, 30);
+                                                onColumnDraftChange(value);
+                                            }}
+                                            onPointerDownCapture={(e) => e.stopPropagation()}
+                                            onKeyDown={(e) => {
+                                                if (e.key === "Enter") {
+                                                    e.preventDefault();
+                                                    onColumnCommit();
+                                                }
 
-                                            if (e.key === "Escape") {
-                                                e.preventDefault();
-                                                onColumnCancel();
-                                            }
-                                        }}
-                                        onBlur={() => {
-                                            setTimeout(() => onColumnCommit(), 0);
-                                        }}
-                                        className={cn(
-                                            "h-9 w-full min-w-0 rounded-lg border bg-white px-3 font-bold text-sm text-zinc-900 outline-none",
-                                            columnError
-                                                ? "border-rose-300 focus:border-rose-400 focus:ring-2 focus:ring-rose-100"
-                                                : "border-zinc-200 focus:border-indigo-300 focus:ring-2 focus:ring-indigo-200",
-                                            "select-text"
-                                        )}
-                                        style={{ maxWidth: 220 }}
-                                    />
-                                    <div className="flex justify-end text-[11px] text-zinc-500">
-                                        {columnDraft.length}/30
+                                                if (e.key === "Escape") {
+                                                    e.preventDefault();
+                                                    onColumnCancel();
+                                                }
+                                            }}
+                                            onBlur={() => {
+                                                setTimeout(() => onColumnCommit(), 0);
+                                            }}
+                                            className={cn(
+                                                "h-9 w-full min-w-0 rounded-lg border bg-white px-3 font-bold text-sm text-zinc-900 outline-none",
+                                                columnError
+                                                    ? "border-rose-300 focus:border-rose-400 focus:ring-2 focus:ring-rose-100"
+                                                    : "border-zinc-200 focus:border-indigo-300 focus:ring-2 focus:ring-indigo-200",
+                                                "select-text"
+                                            )}
+                                        />
                                     </div>
+
+                                    <div className="flex justify-end text-[11px] text-zinc-500">{columnDraft.length}/30</div>
 
                                     {columnError ? (
                                         <div className="font-medium text-[11px] text-rose-600">{columnError}</div>
@@ -4829,6 +4841,119 @@ export function GroupBoardScreen({
         });
     };
 
+    const staticBoardContent = (
+        <>
+            {columns.map((col) => (
+                <ColumnView
+                    key={col.id}
+                    col={col}
+                    tasks={filteredBoard[col.id] ?? []}
+                    taskIds={taskIdsByCol[col.id] ?? []}
+                    statusId={col.id}
+                    isTasksLoaded={statusLoadedMap[col.id] ?? false}
+                    isTasksLoading={statusLoadingMap[col.id] ?? false}
+                    taskLoadError={statusLoadErrors[col.id] ?? null}
+                    onRetryLoadTasks={loadTasksForStatus}
+                    onOpenCreateTask={openCreateTask}
+                    onOpenTaskDetail={openTaskDetail}
+                    dndEnabled={false}
+                    canEditTask={canEditTask}
+                    canEditStatus={canEditStatus}
+                    canDeleteStatus={canDeleteStatus}
+                    canDeleteTask={canDeleteTask}
+                    canAddTask={canAddTask}
+                    headerDragProps={undefined}
+                    ghost={null}
+                    dropTargetTaskId={null}
+                    creatingTask={creatingTask}
+                    onRenameColumnInline={startEditColumn}
+                    onDeleteColumn={onDeleteColumn}
+                    taskEditState={editingTask}
+                    onTaskStartEdit={onTaskStartEdit}
+                    onTaskCancelEdit={onTaskCancelEdit}
+                    onTaskDraftChange={(v) => setEditingTask((p) => ({ ...p, draft: v }))}
+                    onTaskCommitEdit={onTaskCommitEdit}
+                    onDeleteTask={onDeleteTask}
+                    isColumnEditing={editingColumn.id === col.id}
+                    columnDraft={editingColumn.id === col.id ? editingColumn.draft : ""}
+                    columnError={editingColumn.id === col.id ? editingColumn.error : null}
+                    onColumnDraftChange={onColumnDraftChange}
+                    onColumnCommit={() => void commitEditColumn()}
+                    onColumnCancel={cancelEditColumn}
+                    isLoadingMore={statusLoadingMoreMap[col.id] ?? false}
+                    hasMore={statusHasMoreMap[col.id] ?? false}
+                    onLoadMore={loadMoreForStatus}
+                    totalCount={statusTotalCountMap[col.id]}
+                />
+            ))}
+
+            {canAddStatus && (
+                <div className="min-w-[300px] max-w-[300px] self-start">
+                    <AddColumnInline isSubmitting={creatingColumn} onSubmit={submitAddColumn} />
+                </div>
+            )}
+        </>
+    );
+
+    const sortableBoardContent = (
+        <>
+            {columns.map((col) => (
+                <SortableColumn
+                    key={col.id}
+                    col={col}
+                    tasks={filteredBoard[col.id] ?? []}
+                    taskIds={taskIdsByCol[col.id] ?? []}
+                    statusId={col.id}
+                    isTasksLoaded={statusLoadedMap[col.id] ?? false}
+                    isTasksLoading={statusLoadingMap[col.id] ?? false}
+                    taskLoadError={statusLoadErrors[col.id] ?? null}
+                    onRetryLoadTasks={loadTasksForStatus}
+                    onOpenCreateTask={openCreateTask}
+                    onOpenTaskDetail={openTaskDetail}
+                    dndEnabled={!isRestricted}
+                    canEditTask={canEditTask}
+                    canEditStatus={canEditStatus}
+                    canDeleteStatus={canDeleteStatus}
+                    canDeleteTask={canDeleteTask}
+                    canAddTask={canAddTask}
+                    ghost={ghost}
+                    dropTargetTaskId={dropTargetTaskId}
+                    creatingTask={creatingTask}
+                    onRenameColumnInline={startEditColumn}
+                    onDeleteColumn={onDeleteColumn}
+                    taskEditState={editingTask}
+                    onTaskStartEdit={onTaskStartEdit}
+                    onTaskCancelEdit={onTaskCancelEdit}
+                    onTaskDraftChange={(v) => setEditingTask((p) => ({ ...p, draft: v }))}
+                    onTaskCommitEdit={onTaskCommitEdit}
+                    onDeleteTask={onDeleteTask}
+                    isColumnEditing={editingColumn.id === col.id}
+                    columnDraft={editingColumn.id === col.id ? editingColumn.draft : ""}
+                    columnError={editingColumn.id === col.id ? editingColumn.error : null}
+                    onColumnDraftChange={onColumnDraftChange}
+                    onColumnCommit={() => void commitEditColumn()}
+                    onColumnCancel={cancelEditColumn}
+                    isLoadingMore={statusLoadingMoreMap[col.id] ?? false}
+                    hasMore={statusHasMoreMap[col.id] ?? false}
+                    onLoadMore={loadMoreForStatus}
+                    totalCount={statusTotalCountMap[col.id]}
+                />
+            ))}
+
+            {canAddStatus && (
+                <div className="min-w-[300px] max-w-[300px] self-start">
+                    <AddColumnInline isSubmitting={creatingColumn} onSubmit={submitAddColumn} />
+                </div>
+            )}
+        </>
+    );
+
+    const dragOverlayContent = activeTask ? (
+        <TaskOverlay task={activeTask} />
+    ) : activeColumn ? (
+        <ColumnOverlay col={activeColumn} tasks={board[activeColumn.id] ?? []} />
+    ) : null;
+
     return (
         <div className={boardRootClassName}>
             <TaskFormModal
@@ -4894,144 +5019,27 @@ export function GroupBoardScreen({
                     </div>
                 ) : null}
 
-                {!mounted ? (
-                    <div
-                        ref={boardScrollRef}
-                        onScroll={handleBoardScroll}
-                        onPointerDown={handleBoardPointerDown}
-                        onPointerMove={handleBoardPointerMove}
-                        onPointerUp={handleBoardPointerUp}
-                        onPointerCancel={handleBoardPointerCancel}
-                        className={boardScrollClassName}>
-                        {columns.map((col) => (
-                            <ColumnView
-                                key={col.id}
-                                col={col}
-                                tasks={filteredBoard[col.id] ?? []}
-                                taskIds={taskIdsByCol[col.id] ?? []}
-                                statusId={col.id}
-                                isTasksLoaded={statusLoadedMap[col.id] ?? false}
-                                isTasksLoading={statusLoadingMap[col.id] ?? false}
-                                taskLoadError={statusLoadErrors[col.id] ?? null}
-                                onRetryLoadTasks={loadTasksForStatus}
-                                onOpenCreateTask={openCreateTask}
-                                onOpenTaskDetail={openTaskDetail}
-                                dndEnabled={false}
-                                canEditTask={canEditTask}
-                                canEditStatus={canEditStatus}
-                                canDeleteStatus={canDeleteStatus}
-                                canDeleteTask={canDeleteTask}
-                                canAddTask={canAddTask}
-                                headerDragProps={undefined}
-                                ghost={null}
-                                dropTargetTaskId={null}
-                                creatingTask={creatingTask}
-                                onRenameColumnInline={startEditColumn}
-                                onDeleteColumn={onDeleteColumn}
-                                taskEditState={editingTask}
-                                onTaskStartEdit={onTaskStartEdit}
-                                onTaskCancelEdit={onTaskCancelEdit}
-                                onTaskDraftChange={(v) => setEditingTask((p) => ({ ...p, draft: v }))}
-                                onTaskCommitEdit={onTaskCommitEdit}
-                                onDeleteTask={onDeleteTask}
-                                isColumnEditing={editingColumn.id === col.id}
-                                columnDraft={editingColumn.id === col.id ? editingColumn.draft : ""}
-                                columnError={editingColumn.id === col.id ? editingColumn.error : null}
-                                onColumnDraftChange={onColumnDraftChange}
-                                onColumnCommit={() => void commitEditColumn()}
-                                onColumnCancel={cancelEditColumn}
-                                isLoadingMore={statusLoadingMoreMap[col.id] ?? false}
-                                hasMore={statusHasMoreMap[col.id] ?? false}
-                                onLoadMore={loadMoreForStatus}
-                                totalCount={statusTotalCountMap[col.id]}
-                            />
-                        ))}
-
-                        {canAddStatus && (
-                            <div className="min-w-[300px] max-w-[300px] self-start">
-                                <AddColumnInline isSubmitting={creatingColumn} onSubmit={submitAddColumn} />
-                            </div>
-                        )}
-                    </div>
-                ) : (
-                    <DndContext
-                        sensors={sensors}
-                        autoScroll={false}
-                        collisionDetection={collisionDetection}
-                        onDragStart={handleDragStart}
-                        onDragMove={handleDragMove}
-                        onDragOver={handleDragOver}
-                        onDragCancel={handleDragCancel}
-                        onDragEnd={handleDragEnd}>
-                        <SortableContext items={columnIds} strategy={horizontalListSortingStrategy}>
-                            <div
-                                ref={boardScrollRef}
-                                onScroll={handleBoardScroll}
-                                onPointerDown={handleBoardPointerDown}
-                                onPointerMove={handleBoardPointerMove}
-                                onPointerUp={handleBoardPointerUp}
-                                onPointerCancel={handleBoardPointerCancel}
-                                className={boardScrollClassName}>
-                                {columns.map((col) => (
-                                    <SortableColumn
-                                        key={col.id}
-                                        col={col}
-                                        tasks={filteredBoard[col.id] ?? []}
-                                        taskIds={taskIdsByCol[col.id] ?? []}
-                                        statusId={col.id}
-                                        isTasksLoaded={statusLoadedMap[col.id] ?? false}
-                                        isTasksLoading={statusLoadingMap[col.id] ?? false}
-                                        taskLoadError={statusLoadErrors[col.id] ?? null}
-                                        onRetryLoadTasks={loadTasksForStatus}
-                                        onOpenCreateTask={openCreateTask}
-                                        onOpenTaskDetail={openTaskDetail}
-                                        dndEnabled={!isRestricted}
-                                        canEditTask={canEditTask}
-                                        canEditStatus={canEditStatus}
-                                        canDeleteStatus={canDeleteStatus}
-                                        canDeleteTask={canDeleteTask}
-                                        canAddTask={canAddTask}
-                                        ghost={ghost}
-                                        dropTargetTaskId={dropTargetTaskId}
-                                        creatingTask={creatingTask}
-                                        onRenameColumnInline={startEditColumn}
-                                        onDeleteColumn={onDeleteColumn}
-                                        taskEditState={editingTask}
-                                        onTaskStartEdit={onTaskStartEdit}
-                                        onTaskCancelEdit={onTaskCancelEdit}
-                                        onTaskDraftChange={(v) => setEditingTask((p) => ({ ...p, draft: v }))}
-                                        onTaskCommitEdit={onTaskCommitEdit}
-                                        onDeleteTask={onDeleteTask}
-                                        isColumnEditing={editingColumn.id === col.id}
-                                        columnDraft={editingColumn.id === col.id ? editingColumn.draft : ""}
-                                        columnError={editingColumn.id === col.id ? editingColumn.error : null}
-                                        onColumnDraftChange={onColumnDraftChange}
-                                        onColumnCommit={() => void commitEditColumn()}
-                                        onColumnCancel={cancelEditColumn}
-                                        isLoadingMore={statusLoadingMoreMap[col.id] ?? false}
-                                        hasMore={statusHasMoreMap[col.id] ?? false}
-                                        onLoadMore={loadMoreForStatus}
-                                        totalCount={statusTotalCountMap[col.id]}
-                                    />
-                                ))}
-
-                                {canAddStatus && (
-                                    <div className="min-w-[300px] max-w-[300px] self-start">
-                                        <AddColumnInline isSubmitting={creatingColumn} onSubmit={submitAddColumn} />
-                                    </div>
-                                )}
-                            </div>
-                        </SortableContext>
-
-                        <DragOverlay>
-                            {activeTask ? (
-                                <TaskOverlay task={activeTask} />
-                            ) : activeColumn ? (
-                                <ColumnOverlay col={activeColumn} tasks={board[activeColumn.id] ?? []} />
-                            ) : null}
-                        </DragOverlay>
-                    </DndContext>
-                )}
+                <GroupBoardDnd
+                    mounted={mounted}
+                    sensors={sensors}
+                    collisionDetection={collisionDetection}
+                    columnIds={columnIds}
+                    boardScrollRef={boardScrollRef}
+                    boardScrollClassName={boardScrollClassName}
+                    onBoardScroll={handleBoardScroll}
+                    onBoardPointerDown={handleBoardPointerDown}
+                    onBoardPointerMove={handleBoardPointerMove}
+                    onBoardPointerUp={handleBoardPointerUp}
+                    onBoardPointerCancel={handleBoardPointerCancel}
+                    onDragStart={handleDragStart}
+                    onDragMove={handleDragMove}
+                    onDragOver={handleDragOver}
+                    onDragCancel={handleDragCancel}
+                    onDragEnd={handleDragEnd}
+                    staticContent={staticBoardContent}
+                    sortableContent={sortableBoardContent}
+                    overlayContent={dragOverlayContent}
+                />
             </div>
         </div>
     );

@@ -829,7 +829,7 @@ export default function SettingsClient({ initialData }: SettingsClientProps) {
                 </div>
                 <Alert
                     type="error"
-                    message={t("profile.deleteIrreversible")}
+                    title={t("profile.deleteIrreversible")}
                     style={{ marginBottom: 20, borderRadius: 8 }}
                     showIcon={false}
                     banner
