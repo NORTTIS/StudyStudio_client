@@ -1091,6 +1091,7 @@ async function apiCreateTask(
         groupId: string;
         groupStatusId: string;
         taskName: string;
+        taskDescription?: string | null;
         assigneeId?: string | null;
         dueDate?: unknown;
         startDate?: unknown;
@@ -1115,7 +1116,8 @@ async function apiCreateTask(
     const payload: components["schemas"]["TaskItemGroupRequest"] = {
         groupId: args.groupId,
         groupStatusId: args.groupStatusId,
-        taskName: String(args.taskName ?? "").trim()
+        taskName: String(args.taskName ?? "").trim(),
+        taskDescription: String(args.taskDescription ?? "").trim() || null
     };
 
     if (args.assigneeId && isUuidLike(args.assigneeId)) {
@@ -4019,6 +4021,7 @@ export function GroupBoardScreen({
             return {
                 statusId: String(obj.statusId ?? obj.groupStatusId ?? "").trim(),
                 title: String(obj.title ?? obj.taskName ?? "").trim(),
+                description: String(obj.description ?? obj.taskDescription ?? "").trim(),
                 dueDate: obj.dueDate ?? obj.due ?? null,
                 startDate: obj.startDate ?? obj.start ?? null,
                 assigneeId: obj.assigneeId ?? obj.assignees ?? obj.assignee ?? null,
@@ -4047,6 +4050,7 @@ export function GroupBoardScreen({
                     groupId,
                     groupStatusId: columnId,
                     taskName: normalized.title,
+                    taskDescription: normalized.description || null,
                     assigneeId: normalized.assigneeId ? String(normalized.assigneeId) : null,
                     dueDate: rawDue,
                     startDate: rawStart,

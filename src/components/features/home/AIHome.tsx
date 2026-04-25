@@ -26,6 +26,7 @@ type QuickAction = {
     icon: React.ReactNode;
 };
 
+const MAX_PROMPT_LENGTH = 500;
 const initialMessages: ChatMessage[] = [];
 
 const formatTime = (ts: number, locale: string) =>
@@ -290,6 +291,9 @@ export default function AIHome() {
         remaining: null as number | null,
         dailyLimit: null as number | null
     });
+    const trimmedInput = input.trim();
+    const isPromptTooLong = trimmedInput.length > MAX_PROMPT_LENGTH;
+    const cannotSubmit = isSending || !trimmedInput || isPromptTooLong;
 
     React.useEffect(() => {
         getUserProfile(locale)
@@ -329,7 +333,7 @@ export default function AIHome() {
     const sendQuestion = React.useCallback(
         async (question: string) => {
             const trimmed = question.trim();
-            if (!trimmed || isSendingRef.current) return;
+            if (!trimmed || trimmed.length > MAX_PROMPT_LENGTH || isSendingRef.current) return;
 
             const now = Date.now();
 
@@ -638,18 +642,23 @@ export default function AIHome() {
                                 <div className="relative flex flex-col gap-3 sm:flex-row sm:items-center">
                                     <textarea
                                         value={input}
-                                        onChange={(e) => setInput(e.target.value)}
+                                        onChange={(e) => setInput(e.target.value.slice(0, MAX_PROMPT_LENGTH))}
                                         onKeyDown={onInputKeyDown}
                                         onFocus={() => setIsComposerFocused(true)}
                                         onBlur={() => setIsComposerFocused(false)}
+                                        disabled={isSending}
+                                        maxLength={MAX_PROMPT_LENGTH}
                                         placeholder={tr("placeholder")}
-                                        className="min-h-[50px] w-full resize-none rounded-[22px] border-0 bg-transparent px-3 py-3 text-sm text-[#2B2118] outline-none placeholder:text-[#B0A296]"
+                                        className="min-h-[50px] w-full resize-none rounded-[22px] border-0 bg-transparent px-3 py-3 text-sm text-[#2B2118] outline-none placeholder:text-[#B0A296] disabled:opacity-50"
                                     />
+                                    <div className="w-full px-3 pt-1 text-right text-xs text-[#9C8C80] sm:absolute sm:right-16 sm:bottom-1">
+                                        {input.length}/{MAX_PROMPT_LENGTH}
+                                    </div>
 
                                     <motion.div whileTap={{ scale: 0.96 }} whileHover={{ y: -1 }}>
                                         <Button
                                             type="submit"
-                                            disabled={isSending || !input.trim()}
+                                            disabled={cannotSubmit}
                                             className="h-10 w-10 rounded-lg bg-orange-500 p-0 text-white shadow-[0_16px_28px_rgba(255,107,53,0.26)] transition hover:bg-orange-600 flex items-center justify-center shrink-0">
                                             {isSending ? (
                                                 <Loader2 className="h-4 w-4 animate-spin" />

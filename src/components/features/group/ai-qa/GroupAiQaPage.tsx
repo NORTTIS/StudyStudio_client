@@ -25,6 +25,7 @@ type QuickAction = {
     prompt: string;
 };
 
+const MAX_PROMPT_LENGTH = 500;
 const stripLocale = (p: string) => p.replace(/^\/[a-z]{2}(?=\/)/i, "");
 
 const extractGroupIdFromPath = (pathname: string) => {
@@ -90,6 +91,9 @@ export default function GroupAiQaPage() {
     const [showScrollToBottom, setShowScrollToBottom] = React.useState(false);
     const bottomAnchorRef = React.useRef<HTMLDivElement | null>(null);
     const shouldAutoScrollRef = React.useRef(true);
+    const isSendingRef = React.useRef(false);
+    const trimmedInput = input.trim();
+    const isPromptTooLong = trimmedInput.length > MAX_PROMPT_LENGTH;
 
     const scrollToBottom = React.useCallback((behavior: ScrollBehavior = "smooth") => {
         bottomAnchorRef.current?.scrollIntoView({ behavior, block: "end" });
@@ -157,6 +161,7 @@ export default function GroupAiQaPage() {
         const r = currentUserRole.toLowerCase().trim();
         return r === "viewer" || r === "view" || r === "commenter";
     }, [currentUserRole]);
+    const cannotSubmit = isSending || !trimmedInput || isPromptTooLong || isRestricted;
 
     const quickActions: QuickAction[] = React.useMemo(
         () => [
@@ -187,7 +192,7 @@ export default function GroupAiQaPage() {
     const sendQuestion = React.useCallback(
         async (question: string, userDisplayText?: string) => {
             const trimmed = question.trim();
-            if (!trimmed || isSending) return;
+            if (!trimmed || trimmed.length > MAX_PROMPT_LENGTH || isSendingRef.current) return;
 
             if (!groupId) {
                 toast({ variant: "destructive", description: t("cannotDetectGroupId") });
@@ -216,7 +221,7 @@ export default function GroupAiQaPage() {
                                 prev.map((m) => (m.id === assistantMessageId ? { ...m, content: renderedText } : m))
                             );
                         }
-                        if (!isSending && flushTimer) {
+                        if (!isSendingRef.current && flushTimer) {
                             clearInterval(flushTimer);
                             flushTimer = null;
                         }
@@ -245,6 +250,7 @@ export default function GroupAiQaPage() {
             ]);
             scrollToBottom("smooth");
             setInput("");
+            isSendingRef.current = true;
             setIsSending(true);
 
             try {
@@ -294,10 +300,11 @@ export default function GroupAiQaPage() {
                 setMessages((prev) => prev.filter((m) => !(m.id === assistantMessageId && !m.content.trim())));
                 toast({ variant: "destructive", description: parseAIError(error, locale) || t("aiResponseError") });
             } finally {
+                isSendingRef.current = false;
                 setIsSending(false);
             }
         },
-        [groupId, isSending, scrollToBottom, toast, t, locale]
+        [groupId, scrollToBottom, toast, t, locale]
     );
 
     const onSubmit: React.FormEventHandler<HTMLFormElement> = async (e) => {
@@ -308,7 +315,7 @@ export default function GroupAiQaPage() {
     const onInputKeyDown: React.KeyboardEventHandler<HTMLTextAreaElement> = (e) => {
         if (e.key !== "Enter" || e.shiftKey) return;
         e.preventDefault();
-        if (isSending || !input.trim()) return;
+        if (cannotSubmit) return;
         void sendQuestion(input);
     };
 
@@ -426,9 +433,10 @@ export default function GroupAiQaPage() {
                         <div className="relative flex flex-col gap-3 sm:flex-row sm:items-center">
                             <textarea
                                 value={input}
-                                onChange={(e) => setInput(e.target.value)}
+                                onChange={(e) => setInput(e.target.value.slice(0, MAX_PROMPT_LENGTH))}
                                 onKeyDown={onInputKeyDown}
                                 disabled={isSending || isRestricted}
+                                maxLength={MAX_PROMPT_LENGTH}
                                 placeholder={
                                     isRestricted
                                         ? locale === "vi"
@@ -438,9 +446,12 @@ export default function GroupAiQaPage() {
                                 }
                                 className="max-h-50 min-h-12.5 w-full resize-none rounded-[22px] border-0 bg-transparent px-3 py-3 text-[#2B2118] text-sm outline-none placeholder:text-[#B0A296] disabled:opacity-50"
                             />
+                            <div className="w-full px-3 pt-1 text-right text-xs text-[#9A98AE] sm:absolute sm:right-16 sm:bottom-1">
+                                {input.length}/{MAX_PROMPT_LENGTH}
+                            </div>
                             <Button
                                 type="submit"
-                                disabled={isSending || !input.trim() || isRestricted}
+                                disabled={cannotSubmit}
                                 className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-orange-500 p-0 text-white shadow-[0_16px_28px_rgba(255,107,53,0.26)] transition hover:bg-orange-600 disabled:opacity-50">
                                 {isSending ? (
                                     <Loader2 className="h-4 w-4 animate-spin" />

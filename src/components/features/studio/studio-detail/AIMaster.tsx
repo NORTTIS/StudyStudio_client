@@ -24,6 +24,7 @@ type QuickAction = {
     prompt: string;
 };
 
+const MAX_PROMPT_LENGTH = 500;
 const formatTime = (ts: number, locale: string) =>
     new Date(ts).toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" });
 
@@ -56,6 +57,10 @@ export default function AIMaster({ studioId }: { studioId?: string }) {
     const [showScrollToBottom, setShowScrollToBottom] = React.useState(false);
     const bottomAnchorRef = React.useRef<HTMLDivElement | null>(null);
     const shouldAutoScrollRef = React.useRef(true);
+    const isSendingRef = React.useRef(false);
+    const trimmedInput = input.trim();
+    const isPromptTooLong = trimmedInput.length > MAX_PROMPT_LENGTH;
+    const cannotSubmit = isSending || !trimmedInput || isPromptTooLong;
 
     const scrollToBottom = React.useCallback((behavior: ScrollBehavior = "smooth") => {
         bottomAnchorRef.current?.scrollIntoView({ behavior, block: "end" });
@@ -140,7 +145,7 @@ export default function AIMaster({ studioId }: { studioId?: string }) {
     const sendQuestion = React.useCallback(
         async (question: string, userDisplayText?: string) => {
             const trimmed = question.trim();
-            if (!trimmed || isSending) return;
+            if (!trimmed || trimmed.length > MAX_PROMPT_LENGTH || isSendingRef.current) return;
 
             if (!studioId) {
                 toast({ variant: "destructive", description: t("cannotDetectStudioId") });
@@ -169,7 +174,7 @@ export default function AIMaster({ studioId }: { studioId?: string }) {
                                 prev.map((m) => (m.id === assistantMessageId ? { ...m, content: renderedText } : m))
                             );
                         }
-                        if (!isSending && flushTimer) {
+                        if (!isSendingRef.current && flushTimer) {
                             clearInterval(flushTimer);
                             flushTimer = null;
                         }
@@ -198,6 +203,7 @@ export default function AIMaster({ studioId }: { studioId?: string }) {
             ]);
             scrollToBottom("smooth");
             setInput("");
+            isSendingRef.current = true;
             setIsSending(true);
 
             try {
@@ -246,10 +252,11 @@ export default function AIMaster({ studioId }: { studioId?: string }) {
                 setMessages((prev) => prev.filter((m) => !(m.id === assistantMessageId && !m.content.trim())));
                 toast({ variant: "destructive", description: parseAIError(error) || t("aiResponseError") });
             } finally {
+                isSendingRef.current = false;
                 setIsSending(false);
             }
         },
-        [dailyLimit, studioId, isSending, scrollToBottom, toast, t]
+        [studioId, scrollToBottom, toast, t]
     );
 
     const onSubmit: React.FormEventHandler<HTMLFormElement> = async (e) => {
@@ -260,7 +267,7 @@ export default function AIMaster({ studioId }: { studioId?: string }) {
     const onInputKeyDown: React.KeyboardEventHandler<HTMLTextAreaElement> = (e) => {
         if (e.key !== "Enter" || e.shiftKey) return;
         e.preventDefault();
-        if (isSending || !input.trim()) return;
+        if (cannotSubmit) return;
         void sendQuestion(input);
     };
 
@@ -381,14 +388,19 @@ export default function AIMaster({ studioId }: { studioId?: string }) {
                         <div className="relative flex flex-col gap-3 sm:flex-row sm:items-center">
                             <textarea
                                 value={input}
-                                onChange={(e) => setInput(e.target.value)}
+                                onChange={(e) => setInput(e.target.value.slice(0, MAX_PROMPT_LENGTH))}
                                 onKeyDown={onInputKeyDown}
+                                disabled={isSending}
+                                maxLength={MAX_PROMPT_LENGTH}
                                 placeholder={t("inputPlaceholder")}
-                                className="min-h-[50px] max-h-[200px] w-full resize-none rounded-[22px] border-0 bg-transparent px-3 py-3 text-sm text-[#2B2118] outline-none placeholder:text-[#B0A296]"
+                                className="min-h-[50px] max-h-[200px] w-full resize-none rounded-[22px] border-0 bg-transparent px-3 py-3 text-sm text-[#2B2118] outline-none placeholder:text-[#B0A296] disabled:opacity-50"
                             />
+                            <div className="w-full px-3 pt-1 text-right text-xs text-[#9A98AE] sm:absolute sm:right-16 sm:bottom-1">
+                                {input.length}/{MAX_PROMPT_LENGTH}
+                            </div>
                             <Button
                                 type="submit"
-                                disabled={isSending || !input.trim()}
+                                disabled={cannotSubmit}
                                 className="h-10 w-10 rounded-lg bg-orange-500 p-0 text-white shadow-[0_16px_28px_rgba(255,107,53,0.26)] transition hover:bg-orange-600 flex items-center justify-center shrink-0">
                                 {isSending ? (
                                     <Loader2 className="h-4 w-4 animate-spin" />
