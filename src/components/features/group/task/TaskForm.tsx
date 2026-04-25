@@ -765,19 +765,21 @@ export default function TaskFormModal({
                 className="max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-2xl border border-zinc-200 bg-white shadow-2xl"
                 onPointerDown={(e) => e.stopPropagation()}>
                 <div className="relative border-zinc-200 border-b px-7 py-5 pr-24">
-                    <input
-                        value={title}
-                        maxLength={TASK_TITLE_MAX_LENGTH}
-                        onChange={(e) => {
-                            setTitle(e.target.value.slice(0, TASK_TITLE_MAX_LENGTH));
-                            if (error) setError(null);
-                        }}
-                        placeholder={t("titlePlaceholder")}
-                        className="w-full max-w-[600px] rounded-xl border border-zinc-200 bg-white px-4 py-3 font-extrabold text-[30px] text-zinc-900 leading-none outline-none"
-                    />
+                    <div className="relative max-w-[600px]">
+                        <input
+                            value={title}
+                            maxLength={TASK_TITLE_MAX_LENGTH}
+                            onChange={(e) => {
+                                setTitle(e.target.value.slice(0, TASK_TITLE_MAX_LENGTH));
+                                if (error) setError(null);
+                            }}
+                            placeholder={t("titlePlaceholder")}
+                            className="w-full rounded-xl border border-zinc-200 bg-white px-4 pb-8 pt-3 font-extrabold text-[30px] text-zinc-900 leading-none outline-none"
+                        />
 
-                    <div className="mt-2 max-w-[600px] text-right font-medium text-xs text-zinc-500">
-                        {title.length}/{TASK_TITLE_MAX_LENGTH}
+                        <div className="pointer-events-none absolute right-4 bottom-2 text-xs font-medium text-zinc-500">
+                            {title.length}/{TASK_TITLE_MAX_LENGTH}
+                        </div>
                     </div>
 
                     <button
@@ -1005,15 +1007,17 @@ export default function TaskFormModal({
 
                     <div className="mt-6">
                         <div className="font-semibold text-sm text-zinc-600">{t("descriptionLabel")}</div>
-                        <textarea
-                            value={description}
-                            maxLength={TASK_DESCRIPTION_MAX_LENGTH}
-                            onChange={(e) => setDescription(e.target.value.slice(0, TASK_DESCRIPTION_MAX_LENGTH))}
-                            placeholder={t("descriptionPlaceholder")}
-                            className="mt-2 min-h-30 w-full rounded-xl border border-zinc-200 bg-white p-4 text-sm text-zinc-800 outline-none"
-                        />
-                        <div className="mt-2 text-right font-medium text-xs text-zinc-500">
-                            {description.length}/{TASK_DESCRIPTION_MAX_LENGTH}
+                        <div className="relative mt-2">
+                            <textarea
+                                value={description}
+                                maxLength={TASK_DESCRIPTION_MAX_LENGTH}
+                                onChange={(e) => setDescription(e.target.value.slice(0, TASK_DESCRIPTION_MAX_LENGTH))}
+                                placeholder={t("descriptionPlaceholder")}
+                                className="min-h-30 w-full rounded-xl border border-zinc-200 bg-white p-4 pb-8 text-sm text-zinc-800 outline-none"
+                            />
+                            <div className="pointer-events-none absolute right-4 bottom-3 font-medium text-xs text-zinc-500">
+                                {description.length}/{TASK_DESCRIPTION_MAX_LENGTH}
+                            </div>
                         </div>
                     </div>
                 </div>

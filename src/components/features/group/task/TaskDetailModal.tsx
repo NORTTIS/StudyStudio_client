@@ -3048,30 +3048,32 @@ export default function TaskDetailModal(props: {
                             </h2>
                         ) : isEditing ? (
                             <div className="max-w-[560px]">
-                                <input
-                                    value={taskName}
-                                    maxLength={TASK_TITLE_MAX_LENGTH}
-                                    onChange={(e) => {
-                                        const nextValue = e.target.value.slice(0, TASK_TITLE_MAX_LENGTH);
-                                        setTaskName(nextValue);
+                                <div className="relative">
+                                    <input
+                                        value={taskName}
+                                        maxLength={TASK_TITLE_MAX_LENGTH}
+                                        onChange={(e) => {
+                                            const nextValue = e.target.value.slice(0, TASK_TITLE_MAX_LENGTH);
+                                            setTaskName(nextValue);
 
-                                        if (taskNameError && nextValue.trim()) {
-                                            setTaskNameError(null);
-                                        }
-                                    }}
-                                    placeholder={t("taskName")}
-                                    className="w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 font-extrabold text-[24px] text-zinc-900 leading-none outline-none"
-                                />
+                                            if (taskNameError && nextValue.trim()) {
+                                                setTaskNameError(null);
+                                            }
+                                        }}
+                                        placeholder={t("taskName")}
+                                        className="w-full rounded-xl border border-zinc-200 bg-white px-3 pb-7 pt-2 font-extrabold text-[24px] text-zinc-900 leading-none outline-none"
+                                    />
+                                    <div className="pointer-events-none absolute right-3 bottom-2 font-medium text-xs text-zinc-500">
+                                        {taskName.length}/{TASK_TITLE_MAX_LENGTH}
+                                    </div>
+                                </div>
                                 {taskNameError ? (
                                     <div className="mt-2 font-medium text-rose-600 text-sm">{taskNameError}</div>
                                 ) : null}
-                                <div className="mt-2 text-right font-medium text-xs text-zinc-500">
-                                    {taskName.length}/{TASK_TITLE_MAX_LENGTH}
-                                </div>
                             </div>
                         ) : (
                             <div className="flex min-w-0 items-center gap-3">
-                                <h2 className="min-w-0 break-words font-extrabold text-[26px] text-zinc-900 leading-none">
+                                <h2 className="min-w-0 truncate whitespace-nowrap font-extrabold text-[26px] text-zinc-900 leading-none">
                                     {taskName || t("taskFallback")}
                                 </h2>
 
@@ -3459,10 +3461,22 @@ export default function TaskDetailModal(props: {
                             <div className="mt-6">
                                 <div className="mb-2 flex items-center justify-between">
                                     <div className="font-semibold text-sm text-zinc-600">{t("description")}</div>
+                                </div>
+                                <div className="relative">
+                                    <textarea
+                                        value={description}
+                                        onChange={(e) =>
+                                            setDescription(e.target.value.slice(0, TASK_DESCRIPTION_MAX_LENGTH))
+                                        }
+                                        placeholder={t("noDescription")}
+                                        disabled={!isEditing}
+                                        maxLength={TASK_DESCRIPTION_MAX_LENGTH}
+                                        className="min-h-[110px] w-full rounded-xl border border-zinc-200 bg-white p-4 pb-8 text-sm text-zinc-800 outline-none disabled:cursor-not-allowed disabled:bg-zinc-50 disabled:text-zinc-600"
+                                    />
                                     {isEditing ? (
                                         <div
                                             className={cn(
-                                                "font-medium text-xs",
+                                                "pointer-events-none absolute right-4 bottom-3 font-medium text-xs",
                                                 descriptionLength >= TASK_DESCRIPTION_MAX_LENGTH
                                                     ? "text-rose-500"
                                                     : "text-zinc-500"
@@ -3471,16 +3485,6 @@ export default function TaskDetailModal(props: {
                                         </div>
                                     ) : null}
                                 </div>
-                                <textarea
-                                    value={description}
-                                    onChange={(e) =>
-                                        setDescription(e.target.value.slice(0, TASK_DESCRIPTION_MAX_LENGTH))
-                                    }
-                                    placeholder={t("noDescription")}
-                                    disabled={!isEditing}
-                                    maxLength={TASK_DESCRIPTION_MAX_LENGTH}
-                                    className="min-h-[110px] w-full rounded-xl border border-zinc-200 bg-white p-4 text-sm text-zinc-800 outline-none disabled:cursor-not-allowed disabled:bg-zinc-50 disabled:text-zinc-600"
-                                />
                             </div>
                         </div>
 
