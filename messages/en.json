@@ -366,6 +366,9 @@
         "stuck": "Stuck"
       }
     },
+    "sourceFilters": {
+      "personal": "Personal"
+    },
     "groupRanking": {
       "contributor": "in group"
     },
@@ -604,8 +607,8 @@
       "studioNotificationsDesc": "Receive email notifications when work is completed",
       "deleteAccount": {
         "title": "Delete Account",
-        "subtitle": "Your account will be marked for deletion and can be restored later",
-        "warning": "Warning: You will not be able to sign in until the account is restored",
+        "subtitle": "Your account will be marked for deletion",
+        "warning": "Warning: You will not be able to sign",
         "consequence1": "Your account will be marked for deletion",
         "consequence2": "You will lose access to all workspaces",
         "consequence3": "Your data is retained and the account can be restored",

@@ -564,22 +564,6 @@ export function AdminDashboardPage() {
                         </div>
 
                         <div className="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
-                            <div className="rounded-xl border border-gray-200 bg-white p-6">
-                                <div className="mb-4 flex items-center justify-between">
-                                    <h3 className="font-semibold text-[#261E33]">Hoạt động theo giờ</h3>
-                                    <Select value={activityPeriod} onValueChange={setActivityPeriod}>
-                                        <SelectTrigger className="h-8 w-[120px] text-xs">
-                                            <SelectValue placeholder="Chọn thời gian" />
-                                        </SelectTrigger>
-                                        <SelectContent className="bg-white">
-                                            <SelectItem value="day">Hôm nay</SelectItem>
-                                            <SelectItem value="week">7 ngày qua</SelectItem>
-                                            <SelectItem value="month">30 ngày qua</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                                <ReactECharts option={activityHeatmapOption} style={{ height: "280px" }} />
-                            </div>
 
                             <div className="rounded-xl border border-gray-200 bg-white p-6">
                                 <div className="mb-4 flex items-center justify-between">
@@ -597,9 +581,6 @@ export function AdminDashboardPage() {
                                 </div>
                                 <ReactECharts option={reportStatusOption} style={{ height: "280px" }} />
                             </div>
-                        </div>
-
-                        <div className="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
                             <div className="rounded-xl border border-gray-200 bg-white p-6">
                                 <div className="mb-4 flex items-center justify-between">
                                     <h3 className="font-semibold text-[#261E33]">Doanh thu theo thời gian</h3>
@@ -617,6 +598,10 @@ export function AdminDashboardPage() {
                                 </div>
                                 <ReactECharts option={revenueByPeriodOption} style={{ height: "280px" }} />
                             </div>
+                        </div>
+
+                        <div className="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
+                            
 
                             <div className="rounded-xl border border-gray-200 bg-white p-6">
                                 <div className="mb-4 flex items-center justify-between">
@@ -670,30 +655,6 @@ export function AdminDashboardPage() {
                                     </table>
                                 </div>
                             </div>
-                        </div>
-
-                        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                            <div className="rounded-xl border border-gray-200 bg-white p-6">
-                                <div className="mb-4 flex items-center justify-between">
-                                    <h3 className="font-semibold text-[#261E33]">Hoạt động gần đây</h3>
-                                    <Activity className="h-5 w-5 text-[#6F6B99]" />
-                                </div>
-                                <div className="space-y-3">
-                                    {recentActivities.map((activity, i) => (
-                                        <div
-                                            key={`${activity.id}-${i}`}
-                                            className="flex items-start gap-3 rounded-lg border border-gray-100 bg-[#F8F8F8] p-3">
-                                            <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#FF5F3D]/10">
-                                                <Activity className="h-4 w-4 text-[#FF5F3D]" />
-                                            </div>
-                                            <div className="flex-1">
-                                                <p className="text-[#261E33] text-sm">{activity.message}</p>
-                                                <p className="mt-0.5 text-[#6F6B99] text-xs">{activity.time}</p>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
 
                             <div className="rounded-xl border border-gray-200 bg-white p-6">
                                 <div className="mb-4 flex items-center justify-between">
@@ -723,6 +684,8 @@ export function AdminDashboardPage() {
                                 </div>
                             </div>
                         </div>
+
+                       
                     </div>
                 </main>
 

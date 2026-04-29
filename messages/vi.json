@@ -366,6 +366,9 @@
         "stuck": "Bị stuck"
       }
     },
+    "sourceFilters": {
+      "personal": "Cá nhân"
+    },
     "groupRanking": {
       "contributor": "trong nhóm"
     },
@@ -604,8 +607,8 @@
       "studioNotificationsDesc": "Nhận thông báo qua email khi công việc hoàn tất",
       "deleteAccount": {
         "title": "Xóa tài khoản",
-        "subtitle": "Tài khoản sẽ bị đánh dấu là xóa và có thể khôi phục",
-        "warning": "Cảnh báo: Bạn sẽ không thể đăng nhập cho đến khi khôi phục tài khoản",
+        "subtitle": "Tài khoản sẽ bị đánh dấu là xóa",
+        "warning": "Cảnh báo: Bạn sẽ không thể đăng nhập lại tài khoản này sau khi xóa.",
         "consequence1": "Tài khoản sẽ bị đánh dấu là xóa",
         "consequence2": "Bạn sẽ không thể truy cập các không gian làm việc",
         "consequence3": "Dữ liệu vẫn được giữ lại và tài khoản có thể khôi phục",

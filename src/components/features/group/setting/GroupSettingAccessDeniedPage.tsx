@@ -21,11 +21,7 @@ export function GroupSettingAccessDeniedPage({
     const locale = useLocale();
     const t = useTranslations("GroupSettingView");
 
-    const normalizedGroupId = String(groupId ?? "").trim();
-    const normalizedStudioId = String(fromStudioId ?? "").trim();
-    const groupHref = normalizedStudioId
-        ? `/${locale}/group/${normalizedGroupId}?fromStudioId=${encodeURIComponent(normalizedStudioId)}`
-        : `/${locale}/group/${normalizedGroupId}`;
+    const groupHref = `/${locale}/group`;   
 
     return (
         <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">

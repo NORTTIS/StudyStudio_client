@@ -770,18 +770,7 @@ export default function SettingsClient({ initialData }: SettingsClientProps) {
                             <Text strong style={{ color: "#cf1322", fontSize: 12, display: "block", marginBottom: 8 }}>
                                 ⚠️ {t("profile.deleteAccount.warning")}
                             </Text>
-                            {[
-                                t("profile.deleteAccount.consequence1"),
-                                t("profile.deleteAccount.consequence2"),
-                                t("profile.deleteAccount.consequence3")
-                            ].map((c, i) => (
-                                <div key={i} style={{ display: "flex", gap: 6, marginBottom: 4 }}>
-                                    <span style={{ color: "#ff4d4f", fontWeight: 700, fontSize: 12, flexShrink: 0 }}>
-                                        •
-                                    </span>
-                                    <Text style={{ color: "#cf1322", fontSize: 12, lineHeight: "1.5" }}>{c}</Text>
-                                </div>
-                            ))}
+                           
                         </div>
                         <Button
                             danger

@@ -6,10 +6,11 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
     deleteAnnouncement,
-    getAllAnnouncements,
+    getAnnouncementPage,
     markAsRead,
     type Notification
 } from "@/api/notifications";
+import { localizeNotificationText } from "@/utils/notification-localization";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -34,8 +35,11 @@ import { NotificationDetailModal } from "./NotificationDetailModal";
 
 const READ_NOTIFICATIONS_STORAGE_KEY = "study_studio_read_notifications";
 const DELETED_NOTIFICATIONS_STORAGE_KEY = "study_studio_deleted_notifications";
+const INITIAL_PAGE_SIZE = 10;
+const LOAD_MORE_THRESHOLD_PX = 80;
 
-type RawNotification = Notification & {
+type RawNotification = {
+    id?: string;
     announcementId?: string;
     _id?: string;
 };
@@ -132,7 +136,26 @@ function isNotificationNotFoundMessage(message?: string) {
 }
 
 function resolveNotificationActionId(notification: RawNotification): string {
-    return notification.announcementId || notification._id || notification.id;
+    return notification.announcementId || notification._id || notification.id || "";
+}
+
+function mapNotificationType(type: string): Notification["type"] {
+    const normalized = String(type).toLowerCase();
+
+    switch (normalized) {
+        case "warning":
+        case "critical":
+        case "error":
+            return "warning";
+        case "info":
+        case "maintenance":
+            return "info";
+        case "success":
+        case "promotion":
+            return "success";
+        default:
+            return "system";
+    }
 }
 
 function BellButton({ unreadCount }: { unreadCount: number }) {
@@ -143,7 +166,7 @@ function BellButton({ unreadCount }: { unreadCount: number }) {
             <Bell className="h-6 w-6 shrink-0 text-foreground" />
 
             {hasUnread && (
-                <span className="absolute -top-2 -right-2 z-10 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-red-500 px-1 font-semibold text-[10px] text-white leading-none shadow ring-2 ring-background">
+                <span className="absolute -top-2 -right-2 z-10 flex h-4.5 min-w-4.5 items-center justify-center rounded-full bg-red-500 px-1 font-semibold text-[10px] text-white leading-none shadow ring-2 ring-background">
                     {unreadCount > 99 ? "99+" : unreadCount > 9 ? "9+" : unreadCount}
                 </span>
             )}
@@ -238,6 +261,10 @@ export function NotificationDropdown() {
     const [open, setOpen] = useState(false);
     const [notifications, setNotifications] = useState<ExtendedNotification[]>([]);
     const [isLoading, setIsLoading] = useState(false);
+    const [isLoadingMore, setIsLoadingMore] = useState(false);
+    const [page, setPage] = useState(0);
+    const [totalPages, setTotalPages] = useState(0);
+    const [totalCount, setTotalCount] = useState(0);
 
     const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
     const [selectedNotification, setSelectedNotification] = useState<ExtendedNotification | null>(null);
@@ -246,61 +273,126 @@ export function NotificationDropdown() {
     const [notificationToDelete, setNotificationToDelete] = useState<ExtendedNotification | null>(null);
 
     const unreadCount = useMemo(() => notifications.filter((n) => !n.read).length, [notifications]);
+    const hasMore = totalPages > 0 && page < totalPages;
+
+    const loadNotificationsPage = useCallback(
+        async (nextPage: number, replace: boolean) => {
+            if (replace) {
+                setIsLoading(true);
+            } else {
+                setIsLoadingMore(true);
+            }
+
+            try {
+                const response = await getAnnouncementPage(locale, nextPage, INITIAL_PAGE_SIZE);
+                const readIds = getReadNotificationIds();
+                const deletedIds = getDeletedNotificationIds();
+
+                const nextNotifications: ExtendedNotification[] = response.items
+                    .map((notification) => {
+                        const actionId = resolveNotificationActionId(notification);
+
+                        return {
+                            id: actionId,
+                            actionId,
+                            title: localizeNotificationText(notification.title, locale),
+                            description: localizeNotificationText(notification.content, locale),
+                            type: mapNotificationType(notification.type),
+                            date: notification.publishedAt ?? notification.createdAt,
+                            read: Boolean(notification.isRead || readIds.includes(actionId)),
+                            announcementId: notification.announcementId,
+                            sourceType: notification.sourceType as Notification["sourceType"],
+                            groupId: notification.groupId,
+                            taskId: notification.taskId,
+                            isFallback: false
+                        };
+                    })
+                    .filter((notification) => !deletedIds.includes(notification.actionId));
+
+                setPage(response.page);
+                setTotalPages(response.totalPages);
+                setTotalCount(response.totalCount);
+
+                if (replace) {
+                    setNotifications(nextNotifications);
+                } else {
+                    setNotifications((prev) => {
+                        const merged = [...prev];
+
+                        nextNotifications.forEach((notification) => {
+                            if (!merged.some((existing) => existing.actionId === notification.actionId)) {
+                                merged.push(notification);
+                            }
+                        });
+
+                        return merged;
+                    });
+                }
+            } catch (error) {
+                console.error("Load notifications error:", error);
+
+                if (replace) {
+                    const fallbackNotifications: ExtendedNotification[] = [
+                        {
+                            id: "fallback-1",
+                            actionId: "fallback-1",
+                            title: locale === "vi" ? "Chào mừng đến Study Studio" : "Welcome to Study Studio",
+                            description:
+                                locale === "vi" ? "Cảm ơn bạn đã sử dụng Study Studio!" : "Thank you for using Study Studio!",
+                            type: "info",
+                            date: new Date().toISOString(),
+                            read: false,
+                            isFallback: true
+                        }
+                    ];
+
+                    const readIds = getReadNotificationIds();
+
+                    setNotifications(
+                        fallbackNotifications.map((notification) => ({
+                            ...notification,
+                            read: Boolean(notification.read || readIds.includes(notification.actionId))
+                        }))
+                    );
+                    setPage(1);
+                    setTotalPages(1);
+                    setTotalCount(fallbackNotifications.length);
+                }
+            } finally {
+                setIsLoading(false);
+                setIsLoadingMore(false);
+            }
+        },
+        [locale]
+    );
 
     const loadNotifications = useCallback(async () => {
-        setIsLoading(true);
+        setNotifications([]);
+        setPage(0);
+        setTotalPages(0);
+        setTotalCount(0);
+        await loadNotificationsPage(1, true);
+    }, [loadNotificationsPage]);
 
-        try {
-            const data = (await getAllAnnouncements(locale)) as RawNotification[];
-            const readIds = getReadNotificationIds();
-            const deletedIds = getDeletedNotificationIds();
+    const loadMoreNotifications = useCallback(async () => {
+        if (isLoading || isLoadingMore || !hasMore) return;
 
-            const cleanedData: ExtendedNotification[] = data
-                .map((notification) => {
-                    const actionId = resolveNotificationActionId(notification);
+        await loadNotificationsPage(page + 1, false);
+    }, [hasMore, isLoading, isLoadingMore, loadNotificationsPage, page]);
 
-                    return {
-                        ...notification,
-                        id: notification.id,
-                        actionId,
-                        title: notification.title,
-                        description: notification.description,
-                        read: Boolean(notification.read || readIds.includes(actionId)),
-                        isFallback: false
-                    };
-                })
-                .filter((notification) => !deletedIds.includes(notification.actionId));
+    const handleViewportScroll = useCallback<React.UIEventHandler<HTMLDivElement>>(
+        (event) => {
+            if (isLoading || isLoadingMore || !hasMore) return;
 
-            setNotifications(cleanedData);
-        } catch (error) {
-            console.error("Load notifications error:", error);
+            const viewport = event.currentTarget;
+            const distanceToBottom = viewport.scrollHeight - viewport.scrollTop - viewport.clientHeight;
 
-            const fallbackNotifications: ExtendedNotification[] = [
-                {
-                    id: "fallback-1",
-                    actionId: "fallback-1",
-                    title: locale === "vi" ? "Chào mừng đến Study Studio" : "Welcome to Study Studio",
-                    description:
-                        locale === "vi" ? "Cảm ơn bạn đã sử dụng Study Studio!" : "Thank you for using Study Studio!",
-                    type: "info",
-                    date: new Date().toISOString(),
-                    read: false,
-                    isFallback: true
-                }
-            ];
-
-            const readIds = getReadNotificationIds();
-
-            setNotifications(
-                fallbackNotifications.map((notification) => ({
-                    ...notification,
-                    read: Boolean(notification.read || readIds.includes(notification.actionId))
-                }))
-            );
-        } finally {
-            setIsLoading(false);
-        }
-    }, [locale]);
+            if (distanceToBottom <= LOAD_MORE_THRESHOLD_PX) {
+                void loadMoreNotifications();
+            }
+        },
+        [hasMore, isLoading, isLoadingMore, loadMoreNotifications]
+    );
 
     useEffect(() => {
         loadNotifications();
@@ -551,13 +643,13 @@ export function NotificationDropdown() {
                 <DropdownMenuContent
                     align="end"
                     sideOffset={12}
-                    className="w-[420px] overflow-hidden rounded-3xl border bg-background p-0 shadow-2xl">
+                    className="w-105 overflow-hidden rounded-3xl border bg-background p-0 shadow-2xl">
                     <div className="flex items-center justify-between border-b px-4 py-4">
                         <div className="flex items-center gap-3">
                             <h3 className="font-semibold text-foreground text-lg">{t("title")}</h3>
 
                             <Badge variant="secondary" className="rounded-full px-2.5 py-0.5 text-xs">
-                                {notifications.length}
+                                {totalCount}
                             </Badge>
                         </div>
 
@@ -592,33 +684,39 @@ export function NotificationDropdown() {
                         </div>
                     </div>
 
-                    <ScrollArea className="h-[420px]">
-                        <div className="space-y-3 p-3">
-                            {isLoading ? (
-                                <div className="flex items-center justify-center py-12">
-                                    <RefreshCw className="h-5 w-5 animate-spin text-muted-foreground" />
-                                </div>
-                            ) : notifications.length === 0 ? (
-                                <div className="flex flex-col items-center justify-center py-12 text-center">
-                                    <div className="mb-3 rounded-full bg-muted p-3">
-                                        <Bell className="h-5 w-5 text-muted-foreground" />
+                    <ScrollArea className="h-105" onViewportScroll={handleViewportScroll}>
+                            <div className="space-y-3 p-3">
+                                {isLoading ? (
+                                    <div className="flex items-center justify-center py-12">
+                                        <RefreshCw className="h-5 w-5 animate-spin text-muted-foreground" />
                                     </div>
-                                    <p className="text-muted-foreground text-sm">{t("noNotifications")}</p>
-                                </div>
-                            ) : (
-                                notifications.map((notification) => (
-                                    <NotificationItem
-                                        key={notification.id}
-                                        notification={notification}
-                                        onClick={() => handleNotificationClick(notification)}
-                                        onDelete={() => handleDeleteNotification(notification)}
-                                        formatDate={formatDate}
-                                        getNotificationIcon={getNotificationIcon}
-                                        deleteLabel={t("delete")}
-                                    />
-                                ))
-                            )}
-                        </div>
+                                ) : notifications.length === 0 ? (
+                                    <div className="flex flex-col items-center justify-center py-12 text-center">
+                                        <div className="mb-3 rounded-full bg-muted p-3">
+                                            <Bell className="h-5 w-5 text-muted-foreground" />
+                                        </div>
+                                        <p className="text-muted-foreground text-sm">{t("noNotifications")}</p>
+                                    </div>
+                                ) : (
+                                    notifications.map((notification) => (
+                                        <NotificationItem
+                                            key={notification.id}
+                                            notification={notification}
+                                            onClick={() => handleNotificationClick(notification)}
+                                            onDelete={() => handleDeleteNotification(notification)}
+                                            formatDate={formatDate}
+                                            getNotificationIcon={getNotificationIcon}
+                                            deleteLabel={t("delete")}
+                                        />
+                                    ))
+                                )}
+
+                                {isLoadingMore && (
+                                    <div className="flex items-center justify-center py-3">
+                                        <RefreshCw className="h-4 w-4 animate-spin text-muted-foreground" />
+                                    </div>
+                                )}
+                            </div>
                     </ScrollArea>
 
                     {notifications.length > 0 && (

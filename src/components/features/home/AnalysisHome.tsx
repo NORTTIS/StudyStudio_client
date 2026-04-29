@@ -297,6 +297,15 @@ function normalizeStatusName(value?: string | null) {
         .toLowerCase();
 }
 
+function isPersonalRiskAlertGroup(group?: string | null) {
+    const normalized = normalizeStatusName(group);
+    return !normalized || normalized === "ca nhan" || normalized === "personal";
+}
+
+function resolveRiskAlertGroupLabel(group: string | null | undefined, t: (key: string) => string) {
+    return isPersonalRiskAlertGroup(group) ? t("sourceFilters.personal") : String(group ?? "").trim();
+}
+
 function parseTaskDueDate(dueDate?: string | null) {
     const raw = String(dueDate ?? "").trim();
     if (!raw) return null;
@@ -385,6 +394,12 @@ function buildTaskDetailHref(item: HomeTaskListItemResponse, locale: string) {
         return `/${locale}/group/${item.groupId}?taskId=${encodeURIComponent(taskId)}&openTaskDetail=1`;
     }
     return `/${locale}/group/task/${encodeURIComponent(taskId)}`;
+}
+
+function buildPersonalTaskDetailHref(taskId: string, locale: string) {
+    const trimmedTaskId = String(taskId ?? "").trim();
+    if (!trimmedTaskId) return "#";
+    return `/${locale}/home?personalTaskId=${encodeURIComponent(trimmedTaskId)}`;
 }
 
 // Parse ISO week string "2026-W08" → label "02/03–08/03"
@@ -863,7 +878,7 @@ function AnalysisTaskListLayer({
 
                                     <div className="flex flex-wrap gap-2">
                                         {([
-                                            { value: "personal", label: summaryT("sourceFilters.personal") },
+                                            { value: "personal", label: t("sourceFilters.personal") },
                                             { value: "group", label: summaryT("sourceFilters.group") }
                                         ] as const).map((option) => (
                                             <button
@@ -890,7 +905,7 @@ function AnalysisTaskListLayer({
                                         <div className="space-y-3">
                                             {paginatedItems.map((item) => {
                                                 const dueLabel = formatTaskDueDate(item.dueDate, locale, noDateLabel);
-                                                const sourceLabel = resolveSourceLabel(item, summaryT, taskListT);
+                                                const sourceLabel = resolveSourceLabel(item, t, taskListT);
                                                 return (
                                                     <motion.button
                                                         key={`${item.groupId ?? "group"}-${item.taskId ?? item.taskTitle}`}
@@ -1156,12 +1171,14 @@ function RiskAlertCard({
     type,
     title,
     description,
-    group
+    group,
+    onClick
 }: {
     type: string;
     title: string;
     description: string;
     group: string;
+    onClick?: () => void;
 }) {
     const t = useTranslations("AnalysisHome");
     const config: Record<
@@ -1199,7 +1216,14 @@ function RiskAlertCard({
     const c = config[type] ?? config.overdue;
 
     return (
-        <div className={cn("flex items-start gap-3 rounded-xl border p-4 transition-all hover:shadow-sm", c.bg)}>
+        <button
+            type="button"
+            onClick={onClick}
+            className={cn(
+                "flex w-full items-start gap-3 rounded-xl border p-4 text-left transition-all hover:shadow-sm",
+                c.bg,
+                onClick && "cursor-pointer"
+            )}>
             <div
                 className={cn(
                     "mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg shadow-sm",
@@ -1221,7 +1245,7 @@ function RiskAlertCard({
                 <p className="mt-0.5 text-slate-500 text-xs">{description}</p>
                 <p className="mt-1 font-medium text-[10px] text-slate-400 uppercase tracking-wider">{group}</p>
             </div>
-        </div>
+        </button>
     );
 }
 
@@ -1374,7 +1398,7 @@ export default function AnalysisHome() {
         revalidateIfStale: false
     });
 
-    const personalSourceLabel = summaryT("sourceFilters.personal");
+    const personalSourceLabel = t("sourceFilters.personal");
 
     const {
         data: summaryPersonalTasks,
@@ -1621,7 +1645,7 @@ export default function AnalysisHome() {
             const taskId = String(item.taskId ?? "").trim();
             if (!taskId) return;
             closeAnalysisTaskPopup();
-            router.push(`/${locale}/home?personalTaskId=${encodeURIComponent(taskId)}`);
+            router.push(buildPersonalTaskDetailHref(taskId, locale));
             return;
         }
 
@@ -1630,6 +1654,27 @@ export default function AnalysisHome() {
         closeAnalysisTaskPopup();
         router.push(href);
     }, [closeAnalysisTaskPopup, locale, router]);
+
+    const handleGroupRankingClick = React.useCallback((groupId?: string | null) => {
+        const id = String(groupId ?? "").trim();
+        if (!id) return;
+        router.push(`/${locale}/group/${id}`);
+    }, [locale, router]);
+
+    const handleRiskAlertClick = React.useCallback(
+        (alert: NonNullable<UserRiskAlertsResponse["alerts"]>[number]) => {
+            const taskId = String(alert.taskId ?? "").trim();
+            if (!taskId) return;
+
+            if (isPersonalRiskAlertGroup(alert.group)) {
+                router.push(buildPersonalTaskDetailHref(taskId, locale));
+                return;
+            }
+
+            router.push(`/${locale}/group/task/${encodeURIComponent(taskId)}`);
+        },
+        [locale, router]
+    );
 
     return (
         <div className="relative overflow-hidden bg-[linear-gradient(180deg,#F8FAFC_0%,#FFF7ED_34%,#FFFBF5_66%,#F8FAFC_100%)]">
@@ -1780,9 +1825,11 @@ export default function AnalysisHome() {
                             ) : rankings.length > 0 ? (
                                 <div className="space-y-2 overflow-y-auto pr-0.5" style={{ maxHeight: "320px" }}>
                                     {rankings.map((item) => (
-                                        <div
+                                        <button
+                                            type="button"
                                             key={item.groupId}
-                                            className="flex items-center gap-3 rounded-xl border border-slate-50 bg-slate-50/60 px-4 py-3 transition-all hover:-translate-y-0.5 hover:bg-white hover:shadow-sm active:translate-y-0">
+                                            onClick={() => handleGroupRankingClick(item.groupId)}
+                                            className="flex w-full items-center gap-3 rounded-xl border border-slate-50 bg-slate-50/60 px-4 py-3 text-left transition-all hover:-translate-y-0.5 hover:bg-white hover:shadow-sm active:translate-y-0">
                                             <RankBadge rank={item.rank ?? 0} groupName={item.groupName ?? ""} />
 
                                             <div className="min-w-0 flex-1">
@@ -1811,7 +1858,7 @@ export default function AnalysisHome() {
                                                     />
                                                 </div>
                                             </div>
-                                        </div>
+                                        </button>
                                     ))}
                                 </div>
                             ) : (
@@ -2219,7 +2266,8 @@ export default function AnalysisHome() {
                                             type={alert.type ?? "overdue"}
                                             title={alert.title ?? ""}
                                             description={alert.description ?? ""}
-                                            group={alert.group ?? t("common.dash")}
+                                            group={resolveRiskAlertGroupLabel(alert.group, t)}
+                                            onClick={() => handleRiskAlertClick(alert)}
                                         />
                                     ))}
                                 </div>

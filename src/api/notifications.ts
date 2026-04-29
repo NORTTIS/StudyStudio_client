@@ -54,6 +54,14 @@ interface AnnouncementResponse {
     sourceType?: string;
 }
 
+interface AnnouncementPageResponse {
+    items: AnnouncementResponse[];
+    totalCount: number;
+    page: number;
+    pageSize: number;
+    totalPages: number;
+}
+
 interface UserAnnouncementResponse {
     userAnnouncementId: string;
     announcementId: string;
@@ -113,38 +121,95 @@ interface TaskCommentListPayload {
  * Type 0-3: all users see these, with IsRead from UserAnnouncement
  * Type 4-17: only mentioned users see these, with IsRead
  */
-export async function fetchNotifications(locale = "vi"): Promise<Notification[]> {
-    console.log("🔔 API: fetchNotifications được gọi với locale:", locale);
+function mapAnnouncementToNotification(announcement: AnnouncementResponse, locale: string): Notification {
+    return {
+        id: announcement.announcementId,
+        title: localizeNotificationText(announcement.title, locale),
+        description: localizeNotificationText(announcement.content, locale),
+        type: getNotificationType(announcement.type),
+        date: announcement.publishedAt,
+        read: announcement.isRead,
+        link: undefined,
+        announcementId: announcement.announcementId,
+        sourceType: (announcement.sourceType as NotificationSourceType) || "announcement",
+        groupId: announcement.groupId,
+        taskId: announcement.taskId
+    };
+}
 
+async function fetchNotificationPage(
+    locale = "vi",
+    page = 1,
+    pageSize = 10
+): Promise<AnnouncementPageResponse | null> {
     try {
-        console.log("🔔 API: Đang gọi /announcements...");
-        const response = await apiGet<AnnouncementResponse[]>("/announcements", locale);
-        console.log("🔔 API: Phản hồi từ /announcements:", response);
+        const response = await apiGet<AnnouncementPageResponse>(`/announcements?page=${page}&pageSize=${pageSize}`, locale);
 
-        if (response.status === "success" && response.data && Array.isArray(response.data)) {
-            const notifications = response.data.map((announcement: AnnouncementResponse) => ({
-                id: announcement.announcementId,
-                title: localizeNotificationText(announcement.title, locale),
-                description: localizeNotificationText(announcement.content, locale),
-                type: getNotificationType(announcement.type),
-                date: announcement.publishedAt,
-                read: announcement.isRead,
-                link: undefined,
-                announcementId: announcement.announcementId,
-                sourceType: (announcement.sourceType as NotificationSourceType) || "announcement",
-                groupId: announcement.groupId,
-                taskId: announcement.taskId
-            }));
-            console.log("🔔 API: Trả về thông báo:", notifications);
-            return notifications;
+        if (response.status === "success" && response.data) {
+            return response.data;
         }
 
         if (response.status === "error") {
             console.log("🔔 API: Lỗi từ server:", response.message);
         }
 
-        console.log("🔔 API: Không có dữ liệu hợp lệ - trả về mảng rỗng");
-        return [];
+        return null;
+    } catch (error) {
+        console.error("🔔 API: Lỗi trong fetchNotificationPage:", error);
+        return null;
+    }
+}
+
+export async function getAnnouncementPage(
+    locale = "vi",
+    page = 1,
+    pageSize = 10
+): Promise<AnnouncementPageResponse> {
+    const response = await fetchNotificationPage(locale, page, pageSize);
+
+    return response ?? {
+        items: [],
+        totalCount: 0,
+        page,
+        pageSize,
+        totalPages: 0
+    };
+}
+
+/**
+ * Fetch all notifications by paging through the unified endpoint.
+ * Type 0-3: all users see these, with IsRead from UserAnnouncement
+ * Type 4-17: only mentioned users see these, with IsRead
+ */
+export async function fetchNotifications(locale = "vi"): Promise<Notification[]> {
+    console.log("🔔 API: fetchNotifications được gọi với locale:", locale);
+
+    try {
+        const pageSize = 20;
+        const firstPage = await fetchNotificationPage(locale, 1, pageSize);
+
+        if (!firstPage) {
+            console.log("🔔 API: Không có dữ liệu hợp lệ - trả về mảng rỗng");
+            return [];
+        }
+
+        const notifications = firstPage.items.map((announcement) => mapAnnouncementToNotification(announcement, locale));
+
+        if (firstPage.totalPages <= 1) {
+            console.log("🔔 API: Trả về thông báo:", notifications);
+            return notifications;
+        }
+
+        const additionalPages = await Promise.all(
+            Array.from({ length: firstPage.totalPages - 1 }, (_, index) => index + 2).map(async (page) => {
+                const response = await fetchNotificationPage(locale, page, pageSize);
+                return response?.items.map((announcement) => mapAnnouncementToNotification(announcement, locale)) ?? [];
+            })
+        );
+
+        const allNotifications = [...notifications, ...additionalPages.flat()];
+        console.log("🔔 API: Trả về thông báo:", allNotifications);
+        return allNotifications;
     } catch (error) {
         console.error("🔔 API: Lỗi trong fetchNotifications:", error);
         return [];
@@ -206,10 +271,10 @@ export async function getAllAnnouncements(locale = "vi"): Promise<Notification[]
  */
 export async function getNotificationCount(locale = "vi"): Promise<number> {
     try {
-        const response = await apiGet<AnnouncementResponse[]>("/announcements", locale);
+        const response = await fetchNotificationPage(locale, 1, 1);
 
-        if (response.status === "success" && response.data && Array.isArray(response.data)) {
-            return response.data.filter((announcement: AnnouncementResponse) => announcement.isActive).length;
+        if (response) {
+            return response.totalCount;
         }
 
         return 0;

@@ -1,4 +1,5 @@
 import { type ApiResponse, apiDelete, apiGet, apiPut } from "./api-client";
+import { getAnnouncementPage } from "./notifications";
 import { localizeNotificationText } from "@/utils/notification-localization";
 
 function isSystemAnnouncementType(type: string): boolean {
@@ -46,20 +47,25 @@ export interface Announcement {
 
 // Get all public announcements
 export async function getAllAnnouncements(locale = "vi"): Promise<ApiResponse<Announcement[]>> {
-    const response = await apiGet<Announcement[]>('/announcements', locale);
+    const pageSize = 50;
+    const firstPage = await getAnnouncementPage(locale, 1, pageSize);
+    const announcements = [...firstPage.items];
 
-    if (response.status === "success" && response.data) {
-        return {
-            ...response,
-            data: response.data.map((announcement) => ({
-                ...announcement,
-                title: localizeNotificationText(announcement.title, locale),
-                content: localizeNotificationText(announcement.content, locale)
-            }))
-        };
+    for (let page = 2; page <= firstPage.totalPages; page += 1) {
+        const response = await getAnnouncementPage(locale, page, pageSize);
+        announcements.push(...response.items);
     }
 
-    return response;
+    return {
+        status: "success",
+        code: "SUCCESS",
+        message: "",
+        data: announcements.map((announcement) => ({
+            ...announcement,
+            title: localizeNotificationText(announcement.title, locale),
+            content: localizeNotificationText(announcement.content, locale)
+        }))
+    };
 }
 
 // Get announcement by ID
