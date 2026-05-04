@@ -266,6 +266,7 @@ export default function GroupDocumentsPage() {
 
     // State upload file
     const [isUploading, setIsUploading] = React.useState(false);
+    const [uploadError, setUploadError] = React.useState<string | null>(null);
 
     // State delete file
     const [isDeleting, setIsDeleting] = React.useState(false);
@@ -329,6 +330,7 @@ export default function GroupDocumentsPage() {
         if (currentUserRole === null) return false;
         return currentUserRole !== "commenter" && currentUserRole !== "viewer";
     }, [currentUserRole]);
+    const isUploadControlsDisabled = isUploading || !canModify;
 
     /**
      * Load danh sách tài liệu từ backend
@@ -378,7 +380,23 @@ export default function GroupDocumentsPage() {
     }, [loadDocuments]);
 
     // Mở modal upload
-    const onUploadClick = () => setIsUploadModalOpen(true);
+    const onUploadClick = () => {
+        if (isUploadControlsDisabled) return;
+        setUploadError(null);
+        setIsUploadModalOpen(true);
+    };
+
+    const showUploadError = React.useCallback(
+        (description: string) => {
+            if (isUploadModalOpen) {
+                setUploadError(description);
+                return;
+            }
+
+            toast({ variant: "destructive", description });
+        },
+        [isUploadModalOpen, toast]
+    );
 
     /**
      * Upload 1 file theo flow:
@@ -419,27 +437,31 @@ export default function GroupDocumentsPage() {
      * - drag & drop
      */
     const handleUploadFile = async (file: File) => {
+        if (isUploadControlsDisabled) return;
+
+        setUploadError(null);
+
         // Không xác định được groupId thì dừng
         if (!groupId) {
-            toast({ variant: "destructive", description: t("cannotDetectGroupId") });
+            showUploadError(t("cannotDetectGroupId"));
             return;
         }
 
         // Không có quyền thì chặn
         if (!canModify) {
-            toast({ variant: "destructive", description: t("noPermissionToUpload") });
+            showUploadError(t("noPermissionToUpload"));
             return;
         }
 
         // Validate loại file
         if (!isAllowedFile(file)) {
-            toast({ variant: "destructive", description: t("invalidFileType", { name: file.name }) });
+            showUploadError(t("invalidFileType", { name: file.name }));
             return;
         }
 
         // Validate dung lượng
         if (file.size > MAX_FILE_SIZE) {
-            toast({ variant: "destructive", description: t("fileTooLarge", { name: file.name }) });
+            showUploadError(t("fileTooLarge", { name: file.name }));
             return;
         }
 
@@ -450,15 +472,13 @@ export default function GroupDocumentsPage() {
             toast({ variant: "success", description: t("uploadedFiles", { count: 1 }) });
 
             // Đóng modal sau khi upload thành công
+            setUploadError(null);
             setIsUploadModalOpen(false);
 
             // Reload lại danh sách tài liệu
             await loadDocuments();
         } catch (error) {
-            toast({
-                variant: "destructive",
-                description: error instanceof Error ? error.message : t("uploadFailed")
-            });
+            showUploadError(error instanceof Error ? error.message : t("uploadFailed"));
         } finally {
             setIsUploading(false);
         }
@@ -474,11 +494,13 @@ export default function GroupDocumentsPage() {
         // Reset input value để có thể chọn lại đúng cùng 1 file sau này
         e.target.value = "";
 
+        if (isUploadControlsDisabled) return;
+
         if (!files.length) return;
 
         // Chặn upload nhiều file cùng lúc
         if (files.length > 1) {
-            toast({ variant: "destructive", description: t("tooManyFiles") });
+            showUploadError(t("tooManyFiles"));
             return;
         }
 
@@ -573,13 +595,13 @@ export default function GroupDocumentsPage() {
         setIsDragActive(false);
 
         // Nếu đang upload thì bỏ qua
-        if (isUploading) return;
+        if (isUploadControlsDisabled) return;
 
         const files = Array.from(event.dataTransfer?.files || []);
         if (!files.length) return;
 
         if (files.length > 1) {
-            toast({ variant: "destructive", description: t("tooManyFiles") });
+            showUploadError(t("tooManyFiles"));
             return;
         }
 
@@ -607,12 +629,13 @@ export default function GroupDocumentsPage() {
                                     type="file"
                                     className="hidden"
                                     accept=".pdf,.txt,.docx,.md"
+                                    disabled={isUploadControlsDisabled}
                                     onChange={onPickFiles}
                                 />
 
                                 <Button
                                     onClick={onUploadClick}
-                                    disabled={isUploading}
+                                    disabled={isUploadControlsDisabled}
                                     className="rounded-xl bg-[#FF5722] px-5 text-white hover:bg-[#e24d1e]">
                                     <Upload className="mr-2 h-4 w-4" />
                                     {isUploading ? t("uploading") : t("upload")}
@@ -649,7 +672,10 @@ export default function GroupDocumentsPage() {
                 isOpen={isUploadModalOpen}
                 onClose={() => {
                     // Không cho đóng modal nếu đang upload
-                    if (!isUploading) setIsUploadModalOpen(false);
+                    if (!isUploading) {
+                        setIsUploadModalOpen(false);
+                        setUploadError(null);
+                    }
                     setIsDragActive(false);
                 }}
                 title={t("uploadModalTitle")}
@@ -658,10 +684,16 @@ export default function GroupDocumentsPage() {
                     {/** biome-ignore lint/a11y/useSemanticElements: dùng div để custom drag-drop area */}
                     <div
                         role="button"
-                        tabIndex={0}
-                        onClick={() => fileRef.current?.click()}
+                        aria-disabled={isUploadControlsDisabled}
+                        tabIndex={isUploadControlsDisabled ? -1 : 0}
+                        onClick={() => {
+                            if (isUploadControlsDisabled) return;
+                            fileRef.current?.click();
+                        }}
                         onKeyDown={(e) => {
                             // Hỗ trợ mở file picker bằng Enter / Space
+                            if (isUploadControlsDisabled) return;
+
                             if (e.key === "Enter" || e.key === " ") {
                                 e.preventDefault();
                                 fileRef.current?.click();
@@ -670,11 +702,13 @@ export default function GroupDocumentsPage() {
                         onDragEnter={(event) => {
                             event.preventDefault();
                             event.stopPropagation();
+                            if (isUploadControlsDisabled) return;
                             setIsDragActive(true);
                         }}
                         onDragOver={(event) => {
                             event.preventDefault();
                             event.stopPropagation();
+                            if (isUploadControlsDisabled) return;
                             setIsDragActive(true);
                         }}
                         onDragLeave={(event) => {
@@ -685,7 +719,8 @@ export default function GroupDocumentsPage() {
                         onDrop={onDrop}
                         className={twMerge(
                             "flex min-h-40 cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed px-6 py-6 text-center transition",
-                            isDragActive ? "border-[#FF5722] bg-[#FFF3EE]" : "border-[#E5E5E5] bg-white"
+                            isDragActive ? "border-[#FF5722] bg-[#FFF3EE]" : "border-[#E5E5E5] bg-white",
+                            isUploadControlsDisabled && "cursor-not-allowed opacity-60"
                         )}>
                         {/* Icon upload */}
                         <Upload className="mb-2 h-8 w-8 text-[#FF5722]" />
@@ -699,11 +734,19 @@ export default function GroupDocumentsPage() {
                         {/* Nút browse file */}
                         <Button
                             type="button"
-                            disabled={isUploading}
+                            disabled={isUploadControlsDisabled}
                             className="mt-3 rounded-xl bg-[#FF5722] px-5 text-white hover:bg-[#e24d1e]">
                             {t("browseFile")}
                         </Button>
                     </div>
+
+                    {uploadError ? (
+                        <p
+                            role="alert"
+                            className="whitespace-pre-line break-words rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-left text-red-700 text-sm">
+                            {uploadError}
+                        </p>
+                    ) : null}
 
                     {/* Hint upload */}
                     <div className="flex flex-wrap items-center justify-between gap-3">
