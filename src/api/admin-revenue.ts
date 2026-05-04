@@ -86,10 +86,23 @@ export interface RevenueTrendsData {
 }
 
 export async function getRevenueTrends(
-    period: "week" | "month" | "year",
-    locale = "vi"
+    period: "week" | "month" | "year" | "last7days" | "last30days" | "last90days" | "last12months" | "custom",
+    locale = "vi",
+    startDate?: string,
+    endDate?: string
 ): Promise<ApiResponse<RevenueTrendsData>> {
-    return apiGet<RevenueTrendsData>(`/admin/revenue/trends?period=${period}`, locale);
+    const periodMap: Record<string, string> = {
+        week: "last7days",
+        month: "last30days",
+        year: "last12months"
+    };
+
+    const normalizedPeriod = periodMap[period] ?? period;
+    const params = new URLSearchParams();
+    params.append("Period", normalizedPeriod);
+    if (startDate) params.append("StartDate", startDate);
+    if (endDate) params.append("EndDate", endDate);
+    return apiGet<RevenueTrendsData>(`/admin/revenue/trends?${params.toString()}`, locale);
 }
 
 // Top Plans

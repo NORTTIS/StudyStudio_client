@@ -1426,6 +1426,8 @@
     "invalidFileType": "Định dạng tệp không hợp lệ: {name}",
     "fileTooLarge": "Tệp vượt quá 5MB: {name}",
     "uploadFailed": "Tải lên thất bại",
+    "uploadHttpFailed": "Tải lên thất bại: {name} (HTTP {status})",
+    "noPermissionToUpload": "Bạn không có quyền tải tài liệu lên.",
     "confirmDeleteTitle": "Xác nhận xóa tài liệu",
     "confirmDeleteDescriptionPrefix": "Bạn có chắc chắn muốn xóa",
     "confirmDeleteDescriptionSuffix": "không? Hành động này không thể hoàn tác.",

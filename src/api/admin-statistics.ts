@@ -1,5 +1,58 @@
 import { type ApiResponse, apiGet } from "./api-client";
 
+// Helper function to calculate date range based on period
+function calculateDateRange(period: string): { startDate: string; endDate: string } {
+    const today = new Date();
+
+    let start = new Date(today);
+    let end = new Date(today);
+
+    switch (period) {
+        case "day": // Hôm nay
+            // start = today, end = today
+            break;
+
+        case "week": // Tuần này (Thứ Hai - Chủ Nhật)
+            const dayOfWeek = today.getDay();
+            // getDay(): 0=CN, 1=T2, ..., 6=T7
+            const diff = today.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
+            start.setDate(diff);
+            // end = Chủ Nhật của tuần này
+            end = new Date(start);
+            end.setDate(start.getDate() + 6);
+            break;
+
+        case "month": // Tháng này (1 đến cuối tháng)
+            start.setDate(1);
+            // end = ngày cuối tháng
+            end = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+            break;
+
+        case "year": // Năm này (1/1 đến 31/12)
+            start = new Date(today.getFullYear(), 0, 1);
+            end = new Date(today.getFullYear(), 11, 31);
+            break;
+
+        default:
+            // default: tháng này
+            start.setDate(1);
+            end = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+    }
+
+    // Format as YYYY-MM-DD
+    const formatDate = (date: Date): string => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, "0");
+        const day = String(date.getDate()).padStart(2, "0");
+        return `${year}-${month}-${day}`;
+    };
+
+    return {
+        startDate: formatDate(start),
+        endDate: formatDate(end)
+    };
+}
+
 // Hourly Activity
 export interface HourlyActivityData {
     startDate: string;
@@ -12,8 +65,22 @@ export interface HourlyActivityData {
     }[];
 }
 
-export async function getHourlyActivity(period?: string, locale = "vi"): Promise<ApiResponse<HourlyActivityData>> {
-    const url = period ? `/admin/statistics/hourly-activity?period=${period}` : "/admin/statistics/hourly-activity";
+export async function getHourlyActivity(period?: string, locale = "vi", startDate?: string, endDate?: string): Promise<ApiResponse<HourlyActivityData>> {
+    let url = "/admin/statistics/hourly-activity";
+    const params = new URLSearchParams();
+    
+    if (startDate && endDate) {
+        params.append("StartDate", startDate);
+        params.append("EndDate", endDate);
+    } else if (period) {
+        const { startDate: calcStart, endDate: calcEnd } = calculateDateRange(period);
+        params.append("StartDate", calcStart);
+        params.append("EndDate", calcEnd);
+    }
+    
+    if (params.toString()) {
+        url += `?${params.toString()}`;
+    }
     return apiGet<HourlyActivityData>(url, locale);
 }
 
@@ -33,8 +100,24 @@ export interface ReportStatusData {
     totalReports: number;
 }
 
-export async function getReportStatus(period?: string, locale = "vi"): Promise<ApiResponse<ReportStatusData>> {
-    const url = period ? `/admin/statistics/report-status?period=${period}` : "/admin/statistics/report-status";
+export async function getReportStatus(period?: string, locale = "vi", startDate?: string, endDate?: string): Promise<ApiResponse<ReportStatusData>> {
+    let url = "/admin/statistics/report-status";
+    const params = new URLSearchParams();
+    
+    if (startDate && endDate) {
+        params.append("StartDate", startDate);
+        params.append("EndDate", endDate);
+    } else if (period) {
+        const { startDate: calcStart, endDate: calcEnd } = calculateDateRange(period);
+        params.append("StartDate", calcStart);
+        params.append("EndDate", calcEnd);
+    }
+    
+    params.append("Period", "monthly");
+    
+    if (params.toString()) {
+        url += `?${params.toString()}`;
+    }
     return apiGet<ReportStatusData>(url, locale);
 }
 
@@ -50,8 +133,22 @@ export interface UserDistributionData {
     }[];
 }
 
-export async function getUserDistribution(period?: string, locale = "vi"): Promise<ApiResponse<UserDistributionData>> {
-    const url = period ? `/admin/statistics/user-distribution?period=${period}` : "/admin/statistics/user-distribution";
+export async function getUserDistribution(period?: string, locale = "vi", startDate?: string, endDate?: string): Promise<ApiResponse<UserDistributionData>> {
+    let url = "/admin/statistics/user-distribution";
+    const params = new URLSearchParams();
+    
+    if (startDate && endDate) {
+        params.append("StartDate", startDate);
+        params.append("EndDate", endDate);
+    } else if (period) {
+        const { startDate: calcStart, endDate: calcEnd } = calculateDateRange(period);
+        params.append("StartDate", calcStart);
+        params.append("EndDate", calcEnd);
+    }
+    
+    if (params.toString()) {
+        url += `?${params.toString()}`;
+    }
     return apiGet<UserDistributionData>(url, locale);
 }
 
@@ -70,11 +167,25 @@ export interface SubscriptionDistributionData {
 
 export async function getSubscriptionDistribution(
     period?: string,
-    locale = "vi"
+    locale = "vi",
+    startDate?: string,
+    endDate?: string
 ): Promise<ApiResponse<SubscriptionDistributionData>> {
-    const url = period
-        ? `/admin/statistics/subscription-distribution?period=${period}`
-        : "/admin/statistics/subscription-distribution";
+    let url = "/admin/statistics/subscription-distribution";
+    const params = new URLSearchParams();
+
+    if (startDate && endDate) {
+        params.append("StartDate", startDate);
+        params.append("EndDate", endDate);
+    } else if (period) {
+        const { startDate: calcStart, endDate: calcEnd } = calculateDateRange(period);
+        params.append("StartDate", calcStart);
+        params.append("EndDate", calcEnd);
+    }
+
+    if (params.toString()) {
+        url += `?${params.toString()}`;
+    }
     return apiGet<SubscriptionDistributionData>(url, locale);
 }
 

@@ -51,12 +51,6 @@ export function PlanCard({ plan, onEditLimits, onEditPrice }: PlanCardProps) {
                 <p className="text-[#6F6B99] text-sm">/month</p>
             </div>
 
-            {/* Active Subscribers */}
-            <div className="mb-4 rounded-lg bg-[#F8F8F8] p-4">
-                <p className="mb-1 text-[#6F6B99] text-xs">Người Đăng Ký Hoạt Động</p>
-                <p className="font-bold text-2xl text-[#261E33]">{(plan.activeSubscribers ?? 0).toLocaleString()}</p>
-            </div>
-
             {/* Plan Limits */}
             <div className="mb-4 space-y-2 border-t pt-4">
                 <p className="mb-3 font-semibold text-[#261E33] text-sm">Giới Hạn Gói</p>

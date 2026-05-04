@@ -46,7 +46,6 @@ export function AdminDashboardPage() {
     const [reportStatusData, setReportStatusData] = useState<any[]>([]);
 
     // Filters for each chart
-    const [revenuePeriod, setRevenuePeriod] = useState<"week" | "month" | "year">("year");
     const [reportPeriod, setReportPeriod] = useState<string>("month");
     const [activityPeriod, setActivityPeriod] = useState<string>("week");
     const [userPeriod, setUserPeriod] = useState<string>("month");
@@ -58,6 +57,39 @@ export function AdminDashboardPage() {
 
     // Chart-specific filters
     const [revPeriodFilter, setRevPeriodFilter] = useState<string>("month");
+
+    // Chart-specific custom date ranges
+    const [useUserCustomDateRange, setUseUserCustomDateRange] = useState(false);
+    const [userCustomStartDate, setUserCustomStartDate] = useState<string>(() => {
+        const d = new Date();
+        d.setMonth(d.getMonth() - 1);
+        return d.toISOString().split("T")[0];
+    });
+    const [userCustomEndDate, setUserCustomEndDate] = useState<string>(() => new Date().toISOString().split("T")[0]);
+
+    const [useSubCustomDateRange, setUseSubCustomDateRange] = useState(false);
+    const [subCustomStartDate, setSubCustomStartDate] = useState<string>(() => {
+        const d = new Date();
+        d.setMonth(d.getMonth() - 1);
+        return d.toISOString().split("T")[0];
+    });
+    const [subCustomEndDate, setSubCustomEndDate] = useState<string>(() => new Date().toISOString().split("T")[0]);
+
+    const [useReportCustomDateRange, setUseReportCustomDateRange] = useState(false);
+    const [reportCustomStartDate, setReportCustomStartDate] = useState<string>(() => {
+        const d = new Date();
+        d.setMonth(d.getMonth() - 1);
+        return d.toISOString().split("T")[0];
+    });
+    const [reportCustomEndDate, setReportCustomEndDate] = useState<string>(() => new Date().toISOString().split("T")[0]);
+
+    const [useRevenueCustomDateRange, setUseRevenueCustomDateRange] = useState(false);
+    const [revenueCustomStartDate, setRevenueCustomStartDate] = useState<string>(() => {
+        const d = new Date();
+        d.setMonth(d.getMonth() - 1);
+        return d.toISOString().split("T")[0];
+    });
+    const [revenueCustomEndDate, setRevenueCustomEndDate] = useState<string>(() => new Date().toISOString().split("T")[0]);
 
     // Export Modal States
     const [isExportModalOpen, setIsExportModalOpen] = useState(false);
@@ -75,20 +107,34 @@ export function AdminDashboardPage() {
         setIsLoading(true);
         try {
             // Determine date range for Revenue distribution By Period
-            const end = new Date();
-            const start = new Date();
-            if (revPeriodFilter === "week") start.setDate(start.getDate() - 7);
-            else if (revPeriodFilter === "month") start.setMonth(start.getMonth() - 1);
-            else if (revPeriodFilter === "year") start.setFullYear(start.getFullYear() - 1);
-            else if (revPeriodFilter === "day") start.setDate(start.getDate() - 1);
+            const end = useRevenueCustomDateRange ? new Date(revenueCustomEndDate) : new Date();
+            const start = useRevenueCustomDateRange ? new Date(revenueCustomStartDate) : new Date();
+            if (useRevenueCustomDateRange) {
+                end.setHours(23, 59, 59, 999);
+                start.setHours(0, 0, 0, 0);
+            }
+            if (!useRevenueCustomDateRange) {
+                if (revPeriodFilter === "week") start.setDate(start.getDate() - 7);
+                else if (revPeriodFilter === "month") {
+                    // Show all days in current month when month filter is selected
+                    start.setDate(1);
+                    end.setMonth(end.getMonth() + 1, 0);
+                    end.setHours(23, 59, 59, 999);
+                }
+                else if (revPeriodFilter === "year") start.setFullYear(start.getFullYear() - 1);
+                else if (revPeriodFilter === "day") start.setDate(start.getDate() - 1);
+            }
 
-            const periodMapping: any = { day: "daily", week: "weekly", month: "monthly", year: "monthly" };
+            const periodMapping: any = { day: "daily", week: "weekly", month: "daily", year: "monthly" };
             const apiPeriod = periodMapping[revPeriodFilter] || "monthly";
 
             const [
                 revenueResult,
                 recentResult,
                 groupsResult,
+                kpiUserResult,
+                kpiSubResult,
+                kpiReportResult,
                 userDistResult,
                 subDistResult,
                 hourlyResult,
@@ -97,13 +143,25 @@ export function AdminDashboardPage() {
                 transactionsResult,
                 periodResult
             ] = await Promise.allSettled([
-                getRevenueTrends(revenuePeriod, locale).catch(() => ({ status: "error", data: null })),
+                getRevenueTrends("custom", locale, start.toISOString(), end.toISOString()).catch(() => ({
+                    status: "error",
+                    data: null
+                })),
                 getRecentActivity(5, locale).catch(() => ({ status: "error", data: null })),
                 getTopActiveGroups(5, locale).catch(() => ({ status: "error", data: null })),
-                getUserDistribution(userPeriod, locale).catch(() => ({ status: "error", data: null })),
-                getSubscriptionDistribution(subPeriod, locale).catch(() => ({ status: "error", data: null })),
+                getUserDistribution(undefined, locale).catch(() => ({ status: "error", data: null })),
+                getSubscriptionDistribution(undefined, locale).catch(() => ({ status: "error", data: null })),
+                getReportStatus(undefined, locale).catch(() => ({ status: "error", data: null })),
+                useUserCustomDateRange
+                    ? getUserDistribution(undefined, locale, userCustomStartDate, userCustomEndDate).catch(() => ({ status: "error", data: null }))
+                    : getUserDistribution(userPeriod, locale).catch(() => ({ status: "error", data: null })),
+                useSubCustomDateRange
+                    ? getSubscriptionDistribution(undefined, locale, subCustomStartDate, subCustomEndDate).catch(() => ({ status: "error", data: null }))
+                    : getSubscriptionDistribution(subPeriod, locale).catch(() => ({ status: "error", data: null })),
                 getHourlyActivity(activityPeriod, locale).catch(() => ({ status: "error", data: null })),
-                getReportStatus(reportPeriod, locale).catch(() => ({ status: "error", data: null })),
+                useReportCustomDateRange
+                    ? getReportStatus(undefined, locale, reportCustomStartDate, reportCustomEndDate).catch(() => ({ status: "error", data: null }))
+                    : getReportStatus(reportPeriod, locale).catch(() => ({ status: "error", data: null })),
                 getRevenueOverview(locale).catch(() => ({ status: "error", data: null })),
                 getRevenueTransactions(1, 5, locale).catch(() => ({ status: "error", data: null })),
                 getRevenueByPeriod(apiPeriod, start.toISOString(), end.toISOString(), locale).catch(() => ({
@@ -114,12 +172,24 @@ export function AdminDashboardPage() {
 
             const newStats: any = {};
 
-            if (userDistResult.status === "fulfilled" && userDistResult.value?.data) {
-                const data = userDistResult.value.data;
+            if (kpiUserResult.status === "fulfilled" && kpiUserResult.value?.data) {
+                const data = kpiUserResult.value.data;
                 newStats.totalUsers = data.totalUsers || 0;
-                setUserDistData(data.distribution || []);
                 const active = data.distribution?.find((d: any) => d.status === "Active");
                 if (active) newStats.activeUsers = active.count;
+            }
+
+            if (kpiSubResult.status === "fulfilled" && kpiSubResult.value?.data) {
+                newStats.totalSubscriptions = kpiSubResult.value.data.totalSubscriptions || 0;
+            }
+
+            if (kpiReportResult.status === "fulfilled" && kpiReportResult.value?.data) {
+                newStats.totalReports = kpiReportResult.value.data.totalReports || 0;
+            }
+
+            if (userDistResult.status === "fulfilled" && userDistResult.value?.data) {
+                const data = userDistResult.value.data;
+                setUserDistData(data.distribution || []);
             }
 
             if (revenueResult.status === "fulfilled" && revenueResult.value?.data) {
@@ -131,13 +201,11 @@ export function AdminDashboardPage() {
 
             if (reportResult.status === "fulfilled" && reportResult.value?.data) {
                 const data = reportResult.value.data;
-                newStats.totalReports = data.totalReports || 0;
                 setReportStatusData(data.data || []);
             }
 
             if (subDistResult.status === "fulfilled" && subDistResult.value?.data) {
                 const data = subDistResult.value.data;
-                newStats.totalSubscriptions = data.totalSubscriptions || 0;
                 setSubscriptionDistData(data.distribution || []);
             }
 
@@ -195,7 +263,25 @@ export function AdminDashboardPage() {
         } finally {
             setIsLoading(false);
         }
-    }, [revenuePeriod, reportPeriod, activityPeriod, userPeriod, subPeriod, revPeriodFilter]);
+    }, [
+        reportPeriod,
+        activityPeriod,
+        userPeriod,
+        subPeriod,
+        revPeriodFilter,
+        useUserCustomDateRange,
+        userCustomStartDate,
+        userCustomEndDate,
+        useSubCustomDateRange,
+        subCustomStartDate,
+        subCustomEndDate,
+        useReportCustomDateRange,
+        reportCustomStartDate,
+        reportCustomEndDate,
+        useRevenueCustomDateRange,
+        revenueCustomStartDate,
+        revenueCustomEndDate
+    ]);
 
     useEffect(() => {
         loadDashboardData();
@@ -418,11 +504,6 @@ export function AdminDashboardPage() {
                                 <h1 className="mb-2 font-bold text-2xl text-[#261E33]">Bảng điều khiển</h1>
                                 <p className="text-[#6F6B99] text-sm">Tổng quan hệ thống Study Studio</p>
                             </div>
-                            <button
-                                onClick={() => setIsExportModalOpen(true)}
-                                className="rounded-lg bg-[#FF5F3D] px-4 py-2 font-medium text-sm text-white hover:bg-[#E55335]">
-                                Xuất báo cáo (CSV)
-                            </button>
                         </div>
 
                         <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-3 lg:grid-cols-6">
@@ -461,12 +542,15 @@ export function AdminDashboardPage() {
                                             {stats.revenueGrowth}%
                                         </span>
                                         <Select
-                                            value={revenuePeriod}
-                                            onValueChange={(val: any) => setRevenuePeriod(val)}>
+                                            value={revPeriodFilter}
+                                            onValueChange={(val: any) => setRevPeriodFilter(val)}>
                                             <SelectTrigger className="h-7 w-[75px] border-none bg-orange-50 px-2 py-0 text-[#FF5F3D] text-xs">
                                                 <SelectValue />
                                             </SelectTrigger>
                                             <SelectContent className="bg-white">
+                                                <SelectItem className="text-xs" value="day">
+                                                    Ngày
+                                                </SelectItem>
                                                 <SelectItem className="text-xs" value="week">
                                                     Tuần
                                                 </SelectItem>
@@ -529,36 +613,90 @@ export function AdminDashboardPage() {
                             <div className="rounded-xl border border-gray-200 bg-white p-6">
                                 <div className="mb-4 flex items-center justify-between">
                                     <h3 className="font-semibold text-[#261E33]">Phân bố người dùng</h3>
-                                    <Select value={userPeriod} onValueChange={setUserPeriod}>
-                                        <SelectTrigger className="h-8 w-[120px] text-xs">
-                                            <SelectValue placeholder="Chọn thời gian" />
-                                        </SelectTrigger>
-                                        <SelectContent className="bg-white">
-                                            <SelectItem value="day">Hôm nay</SelectItem>
-                                            <SelectItem value="week">Tuần này</SelectItem>
-                                            <SelectItem value="month">Tháng này</SelectItem>
-                                            <SelectItem value="year">Năm nay</SelectItem>
-                                        </SelectContent>
-                                    </Select>
+                                    <div className="flex items-center gap-3">
+                                        <label className="flex items-center gap-1 text-xs">
+                                            <input
+                                                type="checkbox"
+                                                checked={useUserCustomDateRange}
+                                                onChange={(e) => setUseUserCustomDateRange(e.target.checked)}
+                                            />
+                                            Tùy chỉnh
+                                        </label>
+                                        <Select value={userPeriod} onValueChange={setUserPeriod}>
+                                            <SelectTrigger className="h-8 w-[120px] text-xs" disabled={useUserCustomDateRange}>
+                                                <SelectValue placeholder="Chọn thời gian" />
+                                            </SelectTrigger>
+                                            <SelectContent className="bg-white">
+                                                <SelectItem value="day">Hôm nay</SelectItem>
+                                                <SelectItem value="week">Tuần này</SelectItem>
+                                                <SelectItem value="month">Tháng này</SelectItem>
+                                                <SelectItem value="year">Năm nay</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
                                 </div>
+                                {useUserCustomDateRange && (
+                                    <div className="mb-3 flex items-center gap-2">
+                                        <input
+                                            type="date"
+                                            value={userCustomStartDate}
+                                            onChange={(e) => setUserCustomStartDate(e.target.value)}
+                                            className="rounded border border-gray-300 px-2 py-1 text-xs"
+                                        />
+                                        <span className="text-xs">-</span>
+                                        <input
+                                            type="date"
+                                            value={userCustomEndDate}
+                                            onChange={(e) => setUserCustomEndDate(e.target.value)}
+                                            className="rounded border border-gray-300 px-2 py-1 text-xs"
+                                        />
+                                    </div>
+                                )}
                                 <ReactECharts option={userDistributionOption} style={{ height: "280px" }} />
                             </div>
 
                             <div className="rounded-xl border border-gray-200 bg-white p-6">
                                 <div className="mb-4 flex items-center justify-between">
                                     <h3 className="font-semibold text-[#261E33]">Phân bố gói đăng ký</h3>
-                                    <Select value={subPeriod} onValueChange={setSubPeriod}>
-                                        <SelectTrigger className="h-8 w-[120px] text-xs">
-                                            <SelectValue placeholder="Chọn thời gian" />
-                                        </SelectTrigger>
-                                        <SelectContent className="bg-white">
-                                            <SelectItem value="day">Hôm nay</SelectItem>
-                                            <SelectItem value="week">Tuần này</SelectItem>
-                                            <SelectItem value="month">Tháng này</SelectItem>
-                                            <SelectItem value="year">Năm nay</SelectItem>
-                                        </SelectContent>
-                                    </Select>
+                                    <div className="flex items-center gap-3">
+                                        <label className="flex items-center gap-1 text-xs">
+                                            <input
+                                                type="checkbox"
+                                                checked={useSubCustomDateRange}
+                                                onChange={(e) => setUseSubCustomDateRange(e.target.checked)}
+                                            />
+                                            Tùy chỉnh
+                                        </label>
+                                        <Select value={subPeriod} onValueChange={setSubPeriod}>
+                                            <SelectTrigger className="h-8 w-[120px] text-xs" disabled={useSubCustomDateRange}>
+                                                <SelectValue placeholder="Chọn thời gian" />
+                                            </SelectTrigger>
+                                            <SelectContent className="bg-white">
+                                                <SelectItem value="day">Hôm nay</SelectItem>
+                                                <SelectItem value="week">Tuần này</SelectItem>
+                                                <SelectItem value="month">Tháng này</SelectItem>
+                                                <SelectItem value="year">Năm nay</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
                                 </div>
+                                {useSubCustomDateRange && (
+                                    <div className="mb-3 flex items-center gap-2">
+                                        <input
+                                            type="date"
+                                            value={subCustomStartDate}
+                                            onChange={(e) => setSubCustomStartDate(e.target.value)}
+                                            className="rounded border border-gray-300 px-2 py-1 text-xs"
+                                        />
+                                        <span className="text-xs">-</span>
+                                        <input
+                                            type="date"
+                                            value={subCustomEndDate}
+                                            onChange={(e) => setSubCustomEndDate(e.target.value)}
+                                            className="rounded border border-gray-300 px-2 py-1 text-xs"
+                                        />
+                                    </div>
+                                )}
                                 <ReactECharts option={subscriptionOption} style={{ height: "280px" }} />
                             </div>
                         </div>
@@ -568,34 +706,88 @@ export function AdminDashboardPage() {
                             <div className="rounded-xl border border-gray-200 bg-white p-6">
                                 <div className="mb-4 flex items-center justify-between">
                                     <h3 className="font-semibold text-[#261E33]">Trạng thái báo cáo</h3>
-                                    <Select value={reportPeriod} onValueChange={setReportPeriod}>
-                                        <SelectTrigger className="h-8 w-[120px] text-xs">
-                                            <SelectValue placeholder="Chọn thời gian" />
-                                        </SelectTrigger>
-                                        <SelectContent className="bg-white">
-                                            <SelectItem value="week">Tuần này</SelectItem>
-                                            <SelectItem value="month">Tháng này</SelectItem>
-                                            <SelectItem value="year">Năm nay</SelectItem>
-                                        </SelectContent>
-                                    </Select>
+                                    <div className="flex items-center gap-3">
+                                        <label className="flex items-center gap-1 text-xs">
+                                            <input
+                                                type="checkbox"
+                                                checked={useReportCustomDateRange}
+                                                onChange={(e) => setUseReportCustomDateRange(e.target.checked)}
+                                            />
+                                            Tùy chỉnh
+                                        </label>
+                                        <Select value={reportPeriod} onValueChange={setReportPeriod}>
+                                            <SelectTrigger className="h-8 w-[120px] text-xs" disabled={useReportCustomDateRange}>
+                                                <SelectValue placeholder="Chọn thời gian" />
+                                            </SelectTrigger>
+                                            <SelectContent className="bg-white">
+                                                <SelectItem value="week">Tuần này</SelectItem>
+                                                <SelectItem value="month">Tháng này</SelectItem>
+                                                <SelectItem value="year">Năm nay</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
                                 </div>
+                                {useReportCustomDateRange && (
+                                    <div className="mb-3 flex items-center gap-2">
+                                        <input
+                                            type="date"
+                                            value={reportCustomStartDate}
+                                            onChange={(e) => setReportCustomStartDate(e.target.value)}
+                                            className="rounded border border-gray-300 px-2 py-1 text-xs"
+                                        />
+                                        <span className="text-xs">-</span>
+                                        <input
+                                            type="date"
+                                            value={reportCustomEndDate}
+                                            onChange={(e) => setReportCustomEndDate(e.target.value)}
+                                            className="rounded border border-gray-300 px-2 py-1 text-xs"
+                                        />
+                                    </div>
+                                )}
                                 <ReactECharts option={reportStatusOption} style={{ height: "280px" }} />
                             </div>
                             <div className="rounded-xl border border-gray-200 bg-white p-6">
                                 <div className="mb-4 flex items-center justify-between">
                                     <h3 className="font-semibold text-[#261E33]">Doanh thu theo thời gian</h3>
-                                    <Select value={revPeriodFilter} onValueChange={setRevPeriodFilter}>
-                                        <SelectTrigger className="h-8 w-[120px] text-xs">
-                                            <SelectValue placeholder="Kỳ hạn" />
-                                        </SelectTrigger>
-                                        <SelectContent className="bg-white">
-                                            <SelectItem value="day">Hôm nay</SelectItem>
-                                            <SelectItem value="week">Tuần này</SelectItem>
-                                            <SelectItem value="month">Tháng này</SelectItem>
-                                            <SelectItem value="year">Năm nay</SelectItem>
-                                        </SelectContent>
-                                    </Select>
+                                    <div className="flex items-center gap-3">
+                                        <label className="flex items-center gap-1 text-xs">
+                                            <input
+                                                type="checkbox"
+                                                checked={useRevenueCustomDateRange}
+                                                onChange={(e) => setUseRevenueCustomDateRange(e.target.checked)}
+                                            />
+                                            Tùy chỉnh
+                                        </label>
+                                        <Select value={revPeriodFilter} onValueChange={setRevPeriodFilter}>
+                                            <SelectTrigger className="h-8 w-[120px] text-xs" disabled={useRevenueCustomDateRange}>
+                                                <SelectValue placeholder="Kỳ hạn" />
+                                            </SelectTrigger>
+                                            <SelectContent className="bg-white">
+                                                <SelectItem value="day">Hôm nay</SelectItem>
+                                                <SelectItem value="week">Tuần này</SelectItem>
+                                                <SelectItem value="month">Tháng này</SelectItem>
+                                                <SelectItem value="year">Năm nay</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
                                 </div>
+                                {useRevenueCustomDateRange && (
+                                    <div className="mb-3 flex items-center gap-2">
+                                        <input
+                                            type="date"
+                                            value={revenueCustomStartDate}
+                                            onChange={(e) => setRevenueCustomStartDate(e.target.value)}
+                                            className="rounded border border-gray-300 px-2 py-1 text-xs"
+                                        />
+                                        <span className="text-xs">-</span>
+                                        <input
+                                            type="date"
+                                            value={revenueCustomEndDate}
+                                            onChange={(e) => setRevenueCustomEndDate(e.target.value)}
+                                            className="rounded border border-gray-300 px-2 py-1 text-xs"
+                                        />
+                                    </div>
+                                )}
                                 <ReactECharts option={revenueByPeriodOption} style={{ height: "280px" }} />
                             </div>
                         </div>
@@ -688,103 +880,7 @@ export function AdminDashboardPage() {
                        
                     </div>
                 </main>
-
-                {isExportModalOpen && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-                        <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
-                            <h2 className="mb-4 font-bold text-[#261E33] text-xl">Tùy chọn xuất báo cáo</h2>
-
-                            <div className="space-y-4">
-                                <div>
-                                    <label className="mb-1 block font-medium text-[#6F6B99] text-sm">
-                                        Loại báo cáo
-                                    </label>
-                                    <Select value={exportReportType} onValueChange={setExportReportType}>
-                                        <SelectTrigger className="w-full rounded-lg px-3">
-                                            <SelectValue placeholder="Loại báo cáo" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="overview">Tổng quan (Overview)</SelectItem>
-                                            <SelectItem value="period">Theo thời gian (Period)</SelectItem>
-                                            <SelectItem value="plan">Theo gói (Plan)</SelectItem>
-                                            <SelectItem value="top_plans">Top gói (Top Plans)</SelectItem>
-                                            <SelectItem value="transactions">Giao dịch (Transactions)</SelectItem>
-                                            <SelectItem value="mrr">MRR (Doanh thu định kỳ)</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="mb-1 block font-medium text-[#6F6B99] text-sm">
-                                            Ngày bắt đầu
-                                        </label>
-                                        <input
-                                            type="date"
-                                            value={exportStartDate}
-                                            onChange={(e) => setExportStartDate(e.target.value)}
-                                            className="w-full rounded-lg border border-gray-300 p-2 text-sm outline-none focus:border-[#FF5F3D]"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="mb-1 block font-medium text-[#6F6B99] text-sm">
-                                            Ngày kết thúc
-                                        </label>
-                                        <input
-                                            type="date"
-                                            value={exportEndDate}
-                                            onChange={(e) => setExportEndDate(e.target.value)}
-                                            className="w-full rounded-lg border border-gray-300 p-2 text-sm outline-none focus:border-[#FF5F3D]"
-                                        />
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <label className="mb-1 block font-medium text-[#6F6B99] text-sm">
-                                        Chu kỳ hiển thị
-                                    </label>
-                                    <Select value={exportPeriod} onValueChange={setExportPeriod}>
-                                        <SelectTrigger className="w-full rounded-lg px-3">
-                                            <SelectValue placeholder="Chu kỳ hiển thị" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="day">Theo Ngày (Day)</SelectItem>
-                                            <SelectItem value="week">Theo Tuần (Week)</SelectItem>
-                                            <SelectItem value="month">Theo Tháng (Month)</SelectItem>
-                                            <SelectItem value="year">Theo Năm (Year)</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-
-                                <div className="flex items-center gap-2">
-                                    <input
-                                        type="checkbox"
-                                        id="includeCharts"
-                                        checked={exportIncludeCharts}
-                                        onChange={(e) => setExportIncludeCharts(e.target.checked)}
-                                        className="h-4 w-4 rounded border-gray-300 text-[#FF5F3D] focus:ring-[#FF5F3D]"
-                                    />
-                                    <label htmlFor="includeCharts" className="font-medium text-[#6F6B99] text-sm">
-                                        Đính kèm số liệu biểu đồ
-                                    </label>
-                                </div>
-                            </div>
-
-                            <div className="mt-6 flex justify-end gap-3">
-                                <button
-                                    onClick={() => setIsExportModalOpen(false)}
-                                    className="rounded-lg px-4 py-2 font-medium text-[#6F6B99] text-sm hover:bg-gray-100">
-                                    Hủy
-                                </button>
-                                <button
-                                    onClick={handleExport}
-                                    className="rounded-lg bg-[#FF5F3D] px-4 py-2 font-medium text-sm text-white hover:bg-[#E55335]">
-                                    Xuất file
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )}
+               
             </div>
         </div>
     );
