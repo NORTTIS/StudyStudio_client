@@ -314,7 +314,7 @@ function CompareGroupPicker({
                                     <span
                                         className="h-2 w-2 rounded-full"
                                         style={{ backgroundColor: getGroupColor(g.groupColor, g.groupId) }}
-                                    />
+                                        />
                                     {g.groupName}
                                 </span>
                             ))
@@ -889,11 +889,32 @@ export default function AnalyticMaster({ studioRole, maxStorageMb }: AnalyticMas
     // ── Fetch trend (Chart 3) ──
     React.useEffect(() => {
         if (!studioId) return;
-        const start = dateToString(shiftDateByMode(lineAnchor, lineMode, -1));
-        const end = dateToString(shiftDateByMode(lineAnchor, lineMode, 1));
+        
+        // Tính đúng date range dựa vào lineMode để khớp với UI
+        let start: Date, end: Date;
+        
+        if (lineMode === "week") {
+            // Lấy ngày Thứ 2 đầu tuần
+            const day = lineAnchor.getDay();
+            const diff = day === 0 ? -6 : 1 - day;
+            start = new Date(lineAnchor);
+            start.setDate(lineAnchor.getDate() + diff);
+            // Lấy ngày Chủ Nhật cuối tuần (6 ngày sau Thứ 2)
+            end = new Date(start);
+            end.setDate(start.getDate() + 6);
+        } else if (lineMode === "month") {
+            // Lấy ngày đầu và cuối của tháng
+            start = new Date(lineAnchor.getFullYear(), lineAnchor.getMonth(), 1);
+            end = new Date(lineAnchor.getFullYear(), lineAnchor.getMonth() + 1, 0);
+        } else {
+            // year: từ 1/1 đến 31/12
+            start = new Date(lineAnchor.getFullYear(), 0, 1);
+            end = new Date(lineAnchor.getFullYear(), 11, 31);
+        }
+        
         getStudioCompletionTrend(studioId, {
-            startDate: start,
-            endDate: end,
+            startDate: dateToString(start),
+            endDate: dateToString(end),
             groupIds: lineCompareIds.length ? lineCompareIds : undefined
         })
             .then((res) => {
@@ -902,12 +923,32 @@ export default function AnalyticMaster({ studioRole, maxStorageMb }: AnalyticMas
             .catch(console.error);
     }, [studioId, lineAnchor, lineMode, lineCompareIds]);
 
-    // ── Fetch activity (Chart 5) ──
+    // ── Fetch activity (Chart 4) ──
     React.useEffect(() => {
         if (!studioId) return;
-        const start = dateToString(shiftDateByMode(heatmapAnchor, heatmapMode === "week" ? "week" : "month", -1));
-        const end = dateToString(heatmapAnchor);
-        getStudioGroupActivity(studioId, { startDate: start, endDate: end })
+        
+        // Tính đúng date range dựa vào heatmapMode
+        let start: Date, end: Date;
+        
+        if (heatmapMode === "week") {
+            // Lấy ngày Thứ 2 đầu tuần
+            const day = heatmapAnchor.getDay();
+            const diff = day === 0 ? -6 : 1 - day;
+            start = new Date(heatmapAnchor);
+            start.setDate(heatmapAnchor.getDate() + diff);
+            // Lấy ngày Chủ Nhật cuối tuần
+            end = new Date(start);
+            end.setDate(start.getDate() + 6);
+        } else {
+            // month: ngày đầu đến ngày cuối của tháng
+            start = new Date(heatmapAnchor.getFullYear(), heatmapAnchor.getMonth(), 1);
+            end = new Date(heatmapAnchor.getFullYear(), heatmapAnchor.getMonth() + 1, 0);
+        }
+        
+        getStudioGroupActivity(studioId, { 
+            startDate: dateToString(start), 
+            endDate: dateToString(end) 
+        })
             .then((res) => {
                 if (res.status === "success") setActivity(res.data ?? null);
             })
