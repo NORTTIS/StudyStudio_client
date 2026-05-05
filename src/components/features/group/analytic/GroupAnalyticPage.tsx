@@ -1319,7 +1319,7 @@ export default function GroupMemberAnalyticsPage({ groupName = "" }: Props) {
         return () => {
             isMounted = false;
         };
-    }, [groupId, refreshKey]);
+    }, [groupId, refreshKey, currentUserId]);
 
     // Load trend data with date filter - Chart 3
     React.useEffect(() => {
@@ -1397,6 +1397,7 @@ export default function GroupMemberAnalyticsPage({ groupName = "" }: Props) {
 
     const canViewPersonalPieChart = currentUserRole !== "commenter";
     const canFilterMembers = currentUserRole === "owner" || currentUserRole === "moderator";
+    const pieMembers = summary?.memberActivitySummary ?? [];
 
     const effectivePieMemberId = React.useMemo(() => {
         if (canFilterMembers && selectedPieMembers.length > 0) {
@@ -2119,45 +2120,44 @@ export default function GroupMemberAnalyticsPage({ groupName = "" }: Props) {
                                             </div>
 
                                             {/* Member filter dropdown - single selection for pie chart */}
-                                            {canFilterMembers &&
-                                                summary?.memberActivitySummary && (
-                                                <div className="relative">
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => setPieDropdownOpen(!pieDropdownOpen)}
+                                            <div className="relative">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setPieDropdownOpen(!pieDropdownOpen)}
+                                                    className={cn(
+                                                        "inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition",
+                                                        selectedPieMembers.length > 0
+                                                            ? "border-orange-500 bg-orange-500 text-white"
+                                                            : "border-slate-200 bg-white text-slate-600 hover:border-orange-300"
+                                                    )}>
+                                                    <Users className="h-4 w-4" />
+                                                    <span>
+                                                        {selectedPieMembers.length > 0
+                                                            ? pieMembers.find((m) => m.userId === selectedPieMembers[0])?.userName ?? t("memberFilter.selectedMember")
+                                                            : t("memberFilter.selectMembers")}
+                                                    </span>
+                                                    <svg
                                                         className={cn(
-                                                            "inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition",
-                                                            selectedPieMembers.length > 0
-                                                                ? "border-orange-500 bg-orange-500 text-white"
-                                                                : "border-slate-200 bg-white text-slate-600 hover:border-orange-300"
-                                                        )}>
-                                                        <Users className="h-4 w-4" />
-                                                        <span>
-                                                            {selectedPieMembers.length > 0
-                                                                ? summary.memberActivitySummary.find((m) => m.userId === selectedPieMembers[0])?.userName ?? t("memberFilter.selectedMember")
-                                                                : t("memberFilter.selectMembers")}
-                                                        </span>
-                                                        <svg
-                                                            className={cn(
-                                                                "h-4 w-4 transition-transform duration-200",
-                                                                pieDropdownOpen && "rotate-180"
-                                                            )}
-                                                            fill="none"
-                                                            viewBox="0 0 24 24"
-                                                            stroke="currentColor">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                                        </svg>
-                                                    </button>
+                                                            "h-4 w-4 transition-transform duration-200",
+                                                            pieDropdownOpen && "rotate-180"
+                                                        )}
+                                                        fill="none"
+                                                        viewBox="0 0 24 24"
+                                                        stroke="currentColor">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                                    </svg>
+                                                </button>
 
-                                                    {pieDropdownOpen && (
-                                                        <>
-                                                            <div
-                                                                className="fixed inset-0 z-10"
-                                                                onClick={() => setPieDropdownOpen(false)}
-                                                            />
-                                                            <div className="absolute right-0 top-full z-20 mt-2 w-64 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-lg">
-                                                                <div className="max-h-64 overflow-y-auto p-2">
-                                                                    {summary.memberActivitySummary.map((member) => {
+                                                {pieDropdownOpen && (
+                                                    <>
+                                                        <div
+                                                            className="fixed inset-0 z-10"
+                                                            onClick={() => setPieDropdownOpen(false)}
+                                                        />
+                                                        <div className="absolute right-0 top-full z-20 mt-2 w-64 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-lg">
+                                                            <div className="max-h-64 overflow-y-auto p-2">
+                                                                {pieMembers.length > 0 ? (
+                                                                    pieMembers.map((member) => {
                                                                         const isSelected = selectedPieMembers.includes(member.userId ?? "");
                                                                         return (
                                                                             <button
@@ -2188,13 +2188,17 @@ export default function GroupMemberAnalyticsPage({ groupName = "" }: Props) {
                                                                                 <span className="flex-1 truncate font-medium">{member.userName}</span>
                                                                             </button>
                                                                         );
-                                                                    })}
-                                                                </div>
+                                                                    })
+                                                                ) : (
+                                                                    <div className="px-3 py-2 text-sm text-slate-400">
+                                                                        {t("common.loading")}
+                                                                    </div>
+                                                                )}
                                                             </div>
-                                                        </>
-                                                    )}
-                                                </div>
-                                            )}
+                                                        </div>
+                                                    </>
+                                                )}
+                                            </div>
                                         </div>
 
                                         <div className="grid grid-cols-1 items-center gap-4 lg:grid-cols-[260px_minmax(0,1fr)]">
